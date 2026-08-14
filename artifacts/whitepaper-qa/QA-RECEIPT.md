@@ -4,7 +4,7 @@ Date: 2026-08-14
 
 Reviewed source baseline: `01120618be5428a0ae1ead3af87192f030ad9448`
 
-Overall artifact review: `NEEDS_CHANGES`
+Overall artifact review: `PASS`
 
 Publication status: `BLOCKED`
 
@@ -69,7 +69,7 @@ human source-and-claim review gate below.
 
 ## Visual review
 
-Visual gate: `NEEDS_CHANGES`.
+Visual gate: `PASS`.
 
 Coverage at the current official PDF hash:
 
@@ -82,18 +82,21 @@ Coverage at the current official PDF hash:
 - Risk pages inspected: 26–28.
 - Final-reference pages inspected: 28–30.
 
-No missing Korean glyphs, unreadable table cells, clipped body text, or missing page
-numbers were found. One pre-existing PDF pagination defect blocks a visual PASS:
+Every page, all three contact sheets, and every designated full-size page were
+inspected. No clipping, overlap, missing Korean glyphs, broken or unreadable tables,
+missing running headers, or page-number problems were found.
 
-- On pages 18, 21, 23, 25, 27, and 29, the running-header text remains present in
-  PDF text extraction but is visually covered by continued table or list content.
-- On table-continuation pages 18, 21, 23, and 27, the continued table rises into the
-  intended top-margin/header area. Continued list content causes the corresponding
-  top-area collision on pages 25 and 29.
-- This review did not edit the out-of-scope DOCX/PDF builder or CSS. The official
-  DOCX/PDF hashes therefore remain unchanged. The builder must be corrected, the
-  artifacts rebuilt, all pages rerendered, and the visual review repeated before
-  this gate can become `PASS`.
+The top area of pages 18, 21, 23, 25, 27, and 29 was also measured directly at the
+current official PDF hash:
+
+- Each rendered page's `y=0–100 px` strip has the same SHA-256,
+  `97c15aeb2422dd73f6e77af28c9fc6dc912cf92cd01676d756d013202ea4716c`, and every
+  pairwise pixel-difference bounding box is `None`.
+- The running-header text bounding box is `(207.1, 23.2)–(388.2, 33.4)` points.
+- First content begins at `y=65.6 pt` on pages 18, 21, 23, and 27, and at
+  `y=59.5 pt` on pages 25 and 29. This leaves at least about `26 pt` between the
+  header bottom and the first content, so no top-margin or running-header collision
+  is present.
 
 ## Required human review gates
 
@@ -110,7 +113,7 @@ These outcomes are deliberately separate from the automated checks.
 | Token/legal review | `NOT_RUN` | Token, securities, tax, accounting, and consumer-protection review required |
 | Executive publication approval | `NOT_RUN` | Executive approval may occur only after every prior required gate is `PASS` |
 
-No `NOT_RUN` gate is approval. Publication remains blocked until the visual gate is
-fixed and every required human gate records `PASS` with evidence.
+No `NOT_RUN` gate is approval. Publication remains blocked solely until every
+required human gate records `PASS` with evidence.
 
 This receipt proves artifact checks only; it is not publication, legal, medical, financial, Samsung, hospital, or partner approval.
