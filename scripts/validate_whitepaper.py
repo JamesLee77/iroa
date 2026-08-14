@@ -8,18 +8,21 @@ PROHIBITED = (
     "수익 보장",
     "가격 상승 보장",
     "질병 진단을 제공합니다",
-    "Samsung 공식 파트너",
-    "HEFI 파트너를 승계",
 )
 SOURCE_PATTERN = re.compile(r"\[(S-[A-Z0-9-]+)\]")
 CLAIM_PATTERN = re.compile(r"\[(C-[A-Z0-9-]+)\]")
+SAFETY_CLAUSE_PATTERN = re.compile(r"[^.;!?。！？]+")
+LOCAL_ASSERTION_NEGATION = re.compile(
+    r"^\s*(?:(?:이|가|은|는|을|를)?\s*(?:아닙니다|아니다|아님)|(?:이|가|은|는|을|를)?\s*하지\s*않(?:습니다|는다|다|음)|(?:is|are|does|do|will)?\s*not\b)",
+    re.IGNORECASE,
+)
 SAFETY_PATTERNS = (
-    ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:공식|official)\s*(?:파트너|partner)(?:입니다|이다|로\s*활동|합니다)?", re.IGNORECASE)),
+    ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:공식|official)\s*(?:파트너|partner)", re.IGNORECASE)),
     ("diagnostic", re.compile(r"(?:질병|의료|건강)(?:을|를)?\s*(?:진단|diagnos(?:e|is|tic)?)(?:을|를)?\s*(?:제공|지원|수행|실시|가능|합니다|한다|할\s*수)", re.IGNORECASE)),
     ("stablecoin-issuance-custody-exchange", re.compile(r"MODUA.{0,40}(?:스테이블코인|stablecoin).{0,60}(?:발행|수탁|커스터디|보관|매매|교환|중개|거래소)(?:을|를)?\s*(?:제공|지원|수행|실시|가능|합니다|한다|할\s*수|됩니다)", re.IGNORECASE)),
     ("private-key-wallet", re.compile(r"(?:갤럭시\s*워치|Galaxy\s*Watch|Watch).{0,80}(?:개인키|private\s*key).{0,80}(?:지갑|wallet)(?:을|를)?\s*(?:제공|지원|사용|가능|합니다|한다|할\s*수)", re.IGNORECASE)),
     ("health-data-ledger", re.compile(r"(?:건강\s*데이터|health\s*data).{0,80}(?:블록체인|blockchain|결제\s*원장|payment\s*ledger).{0,40}(?:기록|저장|전송|적재)(?:합니다|한다|됩니다|할\s*수)?", re.IGNORECASE)),
-    ("hefi-implementation-or-partnership", re.compile(r"(?:HEFI|헤피).{0,60}(?:구현|구축|통합|연동|제휴|협력|승계|기반)(?:하)?(?:고)?\s*(?:합니다|한다|됩니다|할\s*예정|할\s*계획)?", re.IGNORECASE)),
+    ("hefi-implementation-or-partnership", re.compile(r"(?:HEFI|헤피).{0,60}?(?:구현|구축|통합|연동|제휴|협력|승계|기반|파트너(?:십)?|partner(?:ship)?s?)", re.IGNORECASE)),
 )
 PAYMENT_OR_DATA_SHARING = re.compile(
     r"(?:결제|payment|(?:데이터|정보).{0,20}(?:공유|제공|전송)|(?:공유|제공|전송).{0,20}(?:데이터|정보))",
@@ -39,6 +42,14 @@ def document_units(text: str) -> list[str]:
     return [unit for unit in text.splitlines() if unit.strip()]
 
 
+def safety_clauses(unit: str) -> list[str]:
+    return [match.group().strip() for match in SAFETY_CLAUSE_PATTERN.finditer(unit) if match.group().strip()]
+
+
+def is_locally_negated(clause: str, assertion: re.Match[str]) -> bool:
+    return LOCAL_ASSERTION_NEGATION.match(clause[assertion.end():]) is not None
+
+
 def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> list[str]:
     text = whitepaper_path.read_text(encoding="utf-8")
     sources = load_json(sources_path)
@@ -48,9 +59,13 @@ def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> li
     claims_by_id = {claim.get("id"): claim for claim in claims if claim.get("id")}
     errors = [f"Prohibited claim: {phrase}" for phrase in PROHIBITED if phrase in text]
     for unit in document_units(text):
-        errors.extend(
-            f"Safety violation ({name})" for name, pattern in SAFETY_PATTERNS if pattern.search(unit)
-        )
+        for clause in safety_clauses(unit):
+            for name, pattern in SAFETY_PATTERNS:
+                errors.extend(
+                    f"Safety violation ({name}): {clause}"
+                    for assertion in pattern.finditer(clause)
+                    if not is_locally_negated(clause, assertion)
+                )
         cited_source_ids = SOURCE_PATTERN.findall(unit)
         if cited_source_ids:
             claim_markers = CLAIM_PATTERN.findall(unit)

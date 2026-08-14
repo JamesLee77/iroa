@@ -176,3 +176,45 @@ def test_rejects_cited_sensitive_claim_with_metadata_but_no_local_approval_words
     write_json(claims, [{"id": "C-001", "claim": claim_text, "section": "12", "source_ids": ["S-001"], "source_uses": [{"source_id": "S-001", "claim_kind": "known-fact"}], "explicit_approval_required": True, "status": "conditional"}])
     errors = validate(whitepaper, sources, claims)
     assert any("local explicit approval wording" in error for error in errors)
+
+
+def test_accepts_official_partner_and_hefi_negative_disclaimers(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(
+        "# MODUA\n삼성 공식 파트너가 아닙니다.\nHEFI와 제휴하지 않습니다.",
+        encoding="utf-8",
+    )
+    write_json(sources, [])
+    write_json(claims, [])
+    assert validate(whitepaper, sources, claims) == []
+
+
+def test_rejects_korean_and_english_hefi_partner_assertions(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA\nHEFI 파트너입니다.\nHEFI partner.", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert sum("hefi-implementation-or-partnership" in error for error in errors) == 2
+
+
+def test_negative_disclaimer_does_not_hide_positive_assertion_in_another_clause(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(
+        "# MODUA\n삼성 공식 파트너가 아닙니다; Samsung 공식 파트너입니다.\n"
+        "HEFI와 제휴하지 않습니다; HEFI partner.",
+        encoding="utf-8",
+    )
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert sum("official-partner" in error for error in errors) == 1
+    assert sum("hefi-implementation-or-partnership" in error for error in errors) == 1
+    assert any("Samsung 공식 파트너입니다" in error for error in errors)
+    assert any("HEFI partner" in error for error in errors)
