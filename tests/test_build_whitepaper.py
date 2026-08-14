@@ -90,10 +90,71 @@ def _source_table_cells(source: str) -> list[str]:
     return cells
 
 
+def _human_visible_markdown(text: str) -> str:
+    text = re.sub(r"\[([^]]+)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"(`+)(.*?)\1", r"\2", text)
+    text = re.sub(r"(\*\*|__)(.*?)\1", r"\2", text)
+    return re.sub(r"(?<!\*)\*([^*]+)\*", r"\1", text).strip()
+
+
+def _source_body_items_and_list_groups(
+    source: str,
+) -> tuple[list[str], list[tuple[str, list[str]]]]:
+    body_items: list[str] = []
+    list_groups: list[tuple[str, list[str]]] = []
+    prose_lines: list[str] = []
+    active_list_index: int | None = None
+
+    def flush_prose() -> None:
+        if prose_lines:
+            body_items.append(_human_visible_markdown(" ".join(prose_lines)))
+            prose_lines.clear()
+
+    for line in [*source.splitlines(), ""]:
+        if not line.strip():
+            flush_prose()
+            active_list_index = None
+            continue
+        if re.match(r"^#{1,6}\s+", line) or line.startswith("|"):
+            flush_prose()
+            active_list_index = None
+            continue
+
+        list_match = re.match(r"^(?:([-+*])|(\d+)\.)\s+(.+)$", line)
+        if list_match:
+            flush_prose()
+            list_kind = "bullet" if list_match.group(1) else "decimal"
+            if active_list_index is None or list_groups[active_list_index][0] != list_kind:
+                list_groups.append((list_kind, []))
+                active_list_index = len(list_groups) - 1
+            item = _human_visible_markdown(list_match.group(3))
+            list_groups[active_list_index][1].append(item)
+            body_items.append(item)
+            continue
+
+        active_list_index = None
+        prose_lines.append(re.sub(r"^>\s?", "", line))
+
+    return body_items, list_groups
+
+
 def _docx_text(document: DocumentObject) -> str:
     paragraphs = [paragraph.text for paragraph in document.paragraphs]
     cells = [cell.text for table in document.tables for row in table.rows for cell in row.cells]
     return "\n".join(paragraphs + cells)
+
+
+def _pdf_body_text(pdf: pymupdf.Document) -> str:
+    words: list[str] = []
+    for page in pdf:
+        words.extend(
+            word[4]
+            for word in page.get_text("words")
+            if word[1] >= 40
+            and word[3] <= 800
+            and not re.fullmatch(r"(?:•|\d+\.)", word[4])
+        )
+    return _compact(" ".join(words))
 
 
 def test_build_creates_matching_docx_and_pdf(tmp_path: Path) -> None:
@@ -119,11 +180,9 @@ def test_official_source_content_survives_in_both_outputs(
     source = source_path.read_text(encoding="utf-8")
     headings = [text for _, text in _source_headings(source)]
     table_cells = _source_table_cells(source)
-    representative_values = [
-        "MODUA(모두아)는 노인, 장애인, 그리고 곁에서 돕는 사람을 위한 "
-        "새로운 생활지원 프로젝트다.",
-        "공공 안내문과 복지 문서를 쉬운 말로 설명한다.",
-    ]
+    body_items, list_groups = _source_body_items_and_list_groups(source)
+    assert len(body_items) == 210
+    assert sum(len(items) for _, items in list_groups) == 116
 
     document = Document(docx_path)
     docx_text = _compact(_docx_text(document))
@@ -132,12 +191,20 @@ def test_official_source_content_survives_in_both_outputs(
         for paragraph in document.paragraphs
         if paragraph.style.name in {"Heading 1", "Heading 2", "Heading 3"}
     ]
+    docx_body_items = [
+        _compact(paragraph.text)
+        for paragraph in document.paragraphs
+        if paragraph.text and paragraph.style.name not in {"Heading 1", "Heading 2", "Heading 3"}
+    ]
     with pymupdf.open(pdf_path) as pdf:
         pdf_text = _compact("\n".join(page.get_text() for page in pdf))
+        pdf_body_text = _pdf_body_text(pdf)
 
     assert docx_headings == [_compact(text) for text in headings]
+    assert docx_body_items == [_compact(text) for text in body_items]
     _assert_in_order([_compact(text) for text in headings], pdf_text)
-    for value in representative_values + table_cells:
+    _assert_in_order([_compact(text) for text in body_items], pdf_body_text)
+    for value in table_cells:
         expected = _compact(value)
         assert expected in docx_text
         assert expected in pdf_text
@@ -217,6 +284,102 @@ def test_official_docx_uses_accessible_a4_publication_structure(
                     assert margins.find(qn(f"w:{side}")).get(qn("w:w")) == expected_margin
 
 
+def test_official_docx_styles_and_numbering_match_accessible_contract(
+    official_artifacts: tuple[Path, Path, Path],
+) -> None:
+    source_path, docx_path, _ = official_artifacts
+    document = Document(docx_path)
+
+    normal = document.styles["Normal"]
+    assert normal.font.size.pt == pytest.approx(12)
+    assert normal.element.rPr.rFonts.get(qn("w:eastAsia")) == "Noto Sans KR"
+    assert normal.paragraph_format.line_spacing == pytest.approx(1.333, abs=0.001)
+    assert normal.paragraph_format.widow_control is True
+    normal_spacing = normal.element.pPr.find(qn("w:spacing"))
+    assert normal_spacing.get(qn("w:line")) == "320"
+    assert normal_spacing.get(qn("w:lineRule")) == "auto"
+    assert normal.element.pPr.find(qn("w:widowControl")) is not None
+
+    heading_tokens = {
+        "Heading 1": (16, "2E74B5", 18, 10, "0"),
+        "Heading 2": (13, "2E74B5", 12, 6, "1"),
+        "Heading 3": (12, "1F4D78", 8, 4, "2"),
+    }
+    for name, (size, color, before, after, outline_level) in heading_tokens.items():
+        style = document.styles[name]
+        assert style.font.size.pt == pytest.approx(size)
+        assert str(style.font.color.rgb) == color
+        assert style.element.rPr.rFonts.get(qn("w:eastAsia")) == "Noto Sans KR"
+        assert style.paragraph_format.space_before.pt == pytest.approx(before)
+        assert style.paragraph_format.space_after.pt == pytest.approx(after)
+        assert style.paragraph_format.keep_with_next is True
+        assert style.paragraph_format.keep_together is True
+        assert style.element.pPr.find(qn("w:keepNext")) is not None
+        assert style.element.pPr.find(qn("w:keepLines")) is not None
+        assert style.element.pPr.find(qn("w:outlineLvl")).get(qn("w:val")) == outline_level
+
+    _, source_list_groups = _source_body_items_and_list_groups(
+        source_path.read_text(encoding="utf-8")
+    )
+    list_paragraphs = [
+        paragraph
+        for paragraph in document.paragraphs
+        if paragraph.style.name in {"MODUA Bullet", "MODUA Number"}
+    ]
+    num_ids = [
+        paragraph._p.xpath("./w:pPr/w:numPr/w:numId")[0].get(qn("w:val"))
+        for paragraph in list_paragraphs
+    ]
+    generated_groups = [
+        (num_id, list(items))
+        for num_id, items in groupby(
+            zip(num_ids, list_paragraphs), key=lambda pair: pair[0]
+        )
+    ]
+    numbering = document.part.numbering_part.element
+    generated_formats: list[str] = []
+    for num_id, items in generated_groups:
+        num = next(
+            node
+            for node in numbering.findall(qn("w:num"))
+            if node.get(qn("w:numId")) == num_id
+        )
+        abstract_id = num.find(qn("w:abstractNumId")).get(qn("w:val"))
+        abstract = next(
+            node
+            for node in numbering.findall(qn("w:abstractNum"))
+            if node.get(qn("w:abstractNumId")) == abstract_id
+        )
+        generated_formats.append(
+            abstract.find(qn("w:lvl")).find(qn("w:numFmt")).get(qn("w:val"))
+        )
+        expected_style = "MODUA Bullet" if generated_formats[-1] == "bullet" else "MODUA Number"
+        assert {paragraph.style.name for _, paragraph in items} == {expected_style}
+
+    assert generated_formats == [kind for kind, _ in source_list_groups]
+    assert [len(items) for _, items in generated_groups] == LIST_GROUP_SIZES
+
+
+def test_official_docx_meets_repeatable_high_roi_accessibility_gate(
+    official_artifacts: tuple[Path, Path, Path],
+) -> None:
+    _, docx_path, _ = official_artifacts
+    document = Document(docx_path)
+    heading_levels = [
+        int(paragraph.style.name[-1])
+        for paragraph in document.paragraphs
+        if paragraph.style.name in {"Heading 1", "Heading 2", "Heading 3"}
+    ]
+
+    assert heading_levels[0] == 1
+    assert all(current <= previous + 1 for previous, current in zip(heading_levels, heading_levels[1:]))
+    assert all(table.rows[0]._tr.xpath("./w:trPr/w:tblHeader") for table in document.tables)
+    assert not document.inline_shapes
+    assert not document._element.xpath(".//w:drawing")
+    assert not document._element.xpath(".//w:pict")
+    assert not document._element.xpath(".//w:hyperlink")
+
+
 def test_official_pdf_has_complete_table_header_tag_graph(
     official_artifacts: tuple[Path, Path, Path],
 ) -> None:
@@ -252,6 +415,32 @@ def test_official_pdf_has_complete_table_header_tag_graph(
             for x0, y0, x1, y1, *_ in page.get_text("words"):
                 assert 0 <= x0 <= x1 <= page.rect.width
                 assert 0 <= y0 <= y1 <= page.rect.height
+
+
+def test_official_pdf_has_running_header_and_ordered_page_footers(
+    official_artifacts: tuple[Path, Path, Path],
+) -> None:
+    _, _, pdf_path = official_artifacts
+    expected_header = "MODUA WHITEPAPER · KOREAN REVIEW EDITION"
+    footer_numbers: list[str] = []
+
+    with pymupdf.open(pdf_path) as pdf:
+        for page_number, page in enumerate(pdf, start=1):
+            words = page.get_text("words")
+            header_words = sorted((word for word in words if word[1] < 40), key=lambda word: word[0])
+            footer_words = sorted((word for word in words if word[3] > 800), key=lambda word: word[0])
+            if page_number == 1:
+                assert header_words == []
+                assert footer_words == []
+                continue
+
+            assert " ".join(word[4] for word in header_words) == expected_header
+            assert [word[4] for word in footer_words] == [str(page_number)]
+            assert all(800 < word[1] < word[3] <= page.rect.height for word in footer_words)
+            assert all(abs((word[0] + word[2]) / 2 - page.rect.width / 2) < 1 for word in footer_words)
+            footer_numbers.extend(word[4] for word in footer_words)
+
+    assert footer_numbers == [str(page_number) for page_number in range(2, 31)]
 
 
 def test_separate_ordered_lists_restart_numbering(tmp_path: Path) -> None:
