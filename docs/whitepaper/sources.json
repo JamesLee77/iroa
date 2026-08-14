@@ -1,0 +1,12 @@
+[
+  {"id":"S-KOSTAT-2024","title":"2024 인구주택총조사 등록센서스 결과","publisher":"통계청","url":"https://kostat.go.kr/boardDownload.es?bid=203&list_no=437767&seq=3","claim_ceiling":"Population baseline only"},
+  {"id":"S-NRC-DISABILITY-2024","title":"2024년도 등록장애인 현황","publisher":"보건복지부·국립재활원","url":"https://www.nrc.go.kr/portal/board/boardView.do?bn=qnaView&board_id=NRC_NOTICE_BOARD&fno=39&menu_cd=09_01_00_11&no=23285","claim_ceiling":"Registered disability statistics only"},
+  {"id":"S-SAMSUNG-DATA-SDK","title":"Samsung Health Data SDK","publisher":"Samsung Developer","url":"https://developer.samsung.com/health/data/overview.html","claim_ceiling":"Supported data and wellness limitation"},
+  {"id":"S-SAMSUNG-SENSOR-SDK","title":"Samsung Health Sensor SDK","publisher":"Samsung Developer","url":"https://developer.samsung.com/health/sensor/overview.html","claim_ceiling":"Sensor capability and device support only"},
+  {"id":"S-SAMSUNG-WATCH-PAY","title":"How to Pay Using Samsung Wallet on Galaxy Watch","publisher":"Samsung Newsroom","url":"https://news.samsung.com/us/samsung-how-pay-with-galaxy-watch/","claim_ceiling":"Compatible card payment only"},
+  {"id":"S-MOHW-MYHEALTHWAY","title":"건강정보 고속도로 본격 가동","publisher":"보건복지부","url":"https://www.mohw.go.kr/board.es?act=view&bid=0027&cg_code=&list_no=378308&mid=a10503010300&tag=","claim_ceiling":"Consented health-data exchange policy"},
+  {"id":"S-KRCORE-V2","title":"KR Core Implementation Guide v2.0.0","publisher":"HL7 Korea","url":"https://www.hl7korea.or.kr/fhir/krcore/STU2/","claim_ceiling":"FHIR R4 Korean interoperability specification"},
+  {"id":"S-FSC-VASP-2026","title":"미신고 가상자산사업자 이용 경고","publisher":"금융위원회","url":"https://www.fsc.go.kr/po010103/87177","claim_ceiling":"Reported-provider requirement and enforcement warning"},
+  {"id":"S-HEFI-KO-REF","title":"HEFI 한국어 백서","publisher":"HEFI reference file","url":"../hefi/docs/whitepaper/240503_HeFi_백서_한글★.pdf","claim_ceiling":"Feature inspiration only; no implementation proof"},
+  {"id":"S-HEFI-EN-REF","title":"HEFI English White Paper","publisher":"HEFI reference file","url":"../hefi/docs/whitepaper/HeFi White Paper(ENG) 20230711_purple.docx","claim_ceiling":"Feature inspiration only; no implementation proof"}
+]
