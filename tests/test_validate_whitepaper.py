@@ -218,3 +218,36 @@ def test_negative_disclaimer_does_not_hide_positive_assertion_in_another_clause(
     assert sum("hefi-implementation-or-partnership" in error for error in errors) == 1
     assert any("Samsung 공식 파트너입니다" in error for error in errors)
     assert any("HEFI partner" in error for error in errors)
+
+
+def test_rejects_english_samsung_official_partner_assertion(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA\nSamsung is an official partner.", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert sum("official-partner" in error for error in errors) == 1
+
+
+def test_accepts_english_hefi_partner_disclaimer(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA\nHEFI is not a partner.", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+    assert validate(whitepaper, sources, claims) == []
+
+
+def test_english_hefi_disclaimer_does_not_hide_positive_assertion(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA\nHEFI is not a partner; HEFI is a partner.", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert sum("hefi-implementation-or-partnership" in error for error in errors) == 1
+    assert any("HEFI is a partner" in error for error in errors)

@@ -16,8 +16,12 @@ LOCAL_ASSERTION_NEGATION = re.compile(
     r"^\s*(?:(?:이|가|은|는|을|를)?\s*(?:아닙니다|아니다|아님)|(?:이|가|은|는|을|를)?\s*하지\s*않(?:습니다|는다|다|음)|(?:is|are|does|do|will)?\s*not\b)",
     re.IGNORECASE,
 )
+ENGLISH_PARTNERSHIP_NEGATION = re.compile(
+    r"\b(?:is|are)\s+not\s+(?:an?\s+)?(?:official\s+)?partner(?:ship)?s?\s*$",
+    re.IGNORECASE,
+)
 SAFETY_PATTERNS = (
-    ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:공식|official)\s*(?:파트너|partner)", re.IGNORECASE)),
+    ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:(?:is|are)\s+(?:not\s+)?(?:an?\s+)?)?(?:공식|official)\s*(?:파트너|partner)", re.IGNORECASE)),
     ("diagnostic", re.compile(r"(?:질병|의료|건강)(?:을|를)?\s*(?:진단|diagnos(?:e|is|tic)?)(?:을|를)?\s*(?:제공|지원|수행|실시|가능|합니다|한다|할\s*수)", re.IGNORECASE)),
     ("stablecoin-issuance-custody-exchange", re.compile(r"MODUA.{0,40}(?:스테이블코인|stablecoin).{0,60}(?:발행|수탁|커스터디|보관|매매|교환|중개|거래소)(?:을|를)?\s*(?:제공|지원|수행|실시|가능|합니다|한다|할\s*수|됩니다)", re.IGNORECASE)),
     ("private-key-wallet", re.compile(r"(?:갤럭시\s*워치|Galaxy\s*Watch|Watch).{0,80}(?:개인키|private\s*key).{0,80}(?:지갑|wallet)(?:을|를)?\s*(?:제공|지원|사용|가능|합니다|한다|할\s*수)", re.IGNORECASE)),
@@ -47,7 +51,10 @@ def safety_clauses(unit: str) -> list[str]:
 
 
 def is_locally_negated(clause: str, assertion: re.Match[str]) -> bool:
-    return LOCAL_ASSERTION_NEGATION.match(clause[assertion.end():]) is not None
+    return (
+        LOCAL_ASSERTION_NEGATION.match(clause[assertion.end():]) is not None
+        or ENGLISH_PARTNERSHIP_NEGATION.search(assertion.group()) is not None
+    )
 
 
 def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> list[str]:
