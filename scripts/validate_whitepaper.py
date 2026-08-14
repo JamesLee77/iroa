@@ -14,19 +14,21 @@ PROHIBITED = (
 SOURCE_PATTERN = re.compile(r"\[(S-[A-Z0-9-]+)\]")
 CLAIM_PATTERN = re.compile(r"\[(C-[A-Z0-9-]+)\]")
 SAFETY_PATTERNS = (
-    ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:공식|official)\s*(?:파트너|partner)", re.IGNORECASE)),
-    ("diagnostic", re.compile(r"(?:질병|의료|건강)?\s*(?:진단|diagnos(?:e|is|tic)?)", re.IGNORECASE)),
-    ("stablecoin-issuance-custody-exchange", re.compile(r"MODUA.{0,40}(?:스테이블코인|stablecoin).{0,60}(?:발행|수탁|커스터디|보관|매매|교환|중개|거래소)", re.IGNORECASE)),
-    ("private-key-wallet", re.compile(r"(?:갤럭시\s*워치|Galaxy\s*Watch|Watch).{0,80}(?:개인키|private\s*key).{0,80}(?:지갑|wallet)", re.IGNORECASE)),
-    ("health-data-ledger", re.compile(r"(?:건강\s*데이터|health\s*data).{0,80}(?:블록체인|blockchain|결제\s*원장|payment\s*ledger)", re.IGNORECASE)),
-    ("hefi-implementation-or-partnership", re.compile(r"(?:HEFI|헤피).{0,60}(?:구현|구축|통합|연동|제휴|파트너|협력|승계|기반)", re.IGNORECASE)),
+    ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:공식|official)\s*(?:파트너|partner)(?:입니다|이다|로\s*활동|합니다)?", re.IGNORECASE)),
+    ("diagnostic", re.compile(r"(?:질병|의료|건강)(?:을|를)?\s*(?:진단|diagnos(?:e|is|tic)?)(?:을|를)?\s*(?:제공|지원|수행|실시|가능|합니다|한다|할\s*수)", re.IGNORECASE)),
+    ("stablecoin-issuance-custody-exchange", re.compile(r"MODUA.{0,40}(?:스테이블코인|stablecoin).{0,60}(?:발행|수탁|커스터디|보관|매매|교환|중개|거래소)(?:을|를)?\s*(?:제공|지원|수행|실시|가능|합니다|한다|할\s*수|됩니다)", re.IGNORECASE)),
+    ("private-key-wallet", re.compile(r"(?:갤럭시\s*워치|Galaxy\s*Watch|Watch).{0,80}(?:개인키|private\s*key).{0,80}(?:지갑|wallet)(?:을|를)?\s*(?:제공|지원|사용|가능|합니다|한다|할\s*수)", re.IGNORECASE)),
+    ("health-data-ledger", re.compile(r"(?:건강\s*데이터|health\s*data).{0,80}(?:블록체인|blockchain|결제\s*원장|payment\s*ledger).{0,40}(?:기록|저장|전송|적재)(?:합니다|한다|됩니다|할\s*수)?", re.IGNORECASE)),
+    ("hefi-implementation-or-partnership", re.compile(r"(?:HEFI|헤피).{0,60}(?:구현|구축|통합|연동|제휴|협력|승계|기반)(?:하)?(?:고)?\s*(?:합니다|한다|됩니다|할\s*예정|할\s*계획)?", re.IGNORECASE)),
 )
 PAYMENT_OR_DATA_SHARING = re.compile(
     r"(?:결제|payment|(?:데이터|정보).{0,20}(?:공유|제공|전송)|(?:공유|제공|전송).{0,20}(?:데이터|정보))",
     re.IGNORECASE,
 )
-EXPLICIT_APPROVAL = re.compile(r"(?:명시적\s*(?:동의|승인)|사용자\s*(?:동의|승인)|explicit\s*approval|user\s*consent)", re.IGNORECASE)
-NEGATION_CONTEXT = re.compile(r"(?:아니|아닙|않|없|미지원|미구현|금지)")
+LOCAL_EXPLICIT_APPROVAL = re.compile(
+    r"(?:(?:사람|사용자|본인).{0,16}(?:최종|명시적).{0,16}(?:승인|확인)|(?:최종|명시적).{0,16}(?:승인|확인).{0,16}(?:사람|사용자|본인))",
+    re.IGNORECASE,
+)
 
 
 def load_json(path: Path) -> object:
@@ -34,7 +36,7 @@ def load_json(path: Path) -> object:
 
 
 def document_units(text: str) -> list[str]:
-    return [unit for unit in re.split(r"(?<=[.!?。])|\n", text) if unit.strip()]
+    return [unit for unit in text.splitlines() if unit.strip()]
 
 
 def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> list[str]:
@@ -46,10 +48,9 @@ def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> li
     claims_by_id = {claim.get("id"): claim for claim in claims if claim.get("id")}
     errors = [f"Prohibited claim: {phrase}" for phrase in PROHIBITED if phrase in text]
     for unit in document_units(text):
-        if not NEGATION_CONTEXT.search(unit):
-            errors.extend(
-                f"Safety violation ({name})" for name, pattern in SAFETY_PATTERNS if pattern.search(unit)
-            )
+        errors.extend(
+            f"Safety violation ({name})" for name, pattern in SAFETY_PATTERNS if pattern.search(unit)
+        )
         cited_source_ids = SOURCE_PATTERN.findall(unit)
         if cited_source_ids:
             claim_markers = CLAIM_PATTERN.findall(unit)
@@ -66,7 +67,9 @@ def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> li
                         errors.append(f"Citation {claim_markers[0]} source IDs do not match ledger")
                     if PAYMENT_OR_DATA_SHARING.search(unit) and cited_claim.get("explicit_approval_required") is not True:
                         errors.append(f"Claim {claim_markers[0]} requires explicit approval metadata")
-        elif PAYMENT_OR_DATA_SHARING.search(unit) and not EXPLICIT_APPROVAL.search(unit):
+                    if PAYMENT_OR_DATA_SHARING.search(unit) and not LOCAL_EXPLICIT_APPROVAL.search(unit):
+                        errors.append(f"Claim {claim_markers[0]} requires local explicit approval wording")
+        elif PAYMENT_OR_DATA_SHARING.search(unit) and not LOCAL_EXPLICIT_APPROVAL.search(unit):
             errors.append("Safety violation (explicit-approval-required)")
     for source_id in sorted(set(SOURCE_PATTERN.findall(text)) - source_ids):
         errors.append(f"Unknown source ID: {source_id}")

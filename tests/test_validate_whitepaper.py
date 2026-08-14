@@ -152,3 +152,27 @@ def test_accepts_explicit_negative_safety_disclaimers(tmp_path: Path) -> None:
     write_json(sources, [])
     write_json(claims, [])
     assert validate(whitepaper, sources, claims) == []
+
+
+def test_rejects_unrelated_negation_after_positive_high_risk_assertions(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA\nHEFI와 제휴합니다; 제한은 없습니다. 삼성 공식 파트너입니다; 예외는 없습니다.", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert any("hefi-implementation-or-partnership" in error for error in errors)
+    assert any("official-partner" in error for error in errors)
+
+
+def test_rejects_cited_sensitive_claim_with_metadata_but_no_local_approval_words(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    claim_text = "건강 데이터를 결제 파트너와 공유합니다."
+    whitepaper.write_text(f"# MODUA\n{claim_text} [C-001] [S-001]", encoding="utf-8")
+    write_json(sources, [{"id": "S-001", "title": "Known", "url": "https://example.com", "allowed_claim_kinds": ["known-fact"]}])
+    write_json(claims, [{"id": "C-001", "claim": claim_text, "section": "12", "source_ids": ["S-001"], "source_uses": [{"source_id": "S-001", "claim_kind": "known-fact"}], "explicit_approval_required": True, "status": "conditional"}])
+    errors = validate(whitepaper, sources, claims)
+    assert any("local explicit approval wording" in error for error in errors)
