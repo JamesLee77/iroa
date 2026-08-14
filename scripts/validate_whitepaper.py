@@ -12,22 +12,29 @@ PROHIBITED = (
     "HEFI 파트너를 승계",
 )
 SOURCE_PATTERN = re.compile(r"\[(S-[A-Z0-9-]+)\]")
+CLAIM_PATTERN = re.compile(r"\[(C-[A-Z0-9-]+)\]")
 SAFETY_PATTERNS = (
     ("official-partner", re.compile(r"(?:Samsung|삼성)\s*(?:공식|official)\s*(?:파트너|partner)", re.IGNORECASE)),
     ("diagnostic", re.compile(r"(?:질병|의료|건강)?\s*(?:진단|diagnos(?:e|is|tic)?)", re.IGNORECASE)),
     ("stablecoin-issuance-custody-exchange", re.compile(r"MODUA.{0,40}(?:스테이블코인|stablecoin).{0,60}(?:발행|수탁|커스터디|보관|매매|교환|중개|거래소)", re.IGNORECASE)),
     ("private-key-wallet", re.compile(r"(?:갤럭시\s*워치|Galaxy\s*Watch|Watch).{0,80}(?:개인키|private\s*key).{0,80}(?:지갑|wallet)", re.IGNORECASE)),
     ("health-data-ledger", re.compile(r"(?:건강\s*데이터|health\s*data).{0,80}(?:블록체인|blockchain|결제\s*원장|payment\s*ledger)", re.IGNORECASE)),
+    ("hefi-implementation-or-partnership", re.compile(r"(?:HEFI|헤피).{0,60}(?:구현|구축|통합|연동|제휴|파트너|협력|승계|기반)", re.IGNORECASE)),
 )
 PAYMENT_OR_DATA_SHARING = re.compile(
     r"(?:결제|payment|(?:데이터|정보).{0,20}(?:공유|제공|전송)|(?:공유|제공|전송).{0,20}(?:데이터|정보))",
     re.IGNORECASE,
 )
 EXPLICIT_APPROVAL = re.compile(r"(?:명시적\s*(?:동의|승인)|사용자\s*(?:동의|승인)|explicit\s*approval|user\s*consent)", re.IGNORECASE)
+NEGATION_CONTEXT = re.compile(r"(?:아니|아닙|않|없|미지원|미구현|금지)")
 
 
 def load_json(path: Path) -> object:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def document_units(text: str) -> list[str]:
+    return [unit for unit in re.split(r"(?<=[.!?。])|\n", text) if unit.strip()]
 
 
 def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> list[str]:
@@ -36,12 +43,31 @@ def validate(whitepaper_path: Path, sources_path: Path, claims_path: Path) -> li
     claims = load_json(claims_path)
     source_ids = {entry["id"] for entry in sources}
     sources_by_id = {entry["id"]: entry for entry in sources}
+    claims_by_id = {claim.get("id"): claim for claim in claims if claim.get("id")}
     errors = [f"Prohibited claim: {phrase}" for phrase in PROHIBITED if phrase in text]
-    errors.extend(
-        f"Safety violation ({name})" for name, pattern in SAFETY_PATTERNS if pattern.search(text)
-    )
-    if PAYMENT_OR_DATA_SHARING.search(text) and not EXPLICIT_APPROVAL.search(text):
-        errors.append("Safety violation (explicit-approval-required)")
+    for unit in document_units(text):
+        if not NEGATION_CONTEXT.search(unit):
+            errors.extend(
+                f"Safety violation ({name})" for name, pattern in SAFETY_PATTERNS if pattern.search(unit)
+            )
+        cited_source_ids = SOURCE_PATTERN.findall(unit)
+        if cited_source_ids:
+            claim_markers = CLAIM_PATTERN.findall(unit)
+            if len(claim_markers) != 1:
+                errors.append("Cited claim must include exactly one claim marker")
+            else:
+                cited_claim = claims_by_id.get(claim_markers[0])
+                if cited_claim is None:
+                    errors.append(f"Unknown claim marker: {claim_markers[0]}")
+                else:
+                    if cited_claim.get("claim") not in unit:
+                        errors.append(f"Citation {claim_markers[0]} does not match ledger claim")
+                    if set(cited_source_ids) != set(cited_claim.get("source_ids", [])):
+                        errors.append(f"Citation {claim_markers[0]} source IDs do not match ledger")
+                    if PAYMENT_OR_DATA_SHARING.search(unit) and cited_claim.get("explicit_approval_required") is not True:
+                        errors.append(f"Claim {claim_markers[0]} requires explicit approval metadata")
+        elif PAYMENT_OR_DATA_SHARING.search(unit) and not EXPLICIT_APPROVAL.search(unit):
+            errors.append("Safety violation (explicit-approval-required)")
     for source_id in sorted(set(SOURCE_PATTERN.findall(text)) - source_ids):
         errors.append(f"Unknown source ID: {source_id}")
     for index, claim in enumerate(claims):
