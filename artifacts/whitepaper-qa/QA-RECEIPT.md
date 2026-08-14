@@ -1,0 +1,116 @@
+# MODUA Whitepaper QA Receipt
+
+Date: 2026-08-14
+
+Reviewed source baseline: `01120618be5428a0ae1ead3af87192f030ad9448`
+
+Overall artifact review: `NEEDS_CHANGES`
+
+Publication status: `BLOCKED`
+
+This receipt covers automated artifact checks and an AI-assisted visual review of the
+Korean review edition. It does not record any external human, expert, partner, or
+executive approval. The authoritative Markdown and the official DOCX/PDF bytes were
+not changed during this review.
+
+## Exact source and artifact hashes
+
+All hashes use SHA-256.
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `docs/whitepaper/MODUA_WHITEPAPER_KO.md` | 50,535 | `cd6d46692e9074fd1e3280420b6d61bcc4d6b1667f774ac6a035c99682658245` |
+| `docs/whitepaper/claims.json` | 3,724 | `1d256c5338fb03544b69eb63a65ed0800b2bceb275e79b15011d42c58c1c6150` |
+| `docs/whitepaper/sources.json` | 3,001 | `30e293c867807a68d6c444d0098ca4c2d6ec782685e5f7ca1d2fb0e84d9dfa46` |
+| `docs/whitepaper/legal-review-checklist.md` | 12,300 | `4f8ca46bb796ec9b41cd83ff2b04ba6bb34c81b1ce5f11ecaec3c9020a2098b6` |
+| `docs/whitepaper/exports/MODUA_WHITEPAPER_KO.docx` | 60,714 | `29be8eef4fece0e1cdc5c2126097ec0f0a5953bacb8e033a158599a7050bd151` |
+| `docs/whitepaper/exports/MODUA_WHITEPAPER_KO.pdf` | 394,060 | `fa9c3251abc65d5c39d5a1a7fc7963f5d4fcb868f10b3baf47b13e4112f254e4` |
+| `artifacts/whitepaper-qa/contact-sheet-01.png` | 1,358,508 | `0c80e8064f61aa19b63294c2ade8e3b62a1c792665051cad4ab9dfc281ff169c` |
+| `artifacts/whitepaper-qa/contact-sheet-02.png` | 1,512,760 | `b520920f41dc4e26ad160ceac71be432446458f94125cbadcca02c13e141a62a` |
+| `artifacts/whitepaper-qa/contact-sheet-03.png` | 603,600 | `c6804e9d9464e2fca2536be7b07d1edb94c7d24cc2431120a6a9d8c1cd1132ac` |
+
+The official PDF hash is identical to the Task 6 receipt. The contact-sheet hashes
+were reproduced by two consecutive runs with Pillow 11.3.0.
+
+## Command receipts
+
+| Check | Exit | Result |
+|---|---:|---|
+| `python scripts/render_whitepaper.py` | 0 | `rendered-pages: 30` |
+| Renderer structure audit | 0 | `PASS`; PDF pages 30, page PNGs 30, contact sheets 3, labels `Page 1` through `Page 30` exactly once |
+| Renderer dimensions | 0 | Page PNGs `1191×1684`; contact sheets `1600×1740`; 2× PDF render scale |
+| Official render determinism | 0 | `PASS`; all three contact-sheet hashes identical across consecutive current-output runs |
+| `python -m pytest tests/test_render_whitepaper.py -v` | 0 | `3 passed`; exact page count/2× dimensions, 12-page cap/labels, stale-output replacement and determinism |
+| `python -m pytest -v` | 0 | `34 passed in 8.43s`; zero warnings |
+| `python scripts/validate_whitepaper.py` | 0 | `whitepaper-validation: PASS` |
+| DOCX accessibility audit | 0 | `high: 0`, `medium: 0`, `low: 0` |
+| Markdown/DOCX/PDF parity audit | 0 | `PASS`; all checks listed below matched the current official files |
+
+The Python commands used the task-local Python 3.12 runtime. WeasyPrint-related test
+commands used `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`.
+
+## Three-representation parity
+
+The authoritative Markdown, current official DOCX, and current official PDF matched
+on all required release-review fields:
+
+- The same 19 numbered chapter headings, in the same order.
+- The same `100억 개` maximum-supply wording.
+- The same allocation rows and percentages: `40%`, `10%`, `15%`, `15%`, `8%`,
+  `7%`, `5%`, and total `100%`.
+- The same six roadmap ranges: `0–2개월`, `3–5개월`, `6–9개월`, `10–15개월`,
+  `16–21개월`, and `22–24개월`.
+- The same conditional stablecoin disclaimer: “외부 스테이블코인 결제는 신고
+  사업자 계약·법률검토·보안시험 후에만 실증한다. 이 실증의 각 결제도 사용자
+  최종 승인을 전제로 한다.”
+
+Automated source and claim validation: `PASS`. This is an automated result, not the
+human source-and-claim review gate below.
+
+## Visual review
+
+Visual gate: `NEEDS_CHANGES`.
+
+Coverage at the current official PDF hash:
+
+- Contact sheets inspected: pages 1–12, 13–24, and 25–30; every PDF page is covered.
+- Full-size pages inspected: 1, 12, 13, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+  29, and 30.
+- Table pages inspected: 12, 13, 18, 20, 21, 22, 23, 26, 27, and 28.
+- Token-allocation page inspected: 18.
+- Roadmap pages inspected: 23–25.
+- Risk pages inspected: 26–28.
+- Final-reference pages inspected: 28–30.
+
+No missing Korean glyphs, unreadable table cells, clipped body text, or missing page
+numbers were found. One pre-existing PDF pagination defect blocks a visual PASS:
+
+- On pages 18, 21, 23, 25, 27, and 29, the running-header text remains present in
+  PDF text extraction but is visually covered by continued table or list content.
+- On table-continuation pages 18, 21, 23, and 27, the continued table rises into the
+  intended top-margin/header area. Continued list content causes the corresponding
+  top-area collision on pages 25 and 29.
+- This review did not edit the out-of-scope DOCX/PDF builder or CSS. The official
+  DOCX/PDF hashes therefore remain unchanged. The builder must be corrected, the
+  artifacts rebuilt, all pages rerendered, and the visual review repeated before
+  this gate can become `PASS`.
+
+## Required human review gates
+
+These outcomes are deliberately separate from the automated checks.
+
+| Required gate | Status | Evidence / next requirement |
+|---|---|---|
+| Source and claim review | `NOT_RUN` | Independent human source/claim reviewer required |
+| Korean copyediting | `NOT_RUN` | Korean copyeditor review required |
+| Accessibility review by older and disabled reviewers | `NOT_RUN` | Representative older and disabled reviewers required |
+| Privacy and research-consent review | `NOT_RUN` | Privacy/research-consent expert review required |
+| Hospital/medical boundary review | `NOT_RUN` | Medical, hospital-integration, and clinical-boundary review required |
+| Financial/stablecoin boundary review | `NOT_RUN` | Independent finance/virtual-asset legal and operations review required |
+| Token/legal review | `NOT_RUN` | Token, securities, tax, accounting, and consumer-protection review required |
+| Executive publication approval | `NOT_RUN` | Executive approval may occur only after every prior required gate is `PASS` |
+
+No `NOT_RUN` gate is approval. Publication remains blocked until the visual gate is
+fixed and every required human gate records `PASS` with evidence.
+
+This receipt proves artifact checks only; it is not publication, legal, medical, financial, Samsung, hospital, or partner approval.
