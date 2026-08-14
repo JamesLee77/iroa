@@ -12,3 +12,12 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9"]
+
+[tool.pytest.ini_options]
+# PyMuPDF 1.28.x bundles SWIG types that emit these CPython 3.12 teardown
+# deprecations. Keep the filters exact so other DeprecationWarnings stay visible.
+filterwarnings = [
+  "ignore:builtin type SwigPyPacked has no __module__ attribute:DeprecationWarning",
+  "ignore:builtin type SwigPyObject has no __module__ attribute:DeprecationWarning",
+  "ignore:builtin type swigvarlink has no __module__ attribute:DeprecationWarning"
+]

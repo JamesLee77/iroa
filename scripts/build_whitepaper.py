@@ -576,8 +576,7 @@ def _normalize_docx_archive(path: Path) -> None:
 def _normalize_pdf(path: Path, identifier: str) -> None:
     """Remove runtime-derived tagged-table IDs from a WeasyPrint PDF."""
     normalized = path.with_suffix(".normalized.pdf")
-    pdf = pymupdf.open(path)
-    try:
+    with pymupdf.open(path) as pdf:
         stable_ids: dict[str, str] = {}
         for xref in range(1, pdf.xref_length()):
             kind, value = pdf.xref_get_key(xref, "ID")
@@ -604,8 +603,6 @@ def _normalize_pdf(path: Path, identifier: str) -> None:
             deflate_fonts=True,
             no_new_id=True,
         )
-    finally:
-        pdf.close()
 
     data = normalized.read_bytes()
     deterministic_trailer = (
@@ -637,11 +634,23 @@ def _cover_html(soup: BeautifulSoup) -> str:
     return f"<section class='cover'>{''.join(cover)}</section>{''.join(body)}"
 
 
+def _validate_top_level_nodes(soup: BeautifulSoup) -> None:
+    supported = {"h1", "h2", "h3", "p", "ul", "ol", "blockquote", "table"}
+    for node in soup.children:
+        if isinstance(node, NavigableString):
+            if str(node).strip():
+                raise ValueError("unsupported top-level Markdown/HTML node: text")
+            continue
+        if isinstance(node, Tag) and node.name not in supported:
+            raise ValueError(f"unsupported top-level Markdown/HTML node: {node.name}")
+
+
 def build(markdown_path: Path, output_dir: Path) -> tuple[Path, Path]:
-    output_dir.mkdir(parents=True, exist_ok=True)
     source = markdown_path.read_text(encoding="utf-8")
     body_html = markdown(source, extensions=["tables", "sane_lists"])
     soup = BeautifulSoup(body_html, "html.parser")
+    _validate_top_level_nodes(soup)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     document = Document()
     document.core_properties.title = TITLE
