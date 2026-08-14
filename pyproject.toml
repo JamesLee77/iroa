@@ -1,0 +1,14 @@
+[project]
+name = "modua-whitepaper"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "python-docx>=1.2,<2",
+  "weasyprint>=66,<67",
+  "markdown>=3.8,<4",
+  "beautifulsoup4>=4.13,<5",
+  "pymupdf>=1.26,<2"
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
