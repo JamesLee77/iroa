@@ -36,6 +36,70 @@ def test_accepts_complete_minimal_document(tmp_path: Path) -> None:
     sources = tmp_path / "sources.json"
     claims = tmp_path / "claims.json"
     whitepaper.write_text("# MODUA\n근거 문장 [S-001]", encoding="utf-8")
-    write_json(sources, [{"id": "S-001", "title": "Known", "url": "https://example.com"}])
-    write_json(claims, [{"claim": "근거 문장", "section": "MODUA", "source_ids": ["S-001"], "status": "supported"}])
+    write_json(sources, [{"id": "S-001", "title": "Known", "url": "https://example.com", "allowed_claim_kinds": ["known-fact"]}])
+    write_json(claims, [{"claim": "근거 문장", "section": "MODUA", "source_ids": ["S-001"], "source_uses": [{"source_id": "S-001", "claim_kind": "known-fact"}], "status": "supported"}])
     assert validate(whitepaper, sources, claims) == []
+
+
+def test_rejects_positioning_and_data_safety_variants(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(
+        "# MODUA\n삼성 공식 파트너입니다. 질병을 진단합니다. MODUA 스테이블코인을 발행합니다. "
+        "갤럭시 워치에 개인키 지갑을 제공합니다. 건강 데이터를 블록체인에 기록합니다.",
+        encoding="utf-8",
+    )
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert any("official-partner" in error for error in errors)
+    assert any("diagnostic" in error for error in errors)
+    assert any("stablecoin" in error for error in errors)
+    assert any("private-key-wallet" in error for error in errors)
+    assert any("health-data-ledger" in error for error in errors)
+
+
+def test_rejects_data_sharing_without_explicit_approval(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA\n건강 데이터를 결제 파트너와 공유합니다.", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+    errors = validate(whitepaper, sources, claims)
+    assert any("explicit-approval" in error for error in errors)
+
+
+def test_rejects_invalid_ledger_status_and_unknown_ledger_source(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [{"claim": "근거 문장", "section": "1", "source_ids": ["S-UNKNOWN"], "status": "unreviewed"}])
+    errors = validate(whitepaper, sources, claims)
+    assert any("Invalid claim status" in error for error in errors)
+    assert any("unknown source ID" in error for error in errors)
+
+
+def test_rejects_claim_kind_outside_source_ceiling(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA", encoding="utf-8")
+    write_json(sources, [{"id": "S-001", "title": "Known", "url": "https://example.com", "allowed_claim_kinds": ["population-baseline"]}])
+    write_json(claims, [{"claim": "근거 문장", "section": "1", "source_ids": ["S-001"], "source_uses": [{"source_id": "S-001", "claim_kind": "payment-capability"}], "status": "supported"}])
+    errors = validate(whitepaper, sources, claims)
+    assert any("exceeds source claim ceiling" in error for error in errors)
+
+
+def test_rejects_payment_or_data_sharing_claim_without_approval_metadata(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text("# MODUA", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [{"claim": "결제 파트너와 데이터를 공유한다.", "section": "12", "source_ids": [], "source_uses": [], "status": "conditional"}])
+    errors = validate(whitepaper, sources, claims)
+    assert any("explicit approval metadata" in error for error in errors)

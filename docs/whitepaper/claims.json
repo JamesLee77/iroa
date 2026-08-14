@@ -1,11 +1,11 @@
 [
-  {"claim":"2024년 대한민국 65세 이상 인구는 약 1,012만 명이다.","section":"3","source_ids":["S-KOSTAT-2024"],"status":"supported"},
-  {"claim":"2024년 말 등록장애인은 263만 1,356명이다.","section":"3","source_ids":["S-NRC-DISABILITY-2024"],"status":"supported"},
-  {"claim":"Samsung Health Data SDK는 걸음·수면·심박 등 선택 데이터를 읽을 수 있다.","section":"8","source_ids":["S-SAMSUNG-DATA-SDK"],"status":"supported"},
-  {"claim":"Samsung Health SDK 데이터는 진단·치료 목적이 아닌 웰니스 범위로 시작한다.","section":"8","source_ids":["S-SAMSUNG-DATA-SDK","S-SAMSUNG-SENSOR-SDK"],"status":"supported"},
-  {"claim":"KR Core V2는 FHIR R4 기반 국내 교류 상세규격이다.","section":"9","source_ids":["S-KRCORE-V2"],"status":"supported"},
-  {"claim":"국내 대상 가상자산 매매·교환·중개는 적법한 신고 사업자 경계를 확인해야 한다.","section":"12","source_ids":["S-FSC-VASP-2026"],"status":"supported"},
-  {"claim":"MODUA는 0–24개월의 여섯 단계 검증 로드맵을 따른다.","section":"17","source_ids":[],"status":"design-decision"},
-  {"claim":"외부 스테이블코인 결제는 신고 사업자 계약·법률검토·보안시험 후에만 실증한다.","section":"12","source_ids":["S-FSC-VASP-2026"],"status":"conditional"},
-  {"claim":"조건부 MODUA 토큰의 최대 공급은 100억 개이며 추가 발행하지 않는다.","section":"13","source_ids":[],"status":"conditional"}
+  {"claim":"2024년 대한민국 65세 이상 인구는 약 1,012만 명이다.","section":"3","source_ids":["S-KOSTAT-2024"],"source_uses":[{"source_id":"S-KOSTAT-2024","claim_kind":"population-baseline"}],"status":"supported"},
+  {"claim":"2024년 말 등록장애인은 263만 1,356명이다.","section":"3","source_ids":["S-NRC-DISABILITY-2024"],"source_uses":[{"source_id":"S-NRC-DISABILITY-2024","claim_kind":"registered-disability-statistics"}],"status":"supported"},
+  {"claim":"Samsung Health Data SDK는 걸음·수면·심박 등 선택 데이터를 읽을 수 있다.","section":"8","source_ids":["S-SAMSUNG-DATA-SDK"],"source_uses":[{"source_id":"S-SAMSUNG-DATA-SDK","claim_kind":"wellness-data-capability"}],"status":"supported"},
+  {"claim":"Samsung Health SDK 데이터는 진단·치료 목적이 아닌 웰니스 범위로 시작한다.","section":"8","source_ids":["S-SAMSUNG-DATA-SDK","S-SAMSUNG-SENSOR-SDK"],"source_uses":[{"source_id":"S-SAMSUNG-DATA-SDK","claim_kind":"wellness-limitation"},{"source_id":"S-SAMSUNG-SENSOR-SDK","claim_kind":"wellness-limitation"}],"status":"supported"},
+  {"claim":"KR Core V2는 FHIR R4 기반 국내 교류 상세규격이다.","section":"9","source_ids":["S-KRCORE-V2"],"source_uses":[{"source_id":"S-KRCORE-V2","claim_kind":"fhir-r4-interoperability-specification"}],"status":"supported"},
+  {"claim":"국내 대상 가상자산 매매·교환·중개는 적법한 신고 사업자 경계를 확인해야 한다.","section":"12","source_ids":["S-FSC-VASP-2026"],"source_uses":[{"source_id":"S-FSC-VASP-2026","claim_kind":"reported-provider-boundary"}],"status":"supported"},
+  {"claim":"MODUA는 0–24개월의 여섯 단계 검증 로드맵을 따른다.","section":"17","source_ids":[],"source_uses":[],"status":"design-decision"},
+  {"claim":"외부 스테이블코인 결제는 신고 사업자 계약·법률검토·보안시험 후에만 실증한다.","section":"12","source_ids":["S-FSC-VASP-2026"],"source_uses":[{"source_id":"S-FSC-VASP-2026","claim_kind":"reported-provider-boundary"}],"explicit_approval_required":true,"status":"conditional"},
+  {"claim":"조건부 MODUA 토큰의 최대 공급은 100억 개이며 추가 발행하지 않는다.","section":"13","source_ids":[],"source_uses":[],"status":"conditional"}
 ]
