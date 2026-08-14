@@ -25,6 +25,7 @@ TITLE = "MODUA Whitepaper"
 SUBJECT = "모두의 일상을 돕는 AI 생활자립·상호지원 생태계"
 OUTPUT_STEM = "MODUA_WHITEPAPER_KO"
 FIXED_TIMESTAMP = datetime(2026, 8, 14, tzinfo=timezone.utc)
+DOCUMENT_LANGUAGE = "ko-KR"
 
 # narrative_proposal, with the named modua_a4_publication and
 # large_text_a11y overrides applied explicitly.
@@ -154,6 +155,54 @@ def _set_style_font(style, *, size: float, color: RGBColor | None = None) -> Non
     fonts.set(qn("w:hAnsi"), BODY_FONT)
     fonts.set(qn("w:eastAsia"), KOREAN_FONT)
     fonts.set(qn("w:cs"), BODY_FONT)
+
+
+def _set_language(element) -> None:
+    language = element.find(qn("w:lang"))
+    if language is None:
+        language = OxmlElement("w:lang")
+        element.append(language)
+    language.set(qn("w:val"), DOCUMENT_LANGUAGE)
+    language.set(qn("w:eastAsia"), DOCUMENT_LANGUAGE)
+    language.attrib.pop(qn("w:bidi"), None)
+
+
+def _configure_language_metadata(document: DocumentObject) -> None:
+    settings = document.settings.element
+    theme_language = settings.find(qn("w:themeFontLang"))
+    if theme_language is None:
+        theme_language = OxmlElement("w:themeFontLang")
+        settings.append(theme_language)
+    theme_language.set(qn("w:val"), DOCUMENT_LANGUAGE)
+    theme_language.set(qn("w:eastAsia"), DOCUMENT_LANGUAGE)
+    theme_language.attrib.pop(qn("w:bidi"), None)
+
+    default_run_properties = document.styles.element.xpath(
+        "./w:docDefaults/w:rPrDefault/w:rPr"
+    )
+    if not default_run_properties:
+        raise RuntimeError("DOCX template is missing default run properties")
+    _set_language(default_run_properties[0])
+
+    roots = [document.element]
+    for section in document.sections:
+        roots.extend(
+            [
+                section.header._element,
+                section.first_page_header._element,
+                section.footer._element,
+                section.first_page_footer._element,
+            ]
+        )
+    seen_roots: set[int] = set()
+    for root in roots:
+        if id(root) in seen_roots:
+            continue
+        seen_roots.add(id(root))
+        for run in root.xpath(".//w:r"):
+            if run.find(qn("w:t")) is None and run.find(qn("w:instrText")) is None:
+                continue
+            _set_language(run.get_or_add_rPr())
 
 
 def _set_paragraph_border(paragraph, *, side: str, color: str, size: str) -> None:
@@ -569,7 +618,16 @@ def _normalize_docx_archive(path: Path) -> None:
             replacement.compress_type = zipfile.ZIP_DEFLATED
             replacement.external_attr = info.external_attr
             replacement.create_system = info.create_system
-            target.writestr(replacement, source.read(info.filename))
+            data = source.read(info.filename)
+            if info.filename in {"word/styles.xml", "word/stylesWithEffects.xml"}:
+                data, replacements = re.subn(
+                    rb"<w:lang\b[^>]*/>",
+                    b'<w:lang w:val="ko-KR" w:eastAsia="ko-KR"/>',
+                    data,
+                )
+                if replacements == 0:
+                    raise RuntimeError(f"missing default language metadata: {info.filename}")
+            target.writestr(replacement, data)
     os.replace(normalized, path)
 
 
@@ -662,6 +720,7 @@ def build(markdown_path: Path, output_dir: Path) -> tuple[Path, Path]:
     _configure_page(document)
     _configure_styles(document)
     _append_docx(document, soup)
+    _configure_language_metadata(document)
     docx_path = output_dir / f"{OUTPUT_STEM}.docx"
     document.save(docx_path)
     _normalize_docx_archive(docx_path)

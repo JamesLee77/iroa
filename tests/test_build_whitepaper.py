@@ -2,6 +2,8 @@ import hashlib
 from itertools import groupby
 from pathlib import Path
 import re
+import xml.etree.ElementTree as ET
+import zipfile
 
 from docx import Document
 from docx.document import Document as DocumentObject
@@ -494,3 +496,64 @@ def test_build_is_byte_reproducible(tmp_path: Path) -> None:
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     assert digest(first_docx) == digest(second_docx)
     assert digest(first_pdf) == digest(second_pdf)
+
+
+def test_committed_and_generated_docx_declare_korean_language_metadata(
+    official_artifacts: tuple[Path, Path, Path],
+) -> None:
+    _, generated_docx, _ = official_artifacts
+    committed_docx = ROOT / "docs/whitepaper/exports/MODUA_WHITEPAPER_KO.docx"
+    word_namespace = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    word = f"{{{word_namespace}}}"
+
+    for docx_path in (committed_docx, generated_docx):
+        with zipfile.ZipFile(docx_path) as archive:
+            settings = ET.fromstring(archive.read("word/settings.xml"))
+            theme_language = settings.find(f".//{word}themeFontLang")
+            assert theme_language is not None
+            assert theme_language.get(f"{word}val") == "ko-KR"
+            assert theme_language.get(f"{word}eastAsia") == "ko-KR"
+
+            for part_name in ("word/styles.xml", "word/stylesWithEffects.xml"):
+                styles = ET.fromstring(archive.read(part_name))
+                default_language = styles.find(
+                    f"./{word}docDefaults/{word}rPrDefault/{word}rPr/{word}lang"
+                )
+                assert default_language is not None
+                assert default_language.get(f"{word}val") == "ko-KR"
+                assert default_language.get(f"{word}eastAsia") == "ko-KR"
+
+            text_parts = [
+                name
+                for name in archive.namelist()
+                if name == "word/document.xml"
+                or re.fullmatch(r"word/(?:header|footer)\d+\.xml", name)
+            ]
+            assert text_parts
+            for part_name in text_parts:
+                root = ET.fromstring(archive.read(part_name))
+                text_runs = [
+                    run
+                    for run in root.iter(f"{word}r")
+                    if run.find(f"{word}t") is not None
+                    or run.find(f"{word}instrText") is not None
+                ]
+                for run in text_runs:
+                    language = run.find(f"{word}rPr/{word}lang")
+                    assert language is not None, f"missing run language in {part_name}"
+                    assert language.get(f"{word}val") == "ko-KR"
+                    assert language.get(f"{word}eastAsia") == "ko-KR"
+
+            for part_name in (
+                name
+                for name in archive.namelist()
+                if name.startswith("word/") and name.endswith(".xml")
+            ):
+                root = ET.fromstring(archive.read(part_name))
+                for element_name in ("lang", "themeFontLang"):
+                    for language in root.iter(f"{word}{element_name}"):
+                        values = {
+                            language.get(f"{word}val"),
+                            language.get(f"{word}eastAsia"),
+                        }
+                        assert not values.intersection({"en-US", "ja-JP"})

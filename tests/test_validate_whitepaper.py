@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.validate_whitepaper import validate
 
 
@@ -251,3 +253,84 @@ def test_english_hefi_disclaimer_does_not_hide_positive_assertion(tmp_path: Path
     errors = validate(whitepaper, sources, claims)
     assert sum("hefi-implementation-or-partnership" in error for error in errors) == 1
     assert any("HEFI is a partner" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    ("statement", "violation"),
+    [
+        ("삼성은 MODUA의 공식 파트너입니다.", "official-partner"),
+        ("Samsung과 MODUA는 공식 제휴를 맺었습니다.", "official-partner"),
+        ("MODUA는 스테이블코인을 만듭니다.", "stablecoin-issuance-custody-exchange"),
+        ("건강정보를 블록체인에 저장합니다.", "health-data-ledger"),
+        ("대화 데이터를 블록체인에 기록합니다.", "health-data-ledger"),
+    ],
+)
+def test_rejects_ordinary_prohibited_claim_variants(
+    tmp_path: Path, statement: str, violation: str
+) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(f"# MODUA\n{statement}", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+
+    errors = validate(whitepaper, sources, claims)
+
+    assert any(f"Safety violation ({violation})" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "삼성은 MODUA의 공식 파트너가 아닙니다.",
+        "MODUA는 삼성의 공식 파트너가 아니며 관련 보증을 제공하지 않습니다.",
+        "Samsung과 MODUA는 공식 제휴를 맺지 않습니다.",
+        "HEFI는 MODUA의 파트너가 아닙니다.",
+        "MODUA는 스테이블코인을 만들지 않습니다.",
+        "MODUA는 스테이블코인을 발행·수탁·교환하지 않고 자산을 보관하지 않습니다.",
+        "건강정보를 블록체인에 저장하지 않습니다.",
+        "대화 데이터를 블록체인에 기록하지 않습니다.",
+    ],
+)
+def test_accepts_local_negative_disclaimers_for_new_policy_variants(
+    tmp_path: Path, statement: str
+) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(f"# MODUA\n{statement}", encoding="utf-8")
+    write_json(sources, [])
+    write_json(claims, [])
+
+    assert validate(whitepaper, sources, claims) == []
+
+
+def test_accepts_explicit_local_consent_for_sensitive_data_sharing(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(
+        "# MODUA\n건강 데이터 공유는 사용자 명시적 동의 후에만 가능합니다.",
+        encoding="utf-8",
+    )
+    write_json(sources, [])
+    write_json(claims, [])
+
+    assert validate(whitepaper, sources, claims) == []
+
+
+def test_rejects_unqualified_local_consent_for_sensitive_data_sharing(tmp_path: Path) -> None:
+    whitepaper = tmp_path / "whitepaper.md"
+    sources = tmp_path / "sources.json"
+    claims = tmp_path / "claims.json"
+    whitepaper.write_text(
+        "# MODUA\n건강 데이터 공유는 사용자 동의 후에 가능합니다.",
+        encoding="utf-8",
+    )
+    write_json(sources, [])
+    write_json(claims, [])
+
+    errors = validate(whitepaper, sources, claims)
+
+    assert any("explicit-approval-required" in error for error in errors)
