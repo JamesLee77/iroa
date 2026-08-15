@@ -112,6 +112,62 @@
     "allowed_claim_kinds": ["reported-provider-enforcement", "reported-provider-boundary"]
   },
   {
+    "id": "S-MOHW-LONELY-DEATH-PLAN",
+    "title": "제1차 고독사 예방 기본계획(2023~2027년)",
+    "publisher": "보건복지부",
+    "url": "https://www.mohw.go.kr/board.es?act=view&bid=0027&list_no=376315&mid=a10503010100",
+    "claim_ceiling": "고독사 예방 정책의 사회적 연결·일상문제 지원 방향",
+    "allowed_claim_kinds": ["social-isolation-policy", "human-connection-policy"]
+  },
+  {
+    "id": "S-JAMDA-SOCIAL-ROBOTS-2024",
+    "title": "The Effect of Social Robots on Depression and Loneliness for Older Residents in Long-Term Care Facilities",
+    "publisher": "Journal of the American Medical Directors Association / PubMed",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38614134/",
+    "claim_ceiling": "장기요양시설 고령자 대상 8개 연구 메타분석에서 관찰된 우울·외로움 개선 가능성",
+    "allowed_claim_kinds": ["social-robot-potential-benefit", "limited-setting-evidence"]
+  },
+  {
+    "id": "S-JKGN-COMMUNITY-ROBOT-2024",
+    "title": "Effectiveness of artificial intelligence robot interventions on psychological health in community-dwelling older adults",
+    "publisher": "Journal of Korean Gerontological Nursing / PMC",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12384341/",
+    "claim_ceiling": "지역사회 거주 고령자 대상 AI 로봇 연구의 심리적 결과가 지표별로 혼재함",
+    "allowed_claim_kinds": ["social-robot-mixed-evidence", "research-gap"]
+  },
+  {
+    "id": "S-W3C-VC-20",
+    "title": "Verifiable Credentials Data Model v2.0",
+    "publisher": "W3C",
+    "url": "https://www.w3.org/TR/vc-data-model-2.0/",
+    "claim_ceiling": "암호학적으로 안전하고 개인정보를 존중하며 기계가 검증 가능한 자격증명 데이터 모델",
+    "allowed_claim_kinds": ["verifiable-credential-standard", "privacy-respecting-identity"]
+  },
+  {
+    "id": "S-IETF-RATS-9334",
+    "title": "RFC 9334: Remote ATtestation procedureS Architecture",
+    "publisher": "IETF / RFC Editor",
+    "url": "https://www.rfc-editor.org/rfc/rfc9334.html",
+    "claim_ceiling": "원격 증명의 역할·개념·정보흐름을 정의한 아키텍처",
+    "allowed_claim_kinds": ["remote-attestation-architecture"]
+  },
+  {
+    "id": "S-ISO-13482-2014",
+    "title": "ISO 13482:2014 — Safety requirements for personal care robots",
+    "publisher": "ISO",
+    "url": "https://www.iso.org/standard/53820.html",
+    "claim_ceiling": "개인 돌봄 로봇의 안전 설계·보호조치·사용정보 요구사항과 적용 범위",
+    "allowed_claim_kinds": ["personal-care-robot-safety"]
+  },
+  {
+    "id": "S-DEEPMIND-ROBOTICS-ONDEVICE-2025",
+    "title": "Gemini Robotics On-Device brings AI to local robotic devices",
+    "publisher": "Google DeepMind",
+    "url": "https://deepmind.google/blog/gemini-robotics-on-device-brings-ai-to-local-robotic-devices/",
+    "claim_ceiling": "로봇용 시각-언어-행동 모델을 로컬 기기에서 실행하는 공식 기술 방향",
+    "allowed_claim_kinds": ["on-device-robotics-trend"]
+  },
+  {
     "id": "S-HEFI-KO-REF",
     "title": "HEFI 한국어 백서",
     "publisher": "HEFI reference file",

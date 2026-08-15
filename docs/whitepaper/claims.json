@@ -132,6 +132,89 @@
     "status": "supported"
   },
   {
+    "id": "C-MOHW-SOCIAL-CONNECTION",
+    "claim": "보건복지부의 제1차 고독사 예방 기본계획은 위험군 발굴과 함께 사회적 연결 및 건강·가사 등 일상문제 지원을 추진과제로 둔다.",
+    "section": "3",
+    "source_ids": ["S-MOHW-LONELY-DEATH-PLAN"],
+    "source_uses": [
+      {"source_id": "S-MOHW-LONELY-DEATH-PLAN", "claim_kind": "social-isolation-policy"},
+      {"source_id": "S-MOHW-LONELY-DEATH-PLAN", "claim_kind": "human-connection-policy"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-SOCIAL-ROBOT-EVIDENCE-BOUNDARY",
+    "claim": "고령자 대상 소셜·AI 로봇 연구는 일부 우울·외로움 개선 가능성을 보고하지만 대상·환경·지표별 결과가 달라 장기 효과를 단정할 수 없다.",
+    "section": "3",
+    "source_ids": ["S-JAMDA-SOCIAL-ROBOTS-2024", "S-JKGN-COMMUNITY-ROBOT-2024"],
+    "source_uses": [
+      {"source_id": "S-JAMDA-SOCIAL-ROBOTS-2024", "claim_kind": "social-robot-potential-benefit"},
+      {"source_id": "S-JAMDA-SOCIAL-ROBOTS-2024", "claim_kind": "limited-setting-evidence"},
+      {"source_id": "S-JKGN-COMMUNITY-ROBOT-2024", "claim_kind": "social-robot-mixed-evidence"},
+      {"source_id": "S-JKGN-COMMUNITY-ROBOT-2024", "claim_kind": "research-gap"}
+    ],
+    "status": "supported-with-limitations"
+  },
+  {
+    "id": "C-W3C-VC-20",
+    "claim": "W3C Verifiable Credentials Data Model v2.0은 암호학적으로 안전하고 개인정보를 존중하며 기계가 검증할 수 있는 자격증명 구조를 제공한다.",
+    "section": "11",
+    "source_ids": ["S-W3C-VC-20"],
+    "source_uses": [
+      {"source_id": "S-W3C-VC-20", "claim_kind": "verifiable-credential-standard"},
+      {"source_id": "S-W3C-VC-20", "claim_kind": "privacy-respecting-identity"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-IETF-RATS-ARCHITECTURE",
+    "claim": "IETF RFC 9334는 원격 실행환경의 신뢰 상태를 증명하기 위한 역할과 정보 흐름을 정의한다.",
+    "section": "11",
+    "source_ids": ["S-IETF-RATS-9334"],
+    "source_uses": [{"source_id": "S-IETF-RATS-9334", "claim_kind": "remote-attestation-architecture"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-ISO-PERSONAL-CARE-ROBOT-SAFETY",
+    "claim": "ISO 13482:2014는 개인 돌봄 로봇의 안전 설계·보호조치·사용정보 요구사항을 다룬다.",
+    "section": "8",
+    "source_ids": ["S-ISO-13482-2014"],
+    "source_uses": [{"source_id": "S-ISO-13482-2014", "claim_kind": "personal-care-robot-safety"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-ONDEVICE-ROBOTICS-TREND",
+    "claim": "Google DeepMind의 2025년 공식 공개는 로봇용 시각-언어-행동 모델을 로컬 기기에서 실행하는 기술 방향을 보여준다.",
+    "section": "11",
+    "source_ids": ["S-DEEPMIND-ROBOTICS-ONDEVICE-2025"],
+    "source_uses": [{"source_id": "S-DEEPMIND-ROBOTICS-ONDEVICE-2025", "claim_kind": "on-device-robotics-trend"}],
+    "status": "supported-as-trend"
+  },
+  {
+    "id": "C-MODUA-COMPANION-BOUNDARY",
+    "claim": "MODUA 반려 친구는 고독사를 예측하거나 예방을 보장하지 않고 안부 확인과 사람 연결의 효과·오경보·사용자 통제를 검증한다.",
+    "section": "4",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "design-decision"
+  },
+  {
+    "id": "C-MODUA-SECURE-NODE-DEFAULT",
+    "claim": "MODUA는 모바일·개인 PC가 없거나 장시간·고성능 실행이 필요한 경우 관리형 보안 노드를 기본 실행환경으로 사용하고 개인 PC는 선택적 보조 노드로 둔다.",
+    "section": "8",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "design-decision"
+  },
+  {
+    "id": "C-MODUA-NO-PII-ONCHAIN",
+    "claim": "MODUA는 건강·장애·대화·영상·위치·실명 신원 원문을 블록체인에 기록하지 않고 조건부로 노드 상태·작업·보상 무결성 증명만 사용한다.",
+    "section": "12",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "design-decision"
+  },
+  {
     "id": "C-MODUA-NO-STABLECOIN",
     "claim": "MODUA는 스테이블코인을 발행하지 않으며 외부 스테이블코인 결제도 MVP의 핵심 기능으로 두지 않는다.",
     "section": "16",
