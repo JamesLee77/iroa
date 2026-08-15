@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">IROA 열린 연결 심볼</title>
+  <desc id="desc">사용자를 가두지 않는 열린 고리와 행동이 시작되는 코랄색 연결점.</desc>
+  <path d="M118 39A58 58 0 1 0 122 119" fill="none" stroke="#16263D" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="121" cy="39" r="12" fill="#F06D5E"/>
+  <circle cx="124" cy="120" r="8" fill="#3D8B83"/>
+</svg>

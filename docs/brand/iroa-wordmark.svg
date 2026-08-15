@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="title desc">
+  <title id="title">iroa.ai 워드마크</title>
+  <desc id="desc">짙은 네이비 소문자 이로아와 청록색 닷 에이아이로 구성된 워드마크. 열린 오의 코랄 점은 사람과 에이전트의 연결을 상징한다.</desc>
+  <g fill="none" stroke="#16263D" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40 76V144"/>
+    <path d="M105 144V78M105 91C118 66 144 62 162 77"/>
+    <circle cx="235" cy="108" r="49"/>
+    <circle cx="368" cy="108" r="42"/>
+    <path d="M410 80V144"/>
+  </g>
+  <circle cx="40" cy="36" r="15" fill="#F06D5E"/>
+  <circle cx="270" cy="73" r="11" fill="#F06D5E"/>
+  <circle cx="462" cy="139" r="7" fill="#F06D5E"/>
+  <g fill="none" stroke="#3D8B83" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="514" cy="113" r="28"/>
+    <path d="M542 89V142"/>
+    <path d="M588 91V142"/>
+  </g>
+  <circle cx="588" cy="66" r="8" fill="#3D8B83"/>
+</svg>

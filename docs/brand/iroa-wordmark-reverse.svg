@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="title desc">
+  <title id="title">iroa.ai 역상 워드마크</title>
+  <desc id="desc">어두운 배경에 사용하는 흰색 이로아와 밝은 청록색 닷 에이아이 워드마크.</desc>
+  <rect width="640" height="180" rx="24" fill="#16263D"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40 76V144"/>
+    <path d="M105 144V78M105 91C118 66 144 62 162 77"/>
+    <circle cx="235" cy="108" r="49"/>
+    <circle cx="368" cy="108" r="42"/>
+    <path d="M410 80V144"/>
+  </g>
+  <circle cx="40" cy="36" r="15" fill="#F06D5E"/>
+  <circle cx="270" cy="73" r="11" fill="#F06D5E"/>
+  <circle cx="462" cy="139" r="7" fill="#F06D5E"/>
+  <g fill="none" stroke="#83CDC4" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="514" cy="113" r="28"/>
+    <path d="M542 89V142"/>
+    <path d="M588 91V142"/>
+  </g>
+  <circle cx="588" cy="66" r="8" fill="#83CDC4"/>
+</svg>
