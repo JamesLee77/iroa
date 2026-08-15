@@ -4,4 +4,3 @@ __pycache__/
 .pytest_cache/
 .superpowers/
 .worktrees/
-artifacts/whitepaper-qa/pages/
