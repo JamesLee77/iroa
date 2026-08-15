@@ -128,7 +128,7 @@ IROA는 유아적 캐릭터, 과장된 미래주의, 암호화폐 시각 언어,
 - AI가 사람을 대신해 모든 결정을 내리는 장면
 - 사진 속 인물이 IROA를 지지한다고 암시하는 문구
 
-사진 출처와 대체 텍스트는 `assets/photos/PHOTO-MANIFEST.md`에서 관리한다.
+사진 출처와 대체 텍스트는 [사진 출처 목록](assets/photos/PHOTO-MANIFEST.md)에서 관리한다.
 
 ## 8. 제품 이름
 
