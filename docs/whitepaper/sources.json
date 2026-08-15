@@ -1,12 +1,130 @@
 [
-  {"id":"S-KOSTAT-2024","title":"2024 인구주택총조사 등록센서스 결과","publisher":"통계청","url":"https://kostat.go.kr/boardDownload.es?bid=203&list_no=437767&seq=3","claim_ceiling":"Population baseline only","allowed_claim_kinds":["population-baseline"]},
-  {"id":"S-NRC-DISABILITY-2024","title":"2024년도 등록장애인 현황","publisher":"보건복지부·국립재활원","url":"https://www.nrc.go.kr/portal/board/boardView.do?bn=qnaView&board_id=NRC_NOTICE_BOARD&fno=39&menu_cd=09_01_00_11&no=23285","claim_ceiling":"Registered disability statistics only","allowed_claim_kinds":["registered-disability-statistics"]},
-  {"id":"S-SAMSUNG-DATA-SDK","title":"Samsung Health Data SDK","publisher":"Samsung Developer","url":"https://developer.samsung.com/health/data/overview.html","claim_ceiling":"Supported data and wellness limitation","allowed_claim_kinds":["wellness-data-capability","wellness-limitation"]},
-  {"id":"S-SAMSUNG-SENSOR-SDK","title":"Samsung Health Sensor SDK","publisher":"Samsung Developer","url":"https://developer.samsung.com/health/sensor/overview.html","claim_ceiling":"Sensor capability and device support only","allowed_claim_kinds":["sensor-capability","wellness-limitation"]},
-  {"id":"S-SAMSUNG-WATCH-PAY","title":"How to Pay Using Samsung Wallet on Galaxy Watch","publisher":"Samsung Newsroom","url":"https://news.samsung.com/us/samsung-how-pay-with-galaxy-watch/","claim_ceiling":"Compatible card payment only","allowed_claim_kinds":["compatible-card-payment"]},
-  {"id":"S-MOHW-MYHEALTHWAY","title":"건강정보 고속도로 본격 가동","publisher":"보건복지부","url":"https://www.mohw.go.kr/board.es?act=view&bid=0027&cg_code=&list_no=378308&mid=a10503010300&tag=","claim_ceiling":"Consented health-data exchange policy","allowed_claim_kinds":["consented-health-data-exchange-policy"]},
-  {"id":"S-KRCORE-V2","title":"KR Core Implementation Guide v2.0.0","publisher":"HL7 Korea","url":"https://www.hl7korea.or.kr/fhir/krcore/STU2/","claim_ceiling":"FHIR R4 Korean interoperability specification","allowed_claim_kinds":["fhir-r4-interoperability-specification"]},
-  {"id":"S-FSC-VASP-2026","title":"미신고 가상자산사업자 이용 경고","publisher":"금융위원회","url":"https://www.fsc.go.kr/po010103/87177","claim_ceiling":"Reported-provider requirement and enforcement warning","allowed_claim_kinds":["reported-provider-enforcement","reported-provider-boundary"]},
-  {"id":"S-HEFI-KO-REF","title":"HEFI 한국어 백서","publisher":"HEFI reference file","url":"../hefi/docs/whitepaper/240503_HeFi_백서_한글★.pdf","claim_ceiling":"Feature inspiration only; no implementation proof","allowed_claim_kinds":["feature-inspiration"]},
-  {"id":"S-HEFI-EN-REF","title":"HEFI English White Paper","publisher":"HEFI reference file","url":"../hefi/docs/whitepaper/HeFi White Paper(ENG) 20230711_purple.docx","claim_ceiling":"Feature inspiration only; no implementation proof","allowed_claim_kinds":["feature-inspiration"]}
+  {
+    "id": "S-KOSTAT-ELDERLY-2024",
+    "title": "2024 고령자 통계",
+    "publisher": "통계청",
+    "url": "https://kostat.go.kr/boardDownload.es?bid=203&list_no=437767&seq=3",
+    "claim_ceiling": "고령인구와 관련 사회지표의 공식 통계",
+    "allowed_claim_kinds": ["elderly-population-baseline"]
+  },
+  {
+    "id": "S-NRC-DISABILITY-2024",
+    "title": "장애인 건강보건통계",
+    "publisher": "국립재활원",
+    "url": "https://www.nrc.go.kr/portal/board/boardView.do?bn=qnaView&board_id=NRC_NOTICE_BOARD&fno=39&menu_cd=09_01_00_11&no=23285",
+    "claim_ceiling": "장애인의 건강과 의료이용 관련 공식 통계",
+    "allowed_claim_kinds": ["disability-health-statistics"]
+  },
+  {
+    "id": "S-NIA-DIGITAL-DIVIDE-2025",
+    "title": "2025 디지털정보격차 실태조사",
+    "publisher": "한국지능정보사회진흥원",
+    "url": "https://www.nia.or.kr/site/nia_kor/ex/bbs/List.do?cbIdx=81623",
+    "claim_ceiling": "고령층·장애인의 디지털 접근 및 AI 서비스 조사 주제",
+    "allowed_claim_kinds": ["digital-divide-research-scope"]
+  },
+  {
+    "id": "S-OPENAI-COMPUTER-USE",
+    "title": "Computer Use",
+    "publisher": "OpenAI Developers",
+    "url": "https://developers.openai.com/api/docs/guides/tools-computer-use",
+    "claim_ceiling": "화면 기반 소프트웨어 조작 기능과 공식 안전 권고",
+    "allowed_claim_kinds": ["computer-use-capability", "computer-use-safety"]
+  },
+  {
+    "id": "S-APPLE-APP-INTENTS",
+    "title": "App Intents",
+    "publisher": "Apple Developer",
+    "url": "https://developer.apple.com/documentation/appintents",
+    "claim_ceiling": "앱 기능을 Siri·Shortcuts·시스템에 노출하는 공식 프레임워크",
+    "allowed_claim_kinds": ["mobile-official-action-interface"]
+  },
+  {
+    "id": "S-ANDROID-APPFUNCTIONS",
+    "title": "AppFunctions",
+    "publisher": "Android Developers",
+    "url": "https://developer.android.com/ai/appfunctions?hl=ko",
+    "claim_ceiling": "Android 16 이상 실험적 프리뷰의 앱 기능 노출 방식",
+    "allowed_claim_kinds": ["mobile-official-action-interface", "experimental-preview-status"]
+  },
+  {
+    "id": "S-SAMSUNG-DATA-SDK",
+    "title": "Samsung Health Data SDK Introduction",
+    "publisher": "Samsung Developer",
+    "url": "https://developer.samsung.com/health/data/guide/introduction.html",
+    "claim_ceiling": "지원 데이터와 웰니스 용도 제한",
+    "allowed_claim_kinds": ["wellness-data-capability", "wellness-limitation"]
+  },
+  {
+    "id": "S-SAMSUNG-SENSOR-SDK",
+    "title": "Samsung Health Sensor SDK",
+    "publisher": "Samsung Developer",
+    "url": "https://developer.samsung.com/health/sensor/overview.html",
+    "claim_ceiling": "지원 기기 센서 기능과 웰니스 용도 제한",
+    "allowed_claim_kinds": ["sensor-capability", "wellness-limitation"]
+  },
+  {
+    "id": "S-SAMSUNG-WATCH-PAY",
+    "title": "How to Pay Using Samsung Wallet on Galaxy Watch",
+    "publisher": "Samsung Newsroom",
+    "url": "https://news.samsung.com/us/samsung-how-pay-with-galaxy-watch/",
+    "claim_ceiling": "호환 카드 기반 Galaxy Watch 결제 기능",
+    "allowed_claim_kinds": ["compatible-card-payment"]
+  },
+  {
+    "id": "S-PIPC-GENAI-PRIVACY-2025",
+    "title": "생성형 AI 개발·활용을 위한 개인정보 처리 안내서",
+    "publisher": "개인정보보호위원회",
+    "url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS074&nttId=11410",
+    "claim_ceiling": "생성형 AI 전 생애주기 개인정보 보호와 데이터 주체 권리",
+    "allowed_claim_kinds": ["ai-privacy-lifecycle", "data-subject-rights"]
+  },
+  {
+    "id": "S-PIPC-PRIVACY-PLAN-2026",
+    "title": "제3차 개인정보 보호 기본계획",
+    "publisher": "개인정보보호위원회",
+    "url": "https://www.pipc.go.kr/np/cop/bbs/selectBoardArticle.do?bbsId=BS074&mCode=C010010000&nttId=12228",
+    "claim_ceiling": "Agentic AI·피지컬 AI 관련 위험비례 개인정보 보호 정책 방향",
+    "allowed_claim_kinds": ["agentic-ai-privacy-policy", "risk-proportional-protection"]
+  },
+  {
+    "id": "S-MOHW-MYHEALTHWAY",
+    "title": "건강정보 고속도로 본격 가동",
+    "publisher": "보건복지부",
+    "url": "https://www.mohw.go.kr/board.es?act=view&bid=0027&cg_code=&list_no=378308&mid=a10503010300&tag=",
+    "claim_ceiling": "본인 건강정보 조회·활용을 위한 국가 정책과 기반",
+    "allowed_claim_kinds": ["consented-health-data-exchange-policy"]
+  },
+  {
+    "id": "S-KRCORE-V2",
+    "title": "KR Core Implementation Guide v2.0.0",
+    "publisher": "HL7 Korea",
+    "url": "https://www.hl7korea.or.kr/fhir/krcore/STU2/",
+    "claim_ceiling": "FHIR R4 기반 국내 교류 상세규격",
+    "allowed_claim_kinds": ["fhir-r4-interoperability-specification"]
+  },
+  {
+    "id": "S-FSC-VASP-WARNING",
+    "title": "미신고 가상자산사업자 이용 경고",
+    "publisher": "금융위원회",
+    "url": "https://www.fsc.go.kr/po010103/87177",
+    "claim_ceiling": "미신고 가상자산사업자 이용 위험과 신고 사업자 경계",
+    "allowed_claim_kinds": ["reported-provider-enforcement", "reported-provider-boundary"]
+  },
+  {
+    "id": "S-HEFI-KO-REF",
+    "title": "HEFI 한국어 백서",
+    "publisher": "HEFI reference file",
+    "url": "../hefi/docs/whitepaper/240503_HeFi_백서_한글★.pdf",
+    "claim_ceiling": "기능 아이디어 참고만 가능하며 MODUA 구현·제휴·감사의 증거가 아님",
+    "allowed_claim_kinds": ["feature-inspiration"]
+  },
+  {
+    "id": "S-HEFI-EN-REF",
+    "title": "HEFI English White Paper",
+    "publisher": "HEFI reference file",
+    "url": "../hefi/docs/whitepaper/HeFi White Paper(ENG) 20230711_purple.docx",
+    "claim_ceiling": "기능 아이디어 참고만 가능하며 MODUA 구현·제휴·감사의 증거가 아님",
+    "allowed_claim_kinds": ["feature-inspiration"]
+  }
 ]

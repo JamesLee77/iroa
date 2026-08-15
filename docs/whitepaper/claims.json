@@ -1,15 +1,169 @@
 [
-  {"id":"C-KOSTAT-2024","claim":"2024년 대한민국 65세 이상 인구는 약 1,012만 명이다.","section":"3","source_ids":["S-KOSTAT-2024"],"source_uses":[{"source_id":"S-KOSTAT-2024","claim_kind":"population-baseline"}],"status":"supported"},
-  {"id":"C-NRC-DISABILITY-2024","claim":"2024년 말 등록장애인은 263만 1,356명이다.","section":"3","source_ids":["S-NRC-DISABILITY-2024"],"source_uses":[{"source_id":"S-NRC-DISABILITY-2024","claim_kind":"registered-disability-statistics"}],"status":"supported"},
-  {"id":"C-NRC-DISABILITY-60PLUS-2024","claim":"2024년 말 60세 이상 등록장애인은 166만 1,472명이다.","section":"3","source_ids":["S-NRC-DISABILITY-2024"],"source_uses":[{"source_id":"S-NRC-DISABILITY-2024","claim_kind":"registered-disability-statistics"}],"status":"supported"},
-  {"id":"C-SAMSUNG-DATA-CAPABILITY","claim":"Samsung Health Data SDK는 걸음·수면·심박 등 선택 데이터를 읽을 수 있다.","section":"8","source_ids":["S-SAMSUNG-DATA-SDK"],"source_uses":[{"source_id":"S-SAMSUNG-DATA-SDK","claim_kind":"wellness-data-capability"}],"status":"supported"},
-  {"id":"C-SAMSUNG-SENSOR-CAPABILITY","claim":"Samsung Health Sensor SDK는 지원되는 기기에서 센서 측정값을 읽는 기능을 제공한다.","section":"8","source_ids":["S-SAMSUNG-SENSOR-SDK"],"source_uses":[{"source_id":"S-SAMSUNG-SENSOR-SDK","claim_kind":"sensor-capability"}],"status":"supported"},
-  {"id":"C-SAMSUNG-WELLNESS-LIMIT","claim":"Samsung Health SDK 데이터는 진단·치료 목적이 아닌 웰니스 범위로 시작한다.","section":"8","source_ids":["S-SAMSUNG-DATA-SDK","S-SAMSUNG-SENSOR-SDK"],"source_uses":[{"source_id":"S-SAMSUNG-DATA-SDK","claim_kind":"wellness-limitation"},{"source_id":"S-SAMSUNG-SENSOR-SDK","claim_kind":"wellness-limitation"}],"status":"supported"},
-  {"id":"C-SAMSUNG-WATCH-CARD-PAYMENT","claim":"Samsung Wallet의 Galaxy Watch 결제는 등록된 호환 카드를 지원한다.","section":"12","source_ids":["S-SAMSUNG-WATCH-PAY"],"source_uses":[{"source_id":"S-SAMSUNG-WATCH-PAY","claim_kind":"compatible-card-payment"}],"explicit_approval_required":true,"status":"supported"},
-  {"id":"C-MOHW-CONSENTED-HEALTH-EXCHANGE","claim":"건강정보 고속도로는 사용자 동의에 따른 건강정보 교류 정책이다.","section":"9","source_ids":["S-MOHW-MYHEALTHWAY"],"source_uses":[{"source_id":"S-MOHW-MYHEALTHWAY","claim_kind":"consented-health-data-exchange-policy"}],"status":"supported"},
-  {"id":"C-KRCORE-FHIR-R4","claim":"KR Core V2는 FHIR R4 기반 국내 교류 상세규격이다.","section":"9","source_ids":["S-KRCORE-V2"],"source_uses":[{"source_id":"S-KRCORE-V2","claim_kind":"fhir-r4-interoperability-specification"}],"status":"supported"},
-  {"id":"C-FSC-REPORTED-PROVIDER","claim":"국내 대상 가상자산 매매·교환·중개는 적법한 신고 사업자 경계를 확인해야 한다.","section":"12","source_ids":["S-FSC-VASP-2026"],"source_uses":[{"source_id":"S-FSC-VASP-2026","claim_kind":"reported-provider-boundary"}],"status":"supported"},
-  {"id":"C-ROADMAP-0-24","claim":"MODUA는 0–24개월의 여섯 단계 검증 로드맵을 따른다.","section":"17","source_ids":[],"source_uses":[],"status":"design-decision"},
-  {"id":"C-STABLECOIN-CONDITIONAL","claim":"외부 스테이블코인 결제는 신고 사업자 계약·법률검토·보안시험 후에만 실증한다.","section":"12","source_ids":[],"source_uses":[],"explicit_approval_required":true,"status":"conditional"},
-  {"id":"C-MODUA-TOKEN-CONDITIONAL","claim":"조건부 MODUA 토큰의 최대 공급은 100억 개이며 추가 발행하지 않는다.","section":"13","source_ids":[],"source_uses":[],"status":"conditional"}
+  {
+    "id": "C-KOSTAT-ELDERLY-2024",
+    "claim": "통계청의 2024 고령자 통계는 고령인구 증가와 건강·소득·사회참여 관련 지표를 제시한다.",
+    "section": "3",
+    "source_ids": ["S-KOSTAT-ELDERLY-2024"],
+    "source_uses": [{"source_id": "S-KOSTAT-ELDERLY-2024", "claim_kind": "elderly-population-baseline"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-NRC-DISABILITY-HEALTH",
+    "claim": "국립재활원의 장애인 건강보건통계는 장애인의 건강관리와 의료이용을 별도로 다룬다.",
+    "section": "3",
+    "source_ids": ["S-NRC-DISABILITY-2024"],
+    "source_uses": [{"source_id": "S-NRC-DISABILITY-2024", "claim_kind": "disability-health-statistics"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-NIA-DIGITAL-AI-SCOPE",
+    "claim": "NIA의 2025 디지털정보격차 조사는 고령층·장애인과 AI 서비스 관련 주제를 다룬다.",
+    "section": "3",
+    "source_ids": ["S-NIA-DIGITAL-DIVIDE-2025"],
+    "source_uses": [{"source_id": "S-NIA-DIGITAL-DIVIDE-2025", "claim_kind": "digital-divide-research-scope"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-COMPUTER-USE-CAPABILITY",
+    "claim": "Computer Use는 모델이 화면을 보고 사용자 인터페이스를 조작하게 할 수 있다.",
+    "section": "5",
+    "source_ids": ["S-OPENAI-COMPUTER-USE"],
+    "source_uses": [{"source_id": "S-OPENAI-COMPUTER-USE", "claim_kind": "computer-use-capability"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-COMPUTER-USE-SAFETY",
+    "claim": "공식 Computer Use 가이드는 격리된 환경과 고위험 행동의 사람 개입을 권고한다.",
+    "section": "5",
+    "source_ids": ["S-OPENAI-COMPUTER-USE"],
+    "source_uses": [{"source_id": "S-OPENAI-COMPUTER-USE", "claim_kind": "computer-use-safety"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-APPLE-APP-INTENTS",
+    "claim": "Apple App Intents는 앱의 동작을 Siri·Shortcuts와 시스템 경험에 노출하는 공식 수단이다.",
+    "section": "5",
+    "source_ids": ["S-APPLE-APP-INTENTS"],
+    "source_uses": [{"source_id": "S-APPLE-APP-INTENTS", "claim_kind": "mobile-official-action-interface"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-ANDROID-APPFUNCTIONS",
+    "claim": "Android AppFunctions는 Android 16 이상을 대상으로 하는 실험적 프리뷰이므로 MODUA MVP의 필수 전제가 아니다.",
+    "section": "5",
+    "source_ids": ["S-ANDROID-APPFUNCTIONS"],
+    "source_uses": [
+      {"source_id": "S-ANDROID-APPFUNCTIONS", "claim_kind": "mobile-official-action-interface"},
+      {"source_id": "S-ANDROID-APPFUNCTIONS", "claim_kind": "experimental-preview-status"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-SAMSUNG-DATA-CAPABILITY",
+    "claim": "Samsung Health Data SDK는 사용자의 동의 아래 걸음·수면·심박 등 선택 데이터를 활용할 수 있게 한다.",
+    "section": "7",
+    "source_ids": ["S-SAMSUNG-DATA-SDK"],
+    "source_uses": [{"source_id": "S-SAMSUNG-DATA-SDK", "claim_kind": "wellness-data-capability"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-SAMSUNG-WELLNESS-LIMIT",
+    "claim": "Samsung Health SDK 데이터는 진단·치료 목적이 아닌 웰니스 범위에서 사용해야 한다.",
+    "section": "7",
+    "source_ids": ["S-SAMSUNG-DATA-SDK", "S-SAMSUNG-SENSOR-SDK"],
+    "source_uses": [
+      {"source_id": "S-SAMSUNG-DATA-SDK", "claim_kind": "wellness-limitation"},
+      {"source_id": "S-SAMSUNG-SENSOR-SDK", "claim_kind": "wellness-limitation"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-SAMSUNG-WATCH-CARD-PAYMENT",
+    "claim": "Samsung Wallet의 Galaxy Watch 결제는 호환 카드 기반의 기존 결제수단이다.",
+    "section": "7",
+    "source_ids": ["S-SAMSUNG-WATCH-PAY"],
+    "source_uses": [{"source_id": "S-SAMSUNG-WATCH-PAY", "claim_kind": "compatible-card-payment"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-PIPC-AI-PRIVACY-LIFECYCLE",
+    "claim": "개인정보보호위원회는 생성형 AI 전 생애주기 보호조치와 데이터 주체 권리를 안내한다.",
+    "section": "12",
+    "source_ids": ["S-PIPC-GENAI-PRIVACY-2025"],
+    "source_uses": [
+      {"source_id": "S-PIPC-GENAI-PRIVACY-2025", "claim_kind": "ai-privacy-lifecycle"},
+      {"source_id": "S-PIPC-GENAI-PRIVACY-2025", "claim_kind": "data-subject-rights"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-PIPC-AGENTIC-AI",
+    "claim": "제3차 개인정보 보호 기본계획은 Agentic AI·피지컬 AI에 대한 책임과 위험비례 보호 방향을 포함한다.",
+    "section": "12",
+    "source_ids": ["S-PIPC-PRIVACY-PLAN-2026"],
+    "source_uses": [
+      {"source_id": "S-PIPC-PRIVACY-PLAN-2026", "claim_kind": "agentic-ai-privacy-policy"},
+      {"source_id": "S-PIPC-PRIVACY-PLAN-2026", "claim_kind": "risk-proportional-protection"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-MOHW-CONSENTED-HEALTH-EXCHANGE",
+    "claim": "건강정보 고속도로는 본인이 자신의 건강정보를 조회하고 원하는 곳에 활용하도록 하는 국가 기반을 지향한다.",
+    "section": "13",
+    "source_ids": ["S-MOHW-MYHEALTHWAY"],
+    "source_uses": [{"source_id": "S-MOHW-MYHEALTHWAY", "claim_kind": "consented-health-data-exchange-policy"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-KRCORE-FHIR-R4",
+    "claim": "KR Core V2는 FHIR R4 기반 국내 교류 상세규격이다.",
+    "section": "13",
+    "source_ids": ["S-KRCORE-V2"],
+    "source_uses": [{"source_id": "S-KRCORE-V2", "claim_kind": "fhir-r4-interoperability-specification"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-FSC-REPORTED-PROVIDER",
+    "claim": "가상자산 관련 서비스를 검토할 때는 신고 사업자 경계와 이용자 피해 가능성을 확인해야 한다.",
+    "section": "16",
+    "source_ids": ["S-FSC-VASP-WARNING"],
+    "source_uses": [{"source_id": "S-FSC-VASP-WARNING", "claim_kind": "reported-provider-boundary"}],
+    "status": "supported"
+  },
+  {
+    "id": "C-MODUA-NO-STABLECOIN",
+    "claim": "MODUA는 스테이블코인을 발행하지 않으며 외부 스테이블코인 결제도 MVP의 핵심 기능으로 두지 않는다.",
+    "section": "16",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "design-decision"
+  },
+  {
+    "id": "C-MODUA-TOKEN-CONDITIONAL",
+    "claim": "MODUA 토큰은 서비스·노드 경제·법률·감사 조건이 충족된 경우에만 최대 100억 개까지 별도 검토한다.",
+    "section": "16",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "conditional"
+  },
+  {
+    "id": "C-ROADMAP-SIX-STAGES",
+    "claim": "MODUA는 생활 과업 MVP부터 기관 연계와 조건부 토큰 재판단까지 여섯 단계로 검증한다.",
+    "section": "18",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "design-decision"
+  },
+  {
+    "id": "C-HEFI-REFERENCE-ONLY",
+    "claim": "HEFI 자료는 기능 아이디어 참고용이며 MODUA의 구현·제휴·감사·사업실적 증거가 아니다.",
+    "section": "참고자료",
+    "source_ids": ["S-HEFI-KO-REF", "S-HEFI-EN-REF"],
+    "source_uses": [
+      {"source_id": "S-HEFI-KO-REF", "claim_kind": "feature-inspiration"},
+      {"source_id": "S-HEFI-EN-REF", "claim_kind": "feature-inspiration"}
+    ],
+    "status": "supported"
+  }
 ]
