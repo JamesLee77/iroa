@@ -171,16 +171,16 @@
     "id": "S-HEFI-KO-REF",
     "title": "HEFI 한국어 백서",
     "publisher": "HEFI reference file",
-    "url": "../hefi/docs/whitepaper/240503_HeFi_백서_한글★.pdf",
-    "claim_ceiling": "기능 아이디어 참고만 가능하며 MODUA 구현·제휴·감사의 증거가 아님",
+    "url": "../../../hefi/docs/whitepaper/240503_HeFi_백서_한글★.pdf",
+    "claim_ceiling": "기능 아이디어 참고만 가능하며 IROA 구현·제휴·감사의 증거가 아님",
     "allowed_claim_kinds": ["feature-inspiration"]
   },
   {
     "id": "S-HEFI-EN-REF",
     "title": "HEFI English White Paper",
     "publisher": "HEFI reference file",
-    "url": "../hefi/docs/whitepaper/HeFi White Paper(ENG) 20230711_purple.docx",
-    "claim_ceiling": "기능 아이디어 참고만 가능하며 MODUA 구현·제휴·감사의 증거가 아님",
+    "url": "../../../hefi/docs/whitepaper/HeFi White Paper(ENG) 20230711_purple.docx",
+    "claim_ceiling": "기능 아이디어 참고만 가능하며 IROA 구현·제휴·감사의 증거가 아님",
     "allowed_claim_kinds": ["feature-inspiration"]
   },
   {
@@ -198,5 +198,37 @@
     "url": "https://www.pexels.com/legal-pages/license/",
     "claim_ceiling": "선정 사진의 사용·수정·금지사항을 설명하는 공식 라이선스",
     "allowed_claim_kinds": ["photo-license"]
+  },
+  {
+    "id": "S-MCP-2025-06-18",
+    "title": "Model Context Protocol Specification 2025-06-18",
+    "publisher": "Model Context Protocol",
+    "url": "https://modelcontextprotocol.io/specification/2025-06-18/basic/index",
+    "claim_ceiling": "AI 애플리케이션이 외부 도구·데이터와 연결되는 개방형 프로토콜 구조와 명시적 사용자 통제·보안 고려사항",
+    "allowed_claim_kinds": ["agent-tool-interoperability", "agent-tool-security-boundary"]
+  },
+  {
+    "id": "S-A2A-0.3",
+    "title": "Agent2Agent Protocol Specification v0.3.0",
+    "publisher": "A2A Protocol",
+    "url": "https://a2a-protocol.org/v0.3.0/specification/",
+    "claim_ceiling": "독립된 AI Agent가 내부 상태를 공개하지 않고 역량을 발견하고 과업을 조정하는 상호운용 규격",
+    "allowed_claim_kinds": ["agent-to-agent-interoperability"]
+  },
+  {
+    "id": "S-CCC-CONFIDENTIAL-COMPUTING",
+    "title": "Common Terminology for Confidential Computing",
+    "publisher": "Confidential Computing Consortium",
+    "url": "https://confidentialcomputing.io/wp-content/uploads/sites/10/2023/03/Common-Terminology-for-Confidential-Computing.pdf",
+    "claim_ceiling": "사용 중인 데이터를 하드웨어 기반 신뢰실행환경에서 보호하고 원격 증명으로 상태를 확인하는 개념",
+    "allowed_claim_kinds": ["confidential-computing-concept", "trusted-execution-environment"]
+  },
+  {
+    "id": "S-SAMSUNG-HEALTH-FOUNDATION-2026",
+    "title": "Samsung and Partners Envision a Connected Care Future",
+    "publisher": "Samsung Global Newsroom",
+    "url": "https://news.samsung.com/global/galaxy-unpacked-july-2026-samsung-and-partners-envision-a-connected-care-future-from-first-signal-to-lasting-change",
+    "claim_ceiling": "웨어러블 생체신호와 AI를 결합한 개인화 건강 연구 방향 및 임상근거·개인정보 보호 강조",
+    "allowed_claim_kinds": ["wearable-health-foundation-model-trend", "wearable-health-research-boundary"]
   }
 ]

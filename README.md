@@ -1,14 +1,16 @@
-# MODUA
+# IROA.AI
 
-MODUA is an independent AI life-assistance and mutual-support project for older adults, disabled people, and the people who help them.
+**일상을 이롭게. 필요한 일을 끝까지.**
+
+IROA.AI is an independent, inclusive real-world orchestration project for older adults, disabled people, and the people who help them. It connects phone, mobile, watch, managed secure nodes, agentic kiosks, companion devices, robots, institutions, and human support to complete real-life tasks safely.
 
 ## Document authority
 
-1. `docs/superpowers/specs/2026-08-15-modua-agent-node-whitepaper-redesign.md` is the approved redesign authority.
-2. `docs/specs/modua-inclusive-agent-economy-design.md` is the earlier research and decision reference.
-3. `docs/whitepaper/MODUA_WHITEPAPER_KO.md` is the editorial source of truth.
-4. `docs/whitepaper/claims.json`, `sources.json`, and `legal-review-checklist.md` preserve research and review context.
-5. HEFI documents are references only and never establish MODUA implementation, partnership, token, or medical claims.
+1. `docs/whitepaper/IROA_WHITEPAPER_KO.md` is the current editorial source of truth.
+2. `docs/brand/IROA_BI_GUIDE_KO.md` defines the IROA visual identity and usage rules.
+3. `docs/whitepaper/claims.json`, `sources.json`, and `legal-review-checklist.md` preserve research and review context.
+4. Files whose names contain MODUA are historical design records only; they do not override the IROA whitepaper.
+5. MODUA and HEFI references never establish IROA implementation, partnership, token, medical claims, rights, or business performance.
 
 ## Document workflow
 

@@ -49,7 +49,7 @@
   },
   {
     "id": "C-ANDROID-APPFUNCTIONS",
-    "claim": "Android AppFunctions는 Android 16 이상을 대상으로 하는 실험적 프리뷰이므로 MODUA MVP의 필수 전제가 아니다.",
+    "claim": "Android AppFunctions는 Android 16 이상을 대상으로 하는 실험적 프리뷰이므로 IROA MVP의 필수 전제가 아니다.",
     "section": "5",
     "source_ids": ["S-ANDROID-APPFUNCTIONS"],
     "source_uses": [
@@ -191,40 +191,89 @@
     "status": "supported-as-trend"
   },
   {
-    "id": "C-MODUA-COMPANION-BOUNDARY",
-    "claim": "MODUA 반려 친구는 고독사를 예측하거나 예방을 보장하지 않고 안부 확인과 사람 연결의 효과·오경보·사용자 통제를 검증한다.",
+    "id": "C-MCP-INTEROPERABILITY",
+    "claim": "MCP는 AI 애플리케이션이 외부 도구·데이터와 연결되는 공통 인터페이스를 제공하지만 사용자 동의와 도구별 보안정책을 대체하지 않는다.",
+    "section": "11",
+    "source_ids": ["S-MCP-2025-06-18"],
+    "source_uses": [
+      {"source_id": "S-MCP-2025-06-18", "claim_kind": "agent-tool-interoperability"},
+      {"source_id": "S-MCP-2025-06-18", "claim_kind": "agent-tool-security-boundary"}
+    ],
+    "status": "supported"
+  },
+  {
+    "id": "C-A2A-INTEROPERABILITY",
+    "claim": "A2A v0.3.0은 독립된 Agent가 내부 상태를 공개하지 않고 역량을 발견하고 과업을 조정하는 상호운용 방향을 제공한다.",
+    "section": "11",
+    "source_ids": ["S-A2A-0.3"],
+    "source_uses": [{"source_id": "S-A2A-0.3", "claim_kind": "agent-to-agent-interoperability"}],
+    "status": "supported-as-trend"
+  },
+  {
+    "id": "C-CONFIDENTIAL-COMPUTING-BOUNDARY",
+    "claim": "기밀 컴퓨팅은 사용 중인 데이터를 하드웨어 기반 신뢰실행환경에서 보호하고 원격 증명으로 상태를 확인하는 방법이지만 모든 보안·법적 위험을 자동으로 해결하지 않는다.",
+    "section": "8",
+    "source_ids": ["S-CCC-CONFIDENTIAL-COMPUTING"],
+    "source_uses": [
+      {"source_id": "S-CCC-CONFIDENTIAL-COMPUTING", "claim_kind": "confidential-computing-concept"},
+      {"source_id": "S-CCC-CONFIDENTIAL-COMPUTING", "claim_kind": "trusted-execution-environment"}
+    ],
+    "status": "supported-with-limitations"
+  },
+  {
+    "id": "C-SAMSUNG-WEARABLE-AI-TREND",
+    "claim": "삼성의 2026년 공식 공개는 웨어러블 생체신호와 AI를 결합한 개인화 건강 연구 방향 및 임상근거·개인정보 보호의 중요성을 제시하지만 IROA와의 제휴나 IROA 기능을 증명하지 않는다.",
+    "section": "7",
+    "source_ids": ["S-SAMSUNG-HEALTH-FOUNDATION-2026"],
+    "source_uses": [
+      {"source_id": "S-SAMSUNG-HEALTH-FOUNDATION-2026", "claim_kind": "wearable-health-foundation-model-trend"},
+      {"source_id": "S-SAMSUNG-HEALTH-FOUNDATION-2026", "claim_kind": "wearable-health-research-boundary"}
+    ],
+    "status": "supported-as-trend"
+  },
+  {
+    "id": "C-IROA-BRAND-INDEPENDENT",
+    "claim": "IROA.AI는 MODUA와 HEFI의 구현·제휴·권리·감사·사업실적을 승계한다고 주장하지 않는 독립 프로젝트다.",
+    "section": "1",
+    "source_ids": [],
+    "source_uses": [],
+    "status": "design-decision"
+  },
+  {
+    "id": "C-IROA-COMPANION-BOUNDARY",
+    "claim": "IROA 반려 친구는 고독사를 예측하거나 예방을 보장하지 않고 안부 확인과 사람 연결의 효과·오경보·사용자 통제를 검증한다.",
     "section": "4",
     "source_ids": [],
     "source_uses": [],
     "status": "design-decision"
   },
   {
-    "id": "C-MODUA-SECURE-NODE-DEFAULT",
-    "claim": "MODUA는 모바일·개인 PC가 없거나 장시간·고성능 실행이 필요한 경우 관리형 보안 노드를 기본 실행환경으로 사용하고 개인 PC는 선택적 보조 노드로 둔다.",
+    "id": "C-IROA-SECURE-NODE-DEFAULT",
+    "claim": "IROA는 모바일·개인 PC가 없거나 장시간·고성능 실행이 필요한 경우 관리형 보안 노드를 기본 실행환경으로 사용하고 개인 PC는 선택적 보조 노드로 둔다.",
     "section": "8",
     "source_ids": [],
     "source_uses": [],
     "status": "design-decision"
   },
   {
-    "id": "C-MODUA-NO-PII-ONCHAIN",
-    "claim": "MODUA는 건강·장애·대화·영상·위치·실명 신원 원문을 블록체인에 기록하지 않고 조건부로 노드 상태·작업·보상 무결성 증명만 사용한다.",
+    "id": "C-IROA-NO-PII-ONCHAIN",
+    "claim": "IROA는 건강·장애·대화·영상·위치·실명 신원 원문을 블록체인에 기록하지 않고 조건부로 노드 상태·작업·보상 무결성 증명만 사용한다.",
     "section": "12",
     "source_ids": [],
     "source_uses": [],
     "status": "design-decision"
   },
   {
-    "id": "C-MODUA-NO-STABLECOIN",
-    "claim": "MODUA는 스테이블코인을 발행하지 않으며 외부 스테이블코인 결제도 MVP의 핵심 기능으로 두지 않는다.",
+    "id": "C-IROA-NO-STABLECOIN",
+    "claim": "IROA는 스테이블코인을 발행하지 않으며 외부 스테이블코인 결제도 MVP의 핵심 기능으로 두지 않는다.",
     "section": "16",
     "source_ids": [],
     "source_uses": [],
     "status": "design-decision"
   },
   {
-    "id": "C-MODUA-TOKEN-CONDITIONAL",
-    "claim": "MODUA 토큰은 서비스·노드 경제·법률·감사 조건이 충족된 경우에만 최대 100억 개까지 별도 검토한다.",
+    "id": "C-IROA-TOKEN-CONDITIONAL",
+    "claim": "IROA 토큰은 서비스·노드 경제·법률·감사 조건이 충족된 경우에만 최대 100억 개까지 별도 검토한다.",
     "section": "16",
     "source_ids": [],
     "source_uses": [],
@@ -232,7 +281,7 @@
   },
   {
     "id": "C-ROADMAP-SIX-STAGES",
-    "claim": "MODUA는 생활 과업 MVP부터 기관 연계와 조건부 토큰 재판단까지 여섯 단계로 검증한다.",
+    "claim": "IROA는 생활 과업 MVP부터 기관 연계와 조건부 토큰 재판단까지 여섯 단계로 검증한다.",
     "section": "18",
     "source_ids": [],
     "source_uses": [],
@@ -240,7 +289,7 @@
   },
   {
     "id": "C-HEFI-REFERENCE-ONLY",
-    "claim": "HEFI 자료는 기능 아이디어 참고용이며 MODUA의 구현·제휴·감사·사업실적 증거가 아니다.",
+    "claim": "HEFI 자료는 기능 아이디어 참고용이며 IROA의 구현·제휴·감사·사업실적 증거가 아니다.",
     "section": "참고자료",
     "source_ids": ["S-HEFI-KO-REF", "S-HEFI-EN-REF"],
     "source_uses": [
