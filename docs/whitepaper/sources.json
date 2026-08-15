@@ -182,5 +182,21 @@
     "url": "../hefi/docs/whitepaper/HeFi White Paper(ENG) 20230711_purple.docx",
     "claim_ceiling": "기능 아이디어 참고만 가능하며 MODUA 구현·제휴·감사의 증거가 아님",
     "allowed_claim_kinds": ["feature-inspiration"]
+  },
+  {
+    "id": "S-PEXELS-API",
+    "title": "Pexels API Documentation",
+    "publisher": "Pexels",
+    "url": "https://www.pexels.com/api/documentation/",
+    "claim_ceiling": "백서용 사진 검색·메타데이터 조회에 사용한 공식 API 안내",
+    "allowed_claim_kinds": ["photo-api-source"]
+  },
+  {
+    "id": "S-PEXELS-LICENSE",
+    "title": "Pexels License",
+    "publisher": "Pexels",
+    "url": "https://www.pexels.com/legal-pages/license/",
+    "claim_ceiling": "선정 사진의 사용·수정·금지사항을 설명하는 공식 라이선스",
+    "allowed_claim_kinds": ["photo-license"]
   }
 ]
