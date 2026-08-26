@@ -8,8 +8,8 @@
   </g>
   <circle cx="48" cy="41.5" r="10.5" fill="#16263D"/>
   <g transform="translate(166 29.5) scale(.8)">
-    <path d="M120.706 54.564A48 48 0 1 0 120.706 105.436" fill="none" stroke="#16263D" stroke-width="27.5" stroke-linecap="round"/>
-    <circle cx="120.706" cy="54.564" r="14.323" fill="#F06D5E"/>
+    <path d="M116.770 49.147A48 48 0 1 0 116.770 110.853" fill="none" stroke="#16263D" stroke-width="27.5" stroke-linecap="round"/>
+    <circle cx="128" cy="80" r="10.5" fill="#F06D5E"/>
   </g>
   <g fill="#3D8B83" stroke="#3D8B83" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="438" cy="132" r="7.5" stroke="none"/>

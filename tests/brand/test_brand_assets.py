@@ -72,6 +72,32 @@ class BrandContractTest(unittest.TestCase):
             self.assertTrue(path.is_file(), path)
             audit_svg(path)
 
+    def test_track_a_mono_o_renders_with_a_distinct_action_point(self):
+        source = Path("docs/brand/candidates/track-a/wordmark-mono.svg")
+        with TemporaryDirectory() as directory:
+            destination = Path(directory) / "wordmark-mono-64.png"
+            render_svg_png(source, destination, 213, 64)
+            with Image.open(destination).convert("RGBA") as image:
+                alpha = image.getchannel("A")
+                ink_rows = [
+                    y for y in range(12, 55) if alpha.getpixel((93, y)) >= 128
+                ]
+
+            runs = []
+            run_start = previous = ink_rows[0]
+            for y in ink_rows[1:]:
+                if y != previous + 1:
+                    runs.append((run_start, previous))
+                    run_start = y
+                previous = y
+            runs.append((run_start, previous))
+
+            self.assertEqual(len(runs), 3, runs)
+            open_gaps = [
+                right[0] - left[1] - 1 for left, right in zip(runs, runs[1:])
+            ]
+            self.assertTrue(all(1 <= gap <= 4 for gap in open_gaps), open_gaps)
+
     def test_audit_png_requires_exact_rgba_size_with_transparency(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "opaque.png"

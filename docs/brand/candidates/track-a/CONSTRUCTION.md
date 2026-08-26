@@ -13,29 +13,29 @@ Track A redraws the recognizable lowercase `iroa.ai`, open loop, and navy/coral/
 ## Shared open-loop geometry
 
 - Symbol loop center: `(80, 80)`. Path radius: `48` units. Stroke: `24` units.
-- The opening is centered on the right axis. Terminal centerlines sit at `-32 degrees` and `+32 degrees`, producing a `64-degree` opening and a `296-degree` drawn arc.
-- The upper terminal carries the only coral action point. Its radius is `12.5` units, `104.17%` of the 12-unit round terminal radius, so coral fully replaces the navy cap without a dark fringe.
-- The wordmark `o` reuses the exact symbol path and terminal coordinates under `translate(166 29.5) scale(.8)`. Its effective center is `(230, 93.5)`, path radius `38.4`, stroke `22`, and action-point radius `11.458` units. The larger pre-scale stroke is the optical correction that keeps the smaller loop equal in weight to the main letters.
-- The lower terminal remains the base stroke color. No second teal endpoint or coral punctuation is used.
+- The opening is centered on the right axis. Terminal centerlines sit at `-40 degrees` and `+40 degrees`, producing an `80-degree` opening and a `280-degree` drawn arc.
+- The only coral action point is centered at `(128, 80)` inside that opening. Its 10.5-unit radius is `87.5%` of the 12-unit round terminal radius, so the point completes the `o` rhythm without joining either terminal.
+- The wordmark `o` reuses the exact symbol path and point coordinates under `translate(166 29.5) scale(.8)`. Its effective center is `(230, 93.5)`, path radius `38.4`, stroke `22`, and action-point radius `8.4` units. The larger pre-scale stroke is the optical correction that keeps the smaller loop equal in weight to the main letters.
+- Both terminals remain the base stroke color. No second colored endpoint or coral punctuation is used.
 
 ## Spacing and clear space
 
 - Built-in symbol margin is 20 units at the loop extrema. External clear space is at least one symbol stroke (`24` units, or `0.15 x` the symbol viewBox).
 - Wordmark external clear space is at least one main stroke (`22` units) on all sides. The viewBox includes 37.5 units to the left, 31 units above the `i` dot, 40.5 units to the right, and 37 units below the baseline terminals.
-- Key horizontal optical gaps are 12.6 units between the `r` terminal and `o`, 30 units between the visible `o` action point and `a`, 32.5 units between the main `a` and period, and 8 units between the period and `.ai` bowl.
+- Key horizontal optical gaps are 12.6 units between the `r` terminal and `o`, 27.2 units between the visible `o` action point and `a`, 32.5 units between the main `a` and period, and 8 units between the period and `.ai` bowl.
 
 ## Small-size optical behavior
 
-The master contains the small-size compensation: a 4.17% oversized action point, a 64-degree opening, a 20-unit internal symbol margin, and round terminals. Candidate PNGs use Lanczos downsampling without per-export shape changes.
+The master contains the small-size compensation: a reduced centered action point, an 80-degree opening, a 20-unit internal symbol margin, and round terminals. Candidate PNGs use Lanczos downsampling without per-export shape changes.
 
-| Symbol output | Scale | Effective stroke | Action-point diameter | Clear opening between terminal silhouettes | Built-in edge margin |
+| Symbol output | Scale | Effective stroke | Action-point diameter | Clear gap on each side of point | Built-in edge margin |
 |---:|---:|---:|---:|---:|---:|
-| 16 px | 0.10 | 2.40 px | 2.50 px | 2.64 px | 2.00 px |
-| 24 px | 0.15 | 3.60 px | 3.75 px | 3.96 px | 3.00 px |
-| 32 px | 0.20 | 4.80 px | 5.00 px | 5.27 px | 4.00 px |
-| 64 px | 0.40 | 9.60 px | 10.00 px | 10.55 px | 8.00 px |
+| 16 px | 0.10 | 2.40 px | 2.10 px | 1.03 px | 2.00 px |
+| 24 px | 0.15 | 3.60 px | 3.15 px | 1.55 px | 3.00 px |
+| 32 px | 0.20 | 4.80 px | 4.20 px | 2.07 px | 4.00 px |
+| 64 px | 0.40 | 9.60 px | 8.40 px | 4.13 px | 8.00 px |
 
-At 16 px the open gap remains larger than the combined stroke width and survives antialiasing. At 24 px the upper coral terminal and lower navy terminal remain directionally distinct. At 32 px and above the 24:22:14 stroke hierarchy resolves without counter closure.
+At 16 px the centered point closes the reading rhythm without filling the inner counter. At 24 px the two open gaps and coral action point become individually visible. At 32 px and above the 24:22:14 stroke hierarchy and three-part open-point silhouette resolve without counter closure.
 
 ## Color variants
 
