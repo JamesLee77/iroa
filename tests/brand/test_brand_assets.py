@@ -130,6 +130,28 @@ class BrandContractTest(unittest.TestCase):
             (16, 24, 32, 48, 64, 128, 180, 192, 256, 512, 1024),
         )
 
+    def test_legacy_paths_match_official_masters(self):
+        pairs = (
+            (
+                Path("docs/brand/iroa-symbol.svg"),
+                Path("docs/brand/masters/symbol/iroa-symbol-color.svg"),
+            ),
+            (
+                Path("docs/brand/iroa-wordmark.svg"),
+                Path("docs/brand/masters/wordmark/iroa-wordmark-color.svg"),
+            ),
+            (
+                Path("docs/brand/iroa-wordmark-reverse.svg"),
+                Path("docs/brand/masters/wordmark/iroa-wordmark-reverse.svg"),
+            ),
+            (
+                Path("docs/brand/iroa-wordmark-mono.svg"),
+                Path("docs/brand/masters/wordmark/iroa-wordmark-mono.svg"),
+            ),
+        )
+        for legacy, official in pairs:
+            self.assertEqual(legacy.read_bytes(), official.read_bytes())
+
     def test_wcag_reference_values(self):
         self.assertGreaterEqual(contrast_ratio("#16263D", "#FFFFFF"), 4.5)
         self.assertLess(contrast_ratio("#F06D5E", "#FFFFFF"), 4.5)
@@ -158,6 +180,17 @@ class BrandContractTest(unittest.TestCase):
         fixture = Path("tests/brand/fixtures/foreignobject-html-image.svg")
         with self.assertRaisesRegex(ValueError, "must not embed raster images"):
             audit_svg(fixture)
+
+    def test_svg_rejects_text_elements(self):
+        source = """<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" role=\"img\" aria-labelledby=\"title desc\">
+  <title id=\"title\">Text fixture</title><desc id=\"desc\">Must not pass as a vector master.</desc>
+  <text x=\"1\" y=\"12\">IROA</text>
+</svg>\n"""
+        with TemporaryDirectory() as directory:
+            fixture = Path(directory) / "text.svg"
+            fixture.write_text(source, encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "must not contain text"):
+                audit_svg(fixture)
 
     def test_candidate_paths_use_canonical_filenames(self):
         candidates = CandidatePaths(Path("out/candidate"))
@@ -395,6 +428,119 @@ class BrandContractTest(unittest.TestCase):
                     self.assertTrue(path.is_file(), path)
                     with Image.open(path) as image:
                         self.assertEqual(image.size, expected, path)
+
+    def test_promotion_rejects_a_winner_that_disagrees_with_selection(self):
+        result = subprocess.run(
+            [sys.executable, "tools/brand/promote_candidate.py", "--winner", "track-b"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("does not match selection", result.stderr)
+
+    def test_official_audit_cli_checks_the_promoted_asset_set(self):
+        result = subprocess.run(
+            [sys.executable, "tools/brand/audit_assets.py", "official"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.stdout.strip(), "official asset audit passed")
+
+    def test_official_color_masters_are_the_selected_track_a_masters(self):
+        pairs = (
+            (
+                Path("docs/brand/candidates/track-a/symbol.svg"),
+                Path("docs/brand/masters/symbol/iroa-symbol-color.svg"),
+            ),
+            (
+                Path("docs/brand/candidates/track-a/wordmark.svg"),
+                Path("docs/brand/masters/wordmark/iroa-wordmark-color.svg"),
+            ),
+        )
+        for selected, official in pairs:
+            self.assertEqual(selected.read_bytes(), official.read_bytes())
+
+    def test_official_svg_masters_are_accessible_vector_only_artwork(self):
+        root = Path("docs/brand/masters")
+        expected = {
+            "symbol": ("color", "mono", "reverse"),
+            "wordmark": ("color", "mono", "reverse"),
+            "lockup": ("color", "mono", "reverse"),
+        }
+        for family, variants in expected.items():
+            for variant in variants:
+                path = root / family / f"iroa-{family}-{variant}.svg"
+                self.assertTrue(path.is_file(), path)
+                audit_svg(path)
+                tags = {_local_tag(element.tag) for element in ET.parse(path).iter()}
+                self.assertNotIn("text", tags, path)
+                self.assertNotIn("image", tags, path)
+
+    def test_official_png_exports_have_exact_dimensions_alpha_and_safe_area(self):
+        digital = Path("docs/brand/exports/digital")
+        icons = Path("docs/brand/exports/icons")
+        for size in OFFICIAL_PNG_SIZES:
+            audit_png(digital / f"iroa-symbol-{size}.png", size, size)
+            wordmark = digital / f"iroa-wordmark-{size}.png"
+            audit_png(wordmark, round(size * 600 / 180), size)
+        for size in (16, 32, 48):
+            audit_png(icons / f"favicon-{size}.png", size, size)
+        for size, name in ((180, "apple-touch-icon-180.png"), (192, "app-icon-192.png"), (512, "app-icon-512.png"), (192, "maskable-icon-192.png"), (512, "maskable-icon-512.png"), (48, "symbol-watch-48.png"), (1024, "symbol-kiosk-1024.png")):
+            audit_png(icons / name, size, size)
+
+        for size in (192, 512):
+            with Image.open(icons / f"maskable-icon-{size}.png").convert("RGBA") as image:
+                alpha = image.getchannel("A")
+                bounds = alpha.getbbox()
+                self.assertIsNotNone(bounds)
+                margin = size * 0.10
+                self.assertGreaterEqual(bounds[0], margin)
+                self.assertGreaterEqual(bounds[1], margin)
+                self.assertLessEqual(bounds[2], size - margin)
+                self.assertLessEqual(bounds[3], size - margin)
+        audit_svg(icons / "favicon.svg")
+
+    def test_promotion_is_deterministic_and_compatibility_pngs_are_regenerated(self):
+        command = [sys.executable, "tools/brand/promote_candidate.py", "--winner", "track-a"]
+        subprocess.run(command, check=True, capture_output=True, text=True)
+        outputs = sorted(
+            path
+            for path in Path("docs/brand").glob("**/*")
+            if path.is_file() and ("masters" in path.parts or "exports" in path.parts or path.name.startswith("iroa-"))
+        )
+        before = {path: _digest(path) for path in outputs}
+        subprocess.run(command, check=True, capture_output=True, text=True)
+        self.assertEqual(before, {path: _digest(path) for path in outputs})
+        audit_png(Path("docs/brand/iroa-symbol.png"), 512, 512)
+        audit_png(Path("docs/brand/iroa-wordmark.png"), 1200, 360)
+
+    def test_six_print_pdfs_are_fontless_vector_documents_that_render_cleanly(self):
+        print_root = Path("docs/brand/exports/print")
+        expected = {
+            f"iroa-{role}-{variant}.pdf"
+            for role in ("symbol", "wordmark", "lockup")
+            for variant in ("color", "mono")
+        }
+        self.assertEqual({path.name for path in print_root.glob("*.pdf")}, expected)
+        with TemporaryDirectory() as directory:
+            rendered = Path(directory) / "page"
+            for name in expected:
+                path = print_root / name
+                info = subprocess.run(["pdfinfo", str(path)], check=True, capture_output=True, text=True)
+                self.assertIn("Pages:           1", info.stdout)
+                fonts = subprocess.run(["pdffonts", str(path)], check=True, capture_output=True, text=True)
+                self.assertNotIn("Type 3", fonts.stdout)
+                self.assertEqual(len(fonts.stdout.splitlines()), 2, fonts.stdout)
+                render = subprocess.run(
+                    ["pdftocairo", "-png", "-singlefile", str(path), str(rendered)],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(render.returncode, 0, render.stderr)
+                self.assertEqual(render.stderr, "", render.stderr)
+                with Image.open(rendered.with_suffix(".png")) as image:
+                    self.assertGreater(image.getbbox()[2], 0)
 
 
 if __name__ == "__main__":
