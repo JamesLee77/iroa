@@ -28,10 +28,22 @@
 
     body { display: grid; justify-content: center; gap: 48px; padding: 48px 0; }
 
+    /*
+      Fairness contract: paired wordmarks use the same rendered-height token in
+      every scene. Width remains auto so neither candidate is distorted; shared
+      containers are wide enough for the longer Track B aspect ratio to fit.
+    */
     .board {
       --brand: #16263d;
       --brand-soft: #e7ecef;
       --accent: #f06d5e;
+      --wordmark-hero-height: 150px;
+      --wordmark-proof-height: 64px;
+      --wordmark-web-height: 44px;
+      --wordmark-watch-height: 22px;
+      --wordmark-kiosk-height: 50px;
+      --wordmark-cover-height: 54px;
+      --wordmark-receipt-height: 28px;
       position: relative;
       width: 1600px;
       height: 2263px;
@@ -114,7 +126,7 @@
       padding: 44px 100px;
     }
 
-    .hero img { width: auto; height: auto; max-width: 820px; max-height: 150px; }
+    .hero img { width: auto; height: var(--wordmark-hero-height); max-width: 820px; }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 
@@ -155,10 +167,15 @@
       height: 232px;
       display: grid;
       place-items: center;
-      padding: 30px 48px;
+      padding: 30px 20px;
     }
 
-    .color-card img { width: 82%; max-height: 120px; }
+    .color-card img,
+    .reverse-card img {
+      width: auto;
+      height: var(--wordmark-proof-height);
+      max-width: 100%;
+    }
 
     .reverse-card {
       overflow: hidden;
@@ -166,8 +183,6 @@
       background: var(--brand);
       box-shadow: 0 18px 48px color-mix(in srgb, var(--brand) 24%, transparent);
     }
-
-    .reverse-card img { width: 82%; max-height: 132px; }
 
     .digital-row {
       display: grid;
@@ -236,7 +251,7 @@
       border-bottom: 1px solid #eeece8;
     }
 
-    .web-header img { width: 178px; max-height: 54px; }
+    .web-header img { width: auto; height: var(--wordmark-web-height); max-width: 220px; }
     .web-nav { display: flex; gap: 26px; color: #525761; font-size: 12px; font-weight: 650; }
 
     .web-hero {
@@ -289,7 +304,7 @@
     }
 
     .watch-screen { width: 140px; text-align: left; color: white; }
-    .watch-logo { width: 88px; height: 32px; object-fit: contain; object-position: left center; margin-bottom: 20px; }
+    .watch-logo { width: auto; height: var(--wordmark-watch-height); max-width: 118px; object-fit: contain; object-position: left center; margin-bottom: 20px; }
     .watch-title { font-size: 13px; font-weight: 760; line-height: 1.45; }
     .watch-meta { margin-top: 10px; color: rgba(255,255,255,.72); font-size: 10px; font-weight: 600; }
 
@@ -313,7 +328,7 @@
     }
 
     .kiosk-brand { display: grid; place-items: center; background: var(--brand); }
-    .kiosk-brand img { width: 78%; max-height: 96px; }
+    .kiosk-brand img { width: auto; height: var(--wordmark-kiosk-height); max-width: 240px; }
     .kiosk-action { display: flex; flex-direction: column; justify-content: center; padding: 30px 42px; }
     .kiosk-title { font-size: 24px; font-weight: 780; letter-spacing: -.035em; line-height: 1.35; }
     .kiosk-sub { margin-top: 8px; color: var(--muted); font-size: 12px; }
@@ -350,7 +365,7 @@
       border-radius: 50%;
     }
 
-    .whitepaper img { width: 220px; max-height: 70px; position: relative; z-index: 1; }
+    .whitepaper img { width: auto; height: var(--wordmark-cover-height); max-width: 260px; position: relative; z-index: 1; }
     .doc-kicker { margin-top: 74px; color: var(--brand); font-size: 12px; font-weight: 760; letter-spacing: .12em; }
     .doc-title { margin-top: 8px; font-size: 36px; font-weight: 790; letter-spacing: -.045em; }
     .doc-tagline { margin-top: 10px; color: #4f545e; font-size: 15px; font-weight: 590; }
@@ -365,7 +380,7 @@
       color: #181b21;
     }
 
-    .receipt img { width: 128px; max-height: 44px; display: block; margin: 0 auto 24px; }
+    .receipt img { width: auto; height: var(--wordmark-receipt-height); max-width: 150px; display: block; margin: 0 auto 24px; }
     .receipt-rule { border-top: 1px dashed #9da0a7; margin: 16px 0; }
     .receipt-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 10px; }
     .receipt-state { padding: 10px 12px; border: 1px solid #171a20; text-align: center; font-size: 10px; font-weight: 760; }
