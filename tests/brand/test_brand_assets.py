@@ -6,6 +6,7 @@ import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from urllib.parse import unquote, urlsplit
 from xml.etree import ElementTree as ET
 
 from PIL import Image, ImageChops
@@ -124,7 +125,44 @@ def _horizontal_ink_runs(image: Image.Image) -> list[tuple[int, int]]:
     return runs
 
 
+def _relative_markdown_links(path: Path) -> tuple[Path, ...]:
+    destinations = []
+    source = path.read_text(encoding="utf-8")
+    for destination in re.findall(r"!?\[[^\]]*\]\(([^)]+)\)", source):
+        destination = destination.strip().split(maxsplit=1)[0].strip("<>")
+        parsed = urlsplit(destination)
+        if parsed.scheme or parsed.netloc or not parsed.path:
+            continue
+        destinations.append(path.parent / unquote(parsed.path))
+    return tuple(destinations)
+
+
 class BrandContractTest(unittest.TestCase):
+    def test_bi_guide_has_v1_contract(self):
+        guide = Path("docs/brand/IROA_BI_GUIDE_KO.md").read_text(encoding="utf-8")
+        for required in (
+            "버전: 1.0",
+            "iroa.ai 도메인은 확보 완료",
+            "상표권 확보와는 별개의 문제",
+            "공동 브랜딩",
+            "접근성 대비",
+            "파비콘",
+            "마스크 가능 아이콘",
+        ):
+            self.assertIn(required, guide)
+
+    def test_brand_document_relative_links_resolve(self):
+        documents = (
+            Path("docs/brand/IROA_BI_GUIDE_KO.md"),
+            Path("docs/brand/README.md"),
+        )
+        for document in documents:
+            self.assertTrue(document.is_file(), document)
+            links = _relative_markdown_links(document)
+            self.assertTrue(links, f"{document} must link to its referenced assets")
+            for target in links:
+                self.assertTrue(target.exists(), f"{document}: broken link to {target}")
+
     def test_required_png_sizes_are_exact(self):
         self.assertEqual(
             OFFICIAL_PNG_SIZES,
