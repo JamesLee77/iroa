@@ -1,9 +1,18 @@
+"""Build the two-page image-only comparison PDF.
+
+Run with the bundled PDF runtime because the system Python does not provide
+ReportLab or pypdf:
+
+    /Users/hyunsuklee/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
+        tools/brand/build_comparison_pdf.py TRACK_A.png TRACK_B.png OUTPUT.pdf
+"""
+
 import argparse
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from pypdf import PdfReader, PdfWriter
-from pypdf.generic import NameObject
+from pypdf.generic import ContentStream, NameObject
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
@@ -39,6 +48,13 @@ def build_comparison_pdf(track_a: Path, track_b: Path, output: Path) -> None:
         for page in writer.pages:
             resources = page["/Resources"].get_object()
             resources.pop(NameObject("/Font"), None)
+            content = ContentStream(page.get_contents(), writer)
+            content.operations = [
+                (operands, operator)
+                for operands, operator in content.operations
+                if operator not in {b"BT", b"Tf", b"TL", b"ET"}
+            ]
+            page.replace_contents(content)
         with output.open("wb") as stream:
             writer.write(stream)
 
