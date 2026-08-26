@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>IROA symbol</title>
+  <desc>SVG foreign object that embeds a PNG</desc>
+  <foreignObject width="32" height="32">
+    <img xmlns="http://www.w3.org/1999/xhtml" src="data:image/png;base64,iVBORw0KGgo="/>
+  </foreignObject>
+</svg>

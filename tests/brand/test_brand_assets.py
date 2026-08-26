@@ -25,6 +25,26 @@ class BrandContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "title and desc"):
             audit_svg(fixture)
 
+    def test_svg_requires_viewbox(self):
+        fixture = Path("tests/brand/fixtures/missing-viewbox.svg")
+        with self.assertRaisesRegex(ValueError, "viewBox"):
+            audit_svg(fixture)
+
+    def test_svg_rejects_embedded_image_element(self):
+        fixture = Path("tests/brand/fixtures/embedded-image.svg")
+        with self.assertRaisesRegex(ValueError, "must not embed raster images"):
+            audit_svg(fixture)
+
+    def test_svg_rejects_feimage_data_uri(self):
+        fixture = Path("tests/brand/fixtures/feimage-data-uri.svg")
+        with self.assertRaisesRegex(ValueError, "must not embed raster images"):
+            audit_svg(fixture)
+
+    def test_svg_rejects_foreignobject_html_image(self):
+        fixture = Path("tests/brand/fixtures/foreignobject-html-image.svg")
+        with self.assertRaisesRegex(ValueError, "must not embed raster images"):
+            audit_svg(fixture)
+
     def test_candidate_paths_use_canonical_filenames(self):
         candidates = CandidatePaths(Path("out/candidate"))
         self.assertEqual(candidates.symbol, Path("out/candidate/symbol.svg"))
