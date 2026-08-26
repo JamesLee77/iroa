@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="track-b-symbol-mono-title track-b-symbol-mono-desc">
+  <title id="track-b-symbol-mono-title">IROA.AI Track B monochrome relay step symbol</title>
+  <desc id="track-b-symbol-mono-desc">The fused i and r relay step monogram in solid black.</desc>
+  <path fill="#111111" fill-rule="evenodd" d="M10 10H34V17C34 20 32 23 28 25H58C76 25 88 35 88 50C88 60 82 68 73 72H68L74 78L90 88H65L50 73H38V88H18V26C13 25 10 22 10 18ZM38 38H58C65 38 69 42 69 47C69 52 65 55 59 55H54V59H38Z"/>
+</svg>

@@ -1,17 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 96" role="img" aria-labelledby="track-b-wordmark-title track-b-wordmark-desc">
-  <title id="track-b-wordmark-title">iroa.ai Track B wordmark</title>
-  <desc id="track-b-wordmark-desc">The lowercase iroa.ai name drawn as custom rounded switchline letterforms in mulberry and amber.</desc>
-  <g fill="none" stroke="#4A3652" stroke-width="11" stroke-linecap="butt" stroke-linejoin="round">
-    <path d="M20 30V74"/>
-    <path d="M48 74V48C48 38 56 30 66 30H70C80 30 86 34 90 42"/>
-    <path d="M126 30H142C154 30 162 38 162 50V54C162 66 154 74 142 74H126C114 74 106 66 106 54V50C106 38 114 30 126 30Z"/>
-    <path d="M220 30C207 30 198 39 198 52C198 65 207 74 220 74C233 74 242 65 242 52C242 39 233 30 220 30Z M242 30V74"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 436 96" role="img" aria-labelledby="track-b-wordmark-title track-b-wordmark-desc">
+  <title id="track-b-wordmark-title">iroa.ai Track B relay step wordmark</title>
+  <desc id="track-b-wordmark-desc">The exact iroa.ai name drawn in custom unicase forms with fused i heads and offset counter steps.</desc>
+  <g fill="#4A3652" fill-rule="evenodd">
+    <path d="M10 12H34V19C34 22 32 25 29 26V76H15V26C12 25 10 22 10 19Z"/>
+    <path d="M48 76V12H75C90 12 100 22 100 36C100 46 94 54 85 58H80L86 64L98 76H78L66 61H64V76ZM64 27H75C82 27 86 31 86 37C86 43 82 47 76 47H72V52H64Z"/>
+    <path d="M144 10C124 10 112 23 112 44C112 65 124 78 144 78C164 78 176 64 176 44C176 23 164 10 144 10ZM144 27C134 27 128 34 128 44C128 54 134 61 143 62H148V57H152C157 54 160 49 160 44C160 34 154 27 144 27Z"/>
+    <path d="M190 76L212 17C215 9 220 6 227 6C234 6 239 10 242 18L264 76H244L239 61H213L208 76ZM218 47H225V53H234L226 27Z"/>
+    <path d="M278 62H292V76H278Z"/>
+    <path d="M306 76L328 17C331 9 336 6 343 6C350 6 355 10 358 18L380 76H360L355 61H329L324 76ZM334 47H341V53H350L342 27Z"/>
+    <path d="M394 12H418V19C418 22 416 25 413 26V76H399V26C396 25 394 22 394 19Z"/>
   </g>
-  <path d="M16 12H24C26 12 28 14 28 16V20C28 22 26 24 24 24H16C14 24 12 22 12 20V16C12 14 14 12 16 12Z" fill="#4A3652"/>
-  <g fill="none" stroke="#9A531F" stroke-width="11" stroke-linecap="butt" stroke-linejoin="round">
-    <path d="M312 30C299 30 290 39 290 52C290 65 299 74 312 74C325 74 334 65 334 52C334 39 325 30 312 30Z M334 30V74"/>
-    <path d="M370 30V74"/>
-  </g>
-  <path d="M262 62H270C272 62 274 64 274 66V70C274 72 272 74 270 74H262C260 74 258 72 258 70V66C258 64 260 62 262 62Z" fill="#9A531F"/>
-  <path d="M366 12H374C376 12 378 14 378 16V20C378 22 376 24 374 24H366C364 24 362 22 362 20V16C362 14 364 12 366 12Z" fill="#9A531F"/>
 </svg>

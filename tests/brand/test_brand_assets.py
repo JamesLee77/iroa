@@ -1,10 +1,12 @@
 import hashlib
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
 import unittest
+from xml.etree import ElementTree as ET
 
 from PIL import Image
 
@@ -15,6 +17,110 @@ from tools.brand.render_assets import render_svg_png
 
 def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _local_tag(tag: str) -> str:
+    return tag.rsplit("}", 1)[-1].lower()
+
+
+def _geometry_signature(path: Path) -> tuple[str, tuple[tuple[str, str], ...]]:
+    root = ET.parse(path).getroot()
+    geometry = tuple(
+        (_local_tag(element.tag), element.attrib.get("d", ""))
+        for element in root.iter()
+        if _local_tag(element.tag) == "path"
+    )
+    return root.attrib.get("viewBox", ""), geometry
+
+
+def _svg_colors(path: Path) -> set[str]:
+    colors = set()
+    for element in ET.parse(path).iter():
+        for value in element.attrib.values():
+            colors.update(
+                color.upper() for color in re.findall(r"#[0-9A-Fa-f]{6}\b", value)
+            )
+    return colors
+
+
+def _svg_aspect_ratio(path: Path) -> float:
+    values = ET.parse(path).getroot().attrib["viewBox"].split()
+    return float(values[2]) / float(values[3])
+
+
+def _render_rgba(source: Path, width: int, height: int) -> Image.Image:
+    with TemporaryDirectory() as directory:
+        destination = Path(directory) / "render.png"
+        render_svg_png(source, destination, width, height)
+        with Image.open(destination).convert("RGBA") as image:
+            return image.copy()
+
+
+def _render_normalized(source: Path, canvas_width: int, height: int) -> Image.Image:
+    width = round(height * _svg_aspect_ratio(source))
+    if width > canvas_width:
+        raise ValueError(f"{source} is wider than the comparison canvas")
+    rendered = _render_rgba(source, width, height)
+    canvas = Image.new("RGBA", (canvas_width, height))
+    canvas.alpha_composite(rendered, ((canvas_width - width) // 2, 0))
+    return canvas
+
+
+def _alpha_iou(left: Image.Image, right: Image.Image) -> float:
+    left_ink = {
+        (x, y)
+        for y in range(left.height)
+        for x in range(left.width)
+        if left.getpixel((x, y))[3] >= 128
+    }
+    right_ink = {
+        (x, y)
+        for y in range(right.height)
+        for x in range(right.width)
+        if right.getpixel((x, y))[3] >= 128
+    }
+    return len(left_ink & right_ink) / len(left_ink | right_ink)
+
+
+def _ink_components(image: Image.Image) -> list[int]:
+    ink = {
+        (x, y)
+        for y in range(image.height)
+        for x in range(image.width)
+        if image.getpixel((x, y))[3] >= 128
+    }
+    sizes = []
+    while ink:
+        stack = [ink.pop()]
+        size = 1
+        while stack:
+            x, y = stack.pop()
+            for neighbor in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+                if neighbor in ink:
+                    ink.remove(neighbor)
+                    stack.append(neighbor)
+                    size += 1
+        sizes.append(size)
+    return sorted(sizes, reverse=True)
+
+
+def _horizontal_ink_runs(image: Image.Image) -> list[tuple[int, int]]:
+    columns = [
+        x
+        for x in range(image.width)
+        if any(image.getpixel((x, y))[3] >= 128 for y in range(image.height))
+    ]
+    if not columns:
+        return []
+    runs = []
+    start = previous = columns[0]
+    for column in columns[1:]:
+        if column != previous + 1:
+            runs.append((start, previous))
+            start = column
+        previous = column
+    runs.append((start, previous))
+    return runs
 
 
 class BrandContractTest(unittest.TestCase):
@@ -82,6 +188,8 @@ class BrandContractTest(unittest.TestCase):
         track_b = CandidatePaths(Path("docs/brand/candidates/track-b"))
         for path in (
             track_b.symbol,
+            track_b.root / "symbol-reverse.svg",
+            track_b.root / "symbol-mono.svg",
             track_b.wordmark,
             track_b.wordmark_reverse,
             track_b.wordmark_mono,
@@ -90,6 +198,109 @@ class BrandContractTest(unittest.TestCase):
             audit_svg(path)
         self.assertNotEqual(_digest(track_a.symbol), _digest(track_b.symbol))
         self.assertNotEqual(_digest(track_a.wordmark), _digest(track_b.wordmark))
+
+    def test_track_b_masters_are_path_only(self):
+        root = Path("docs/brand/candidates/track-b")
+        allowed = {"svg", "title", "desc", "g", "path"}
+        for path in sorted(root.glob("*.svg")):
+            tags = {_local_tag(element.tag) for element in ET.parse(path).iter()}
+            self.assertLessEqual(tags, allowed, (path, tags - allowed))
+
+    def test_track_b_color_variants_share_exact_geometry(self):
+        root = Path("docs/brand/candidates/track-b")
+        families = (
+            ("symbol.svg", "symbol-mono.svg", "symbol-reverse.svg"),
+            ("wordmark.svg", "wordmark-mono.svg", "wordmark-reverse.svg"),
+        )
+        for names in families:
+            paths = tuple(root / name for name in names)
+            for path in paths:
+                self.assertTrue(path.is_file(), path)
+            signatures = {_geometry_signature(path) for path in paths}
+            self.assertEqual(len(signatures), 1, paths)
+
+    def test_track_b_palette_excludes_legacy_colors(self):
+        neutral = {"#000000", "#111111", "#FFFFFF"}
+        legacy_paths = tuple(Path("docs/brand/candidates/track-a").glob("*.svg"))
+        legacy_paths += tuple(Path("docs/brand").glob("iroa-*.svg"))
+        legacy_colors = set().union(*(_svg_colors(path) for path in legacy_paths))
+        track_b_colors = set().union(
+            *(
+                _svg_colors(Path("docs/brand/candidates/track-b") / name)
+                for name in ("symbol.svg", "wordmark.svg")
+            )
+        )
+        chromatic_track_b = track_b_colors - neutral
+        self.assertTrue(chromatic_track_b)
+        self.assertTrue(
+            chromatic_track_b.isdisjoint(legacy_colors - neutral),
+            chromatic_track_b & legacy_colors,
+        )
+
+    def test_track_b_rendered_geometry_is_materially_independent(self):
+        track_a = CandidatePaths(Path("docs/brand/candidates/track-a"))
+        track_b = CandidatePaths(Path("docs/brand/candidates/track-b"))
+        track_a_symbol = _render_normalized(track_a.symbol, 96, 96)
+        track_b_symbol = _render_normalized(track_b.symbol, 96, 96)
+        track_a_wordmark = _render_normalized(track_a.wordmark_mono, 436, 96)
+        track_b_wordmark = _render_normalized(track_b.wordmark_mono, 436, 96)
+
+        symbol_iou = _alpha_iou(track_a_symbol, track_b_symbol)
+        wordmark_iou = _alpha_iou(track_a_wordmark, track_b_wordmark)
+        self.assertLess(symbol_iou, 0.40, symbol_iou)
+        self.assertLess(wordmark_iou, 0.18, wordmark_iou)
+        self.assertNotEqual(
+            len(_ink_components(track_a_symbol)),
+            len(_ink_components(track_b_symbol)),
+        )
+        self.assertNotEqual(
+            len(_ink_components(track_a_wordmark)),
+            len(_ink_components(track_b_wordmark)),
+        )
+
+    def test_track_b_wordmark_integrates_i_and_has_even_native_spacing(self):
+        source = Path("docs/brand/candidates/track-b/wordmark-mono.svg")
+        aspect_ratio = _svg_aspect_ratio(source)
+        reference = _render_rgba(source, round(96 * aspect_ratio), 96)
+        self.assertEqual(len(_ink_components(reference)), 7)
+
+        for height in (16, 24, 32, 64):
+            image = _render_rgba(source, round(height * aspect_ratio), height)
+            runs = _horizontal_ink_runs(image)
+            self.assertEqual(len(runs), 7, (height, runs))
+            gaps = [
+                right[0] - left[1] - 1
+                for left, right in zip(runs, runs[1:])
+            ]
+            self.assertGreaterEqual(min(gaps), 1, (height, gaps))
+            self.assertLessEqual(max(gaps), min(gaps) * 2 + 1, (height, gaps))
+
+    def test_track_b_review_proofs_cover_all_variants(self):
+        root = Path("docs/brand/candidates/track-b")
+        for stem in (
+            "symbol",
+            "symbol-mono",
+            "symbol-reverse",
+            "wordmark",
+            "wordmark-mono",
+            "wordmark-reverse",
+        ):
+            source = root / f"{stem}.svg"
+            self.assertTrue(source.is_file(), source)
+            aspect_ratio = _svg_aspect_ratio(source)
+            for height in (16, 24, 32, 64):
+                proof = root / "renders" / f"{stem}-{height}.png"
+                self.assertTrue(proof.is_file(), proof)
+                audit_png(proof, round(height * aspect_ratio), height)
+
+    def test_track_b_masters_render_deterministically(self):
+        root = Path("docs/brand/candidates/track-b")
+        for source in sorted(root.glob("*.svg")):
+            aspect_ratio = _svg_aspect_ratio(source)
+            width = round(32 * aspect_ratio)
+            first = _render_rgba(source, width, 32)
+            second = _render_rgba(source, width, 32)
+            self.assertEqual(first.tobytes(), second.tobytes(), source)
 
     def test_track_a_mono_o_renders_with_a_distinct_action_point(self):
         source = Path("docs/brand/candidates/track-a/wordmark-mono.svg")

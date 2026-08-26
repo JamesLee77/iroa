@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="track-b-symbol-title track-b-symbol-desc">
-  <title id="track-b-symbol-title">IROA.AI Track B switchline symbol</title>
-  <desc id="track-b-symbol-desc">An asymmetric route turns back once, then continues as a warm handoff segment.</desc>
-  <path d="M18 78V38C18 27 27 18 38 18H58C69 18 78 27 78 38C78 49 69 58 58 58H45" fill="none" stroke="#4A3652" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round"/>
-  <path d="M45 58C37 58 30 65 30 73C30 76 32 78 35 78H78" fill="none" stroke="#9A531F" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round"/>
+  <title id="track-b-symbol-title">IROA.AI Track B relay step symbol</title>
+  <desc id="track-b-symbol-desc">A fused i and r monogram with a stepped counter floor before its diagonal release.</desc>
+  <path fill="#4A3652" fill-rule="evenodd" d="M10 10H34V17C34 20 32 23 28 25H58C76 25 88 35 88 50C88 60 82 68 73 72H68L74 78L90 88H65L50 73H38V88H18V26C13 25 10 22 10 18ZM38 38H58C65 38 69 42 69 47C69 52 65 55 59 55H54V59H38Z"/>
 </svg>
