@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 180" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">iroa.ai Track A reverse wordmark</title>
+  <desc id="desc">The refined iroa.ai wordmark in white and light teal on navy with one coral action point at the open o.</desc>
+  <rect width="600" height="180" rx="24" fill="#16263D"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48 72V132"/>
+    <path d="M105 132V75M105 91C116 72 139 68 157 80"/>
+    <path d="M387 96A36 36 0 1 1 351 60A36 36 0 0 1 387 96V132"/>
+  </g>
+  <circle cx="48" cy="41.5" r="10.5" fill="#FFFFFF"/>
+  <g transform="translate(166 29.5) scale(.8)">
+    <path d="M120.706 54.564A48 48 0 1 0 120.706 105.436" fill="none" stroke="#FFFFFF" stroke-width="27.5" stroke-linecap="round"/>
+    <circle cx="120.706" cy="54.564" r="14.323" fill="#F06D5E"/>
+  </g>
+  <g fill="#83CDC4" stroke="#83CDC4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="438" cy="132" r="7.5" stroke="none"/>
+    <path d="M511.5 110A25.5 25.5 0 1 1 486 84.5A25.5 25.5 0 0 1 511.5 110V135.5" fill="none" stroke-width="14"/>
+    <path d="M552 91V135.5" fill="none" stroke-width="14"/>
+    <circle cx="552" cy="68" r="7.5" stroke="none"/>
+  </g>
+</svg>

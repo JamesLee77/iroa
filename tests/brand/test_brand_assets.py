@@ -1,4 +1,7 @@
 from pathlib import Path
+import shutil
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -58,6 +61,17 @@ class BrandContractTest(unittest.TestCase):
             Path("out/candidate/wordmark-mono.svg"),
         )
 
+    def test_track_a_candidate_contract(self):
+        paths = CandidatePaths(Path("docs/brand/candidates/track-a"))
+        for path in (
+            paths.symbol,
+            paths.wordmark,
+            paths.wordmark_reverse,
+            paths.wordmark_mono,
+        ):
+            self.assertTrue(path.is_file(), path)
+            audit_svg(path)
+
     def test_audit_png_requires_exact_rgba_size_with_transparency(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "opaque.png"
@@ -71,6 +85,60 @@ class BrandContractTest(unittest.TestCase):
             destination = Path(directory) / "symbol.png"
             render_svg_png(source, destination, 32, 24)
             audit_png(destination, 32, 24)
+
+    def test_candidate_cli_renders_each_variant_at_review_sizes(self):
+        square_source = Path("tests/brand/fixtures/accessible-symbol.svg")
+        wide_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 20" role="img" aria-labelledby="title desc">
+  <title id="title">Wide test mark</title>
+  <desc id="desc">Three-to-one test artwork for candidate preview rendering.</desc>
+  <path d="M4 10H56" fill="none" stroke="#16263D" stroke-width="4" stroke-linecap="round"/>
+</svg>
+"""
+        with TemporaryDirectory() as directory:
+            candidate = Path(directory) / "candidate"
+            candidate.mkdir()
+            shutil.copyfile(square_source, candidate / "symbol.svg")
+            for name in (
+                "wordmark.svg",
+                "wordmark-reverse.svg",
+                "wordmark-mono.svg",
+            ):
+                (candidate / name).write_text(wide_svg, encoding="utf-8")
+
+            subprocess.run(
+                [
+                    sys.executable,
+                    "tools/brand/render_assets.py",
+                    "candidate",
+                    str(candidate),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            expected_dimensions = {
+                "symbol": ((16, 16), (24, 24), (32, 32), (64, 64)),
+                "wordmark": ((48, 16), (72, 24), (96, 32), (192, 64)),
+                "wordmark-reverse": (
+                    (48, 16),
+                    (72, 24),
+                    (96, 32),
+                    (192, 64),
+                ),
+                "wordmark-mono": (
+                    (48, 16),
+                    (72, 24),
+                    (96, 32),
+                    (192, 64),
+                ),
+            }
+            for stem, dimensions in expected_dimensions.items():
+                for size, expected in zip((16, 24, 32, 64), dimensions):
+                    path = candidate / "renders" / f"{stem}-{size}.png"
+                    self.assertTrue(path.is_file(), path)
+                    with Image.open(path) as image:
+                        self.assertEqual(image.size, expected, path)
 
 
 if __name__ == "__main__":
