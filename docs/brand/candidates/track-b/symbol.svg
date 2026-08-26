@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="track-b-symbol-title track-b-symbol-desc">
+  <title id="track-b-symbol-title">IROA.AI Track B switchline symbol</title>
+  <desc id="track-b-symbol-desc">An asymmetric route turns back once, then continues as a warm handoff segment.</desc>
+  <path d="M18 78V38C18 27 27 18 38 18H58C69 18 78 27 78 38C78 49 69 58 58 58H45" fill="none" stroke="#4A3652" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round"/>
+  <path d="M45 58C37 58 30 65 30 73C30 76 32 78 35 78H78" fill="none" stroke="#9A531F" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round"/>
+</svg>

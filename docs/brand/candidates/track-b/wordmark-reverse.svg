@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 96" role="img" aria-labelledby="track-b-reverse-title track-b-reverse-desc">
+  <title id="track-b-reverse-title">iroa.ai Track B reverse wordmark</title>
+  <desc id="track-b-reverse-desc">The lowercase iroa.ai custom switchline wordmark in white for dark backgrounds.</desc>
+  <g fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="butt" stroke-linejoin="round">
+    <path d="M20 30V74"/>
+    <path d="M48 74V48C48 38 56 30 66 30H70C80 30 86 34 90 42"/>
+    <path d="M126 30H142C154 30 162 38 162 50V54C162 66 154 74 142 74H126C114 74 106 66 106 54V50C106 38 114 30 126 30Z"/>
+    <path d="M220 30C207 30 198 39 198 52C198 65 207 74 220 74C233 74 242 65 242 52C242 39 233 30 220 30Z M242 30V74"/>
+    <path d="M312 30C299 30 290 39 290 52C290 65 299 74 312 74C325 74 334 65 334 52C334 39 325 30 312 30Z M334 30V74"/>
+    <path d="M370 30V74"/>
+  </g>
+  <path d="M16 12H24C26 12 28 14 28 16V20C28 22 26 24 24 24H16C14 24 12 22 12 20V16C12 14 14 12 16 12Z" fill="#FFFFFF"/>
+  <path d="M262 62H270C272 62 274 64 274 66V70C274 72 272 74 270 74H262C260 74 258 72 258 70V66C258 64 260 62 262 62Z" fill="#FFFFFF"/>
+  <path d="M366 12H374C376 12 378 14 378 16V20C378 22 376 24 374 24H366C364 24 362 22 362 20V16C362 14 364 12 366 12Z" fill="#FFFFFF"/>
+</svg>

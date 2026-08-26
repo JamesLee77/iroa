@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 import shutil
 import subprocess
@@ -10,6 +11,10 @@ from PIL import Image
 from tools.brand.audit_assets import audit_png, contrast_ratio, audit_svg
 from tools.brand.brand_contract import CandidatePaths, OFFICIAL_PNG_SIZES
 from tools.brand.render_assets import render_svg_png
+
+
+def _digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 class BrandContractTest(unittest.TestCase):
@@ -71,6 +76,20 @@ class BrandContractTest(unittest.TestCase):
         ):
             self.assertTrue(path.is_file(), path)
             audit_svg(path)
+
+    def test_track_b_candidate_contract_and_independence(self):
+        track_a = CandidatePaths(Path("docs/brand/candidates/track-a"))
+        track_b = CandidatePaths(Path("docs/brand/candidates/track-b"))
+        for path in (
+            track_b.symbol,
+            track_b.wordmark,
+            track_b.wordmark_reverse,
+            track_b.wordmark_mono,
+        ):
+            self.assertTrue(path.is_file(), path)
+            audit_svg(path)
+        self.assertNotEqual(_digest(track_a.symbol), _digest(track_b.symbol))
+        self.assertNotEqual(_digest(track_a.wordmark), _digest(track_b.wordmark))
 
     def test_track_a_mono_o_renders_with_a_distinct_action_point(self):
         source = Path("docs/brand/candidates/track-a/wordmark-mono.svg")
