@@ -76,3 +76,53 @@ git diff --check
 ## Concerns
 
 None for the scoped Task 5 promotion.  Legal trademark clearance and later deployment/consumer integration remain outside this source-and-export validation scope.
+
+## Review fix round 1
+
+All five Important findings and the three output-affecting Minor findings were corrected in the same managed promotion path.
+
+### RED/GREEN evidence
+
+1. RED - direct-target render proof failed because the old renderer rasterized the intrinsic SVG first and then enlarged it with Pillow/Lanczos.  GREEN - `render_svg_png()` now invokes the SVG renderer once with the requested `-z height width` target; the 1024px result is pixel-identical to an independent direct target render.
+2. RED - an added `track-b-leak.png` in a temporary copied official tree was accepted by the audit.  GREEN - exact recursive inventories now cover masters, digital exports, icons, and print; the temp leak is rejected, while promotion removes stale files only inside those four managed directories.
+3. RED - official masters included `circle` and `rect` primitives.  GREEN - every official/favicons graphic primitive is now an SVG path; 1024px Track A source-vs-official color renders are pixel-identical, and strict path-only SVG auditing passes.
+4. RED - blank and image-backed PDFs were accepted by the earlier audit.  GREEN - a blank page, a `BT ET` text page, and a temporary DCT/JPEG XObject PDF are each rejected; official PDFs must be one-page A4, fontless, image-XObject-free, text-operator-free, vector-path-bearing, nonblank, and Poppler-clean.
+5. RED - the prior lockup foreground was 13px off the A4 horizontal center at 150dpi.  GREEN - SVG-derived ink bounds center every PDF foreground within the 3px test tolerance on both axes.
+
+### Regeneration and visual QA
+
+The PDF edit operation marker was invoked once immediately before the corrected six-PDF regeneration command:
+
+```text
+node .../pdf/container_tools/mark_artifact_operation_started.mjs --operation-kind edit --expected-output-count 6 --output-format pdf
+```
+
+All official/root PNGs and icons were regenerated from direct target SVG rendering. Native 512px and 1024px symbol inspection found crisp continuous round edges, correct transparent margins, and no upscaled softness. The six corrected A4 PDF pages were rendered with Poppler at 150dpi and reviewed as one contact sheet: color/mono symbol, wordmark, and lockup are each centered, unclipped, and free of visual artifacts.
+
+### Minor corrections
+
+- Track A symbol, official color/reverse/mono symbol masters, and favicon now describe the action point as centered in the opening; monochrome text does not claim a color.
+- `SELECTION.md` now states that Track A promotion is complete and excludes Track B from official use.
+- Lockup serialization strips trailing whitespace; the final range check is run against `77b6c64..HEAD` after the fix-round commit.
+
+### Fix-round verification commands
+
+```text
+python3 -m unittest discover -s tests/brand -p 'test_*.py' -v
+# 38 tests, OK
+
+python3 tools/brand/audit_assets.py official
+# official asset audit passed
+
+# SHA-256 manifest -> promote -> SHA-256 manifest -> cmp
+# deterministic=0 files=49
+
+# every official PDF content stream
+# BT=False ET=False Do=False paths=True
+
+pdfinfo + pdffonts + pdftocairo (all six)
+# one unencrypted A4 page, no font rows, exit 0 and empty renderer stderr
+
+git diff --check
+# exit 0
+```

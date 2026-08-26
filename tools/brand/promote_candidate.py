@@ -5,14 +5,29 @@ import math
 from pathlib import Path
 import re
 import shutil
+from tempfile import TemporaryDirectory
 import zlib
 from xml.etree import ElementTree as ET
 
+from PIL import Image
+
 if __package__:
-    from .brand_contract import OFFICIAL_PNG_SIZES
+    from .brand_contract import (
+        OFFICIAL_DIGITAL_FILES,
+        OFFICIAL_ICON_FILES,
+        OFFICIAL_MASTER_FILES,
+        OFFICIAL_PNG_SIZES,
+        OFFICIAL_PRINT_FILES,
+    )
     from .render_assets import render_svg_png
 else:
-    from brand_contract import OFFICIAL_PNG_SIZES
+    from brand_contract import (
+        OFFICIAL_DIGITAL_FILES,
+        OFFICIAL_ICON_FILES,
+        OFFICIAL_MASTER_FILES,
+        OFFICIAL_PNG_SIZES,
+        OFFICIAL_PRINT_FILES,
+    )
     from render_assets import render_svg_png
 
 
@@ -34,39 +49,82 @@ def _selection_winner() -> str:
     return match.group(1)
 
 
-def _recolor(source: Path, destination: Path, replacements: dict[str, str], background: str | None = None) -> None:
+def _svg_circle_path(cx: str, cy: str, radius: str) -> str:
+    return (
+        f"M{float(cx) + float(radius):g} {cy} "
+        f"A{radius} {radius} 0 1 0 {float(cx) - float(radius):g} {cy} "
+        f"A{radius} {radius} 0 1 0 {float(cx) + float(radius):g} {cy} Z"
+    )
+
+
+def _rounded_rect_path(width: str, height: str, radius: str = "0") -> str:
+    width_value, height_value, radius_value = float(width), float(height), float(radius)
+    if radius_value == 0:
+        return f"M0 0H{width_value:g}V{height_value:g}H0Z"
+    return (
+        f"M{radius_value:g} 0H{width_value - radius_value:g} "
+        f"A{radius_value:g} {radius_value:g} 0 0 1 {width_value:g} {radius_value:g} "
+        f"V{height_value - radius_value:g}A{radius_value:g} {radius_value:g} 0 0 1 {width_value - radius_value:g} {height_value:g} "
+        f"H{radius_value:g}A{radius_value:g} {radius_value:g} 0 0 1 0 {height_value - radius_value:g} "
+        f"V{radius_value:g}A{radius_value:g} {radius_value:g} 0 0 1 {radius_value:g} 0Z"
+    )
+
+
+def _path_only(content: str) -> str:
+    def circle(match: re.Match[str]) -> str:
+        attributes = dict(re.findall(r'([\w-]+)="([^"]*)"', match.group(1)))
+        remainder = re.sub(r'\s+(?:cx|cy|r)="[^"]*"', "", match.group(1)).strip()
+        return f'<path d="{_svg_circle_path(attributes["cx"], attributes["cy"], attributes["r"])}" {remainder}/>'
+
+    def rect(match: re.Match[str]) -> str:
+        attributes = dict(re.findall(r'([\w-]+)="([^"]*)"', match.group(1)))
+        remainder = re.sub(r'\s+(?:width|height|rx)="[^"]*"', "", match.group(1)).strip()
+        return f'<path d="{_rounded_rect_path(attributes["width"], attributes["height"], attributes.get("rx", "0"))}" {remainder}/>'
+
+    content = re.sub(r"<circle\b([^>]*)/>", circle, content)
+    return re.sub(r"<rect\b([^>]*)/>", rect, content)
+
+
+def _recolor(source: Path, destination: Path, replacements: dict[str, str], background: str | None = None, description: str | None = None) -> None:
     content = source.read_text(encoding="utf-8")
     for old, new in replacements.items():
         content = content.replace(old, new)
     if background:
+        viewbox = ET.parse(source).getroot().attrib["viewBox"].split()
         content = content.replace(
             "</desc>",
-            f"</desc>\n  <rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>",
+            f"</desc>\n  <path d=\"{_rounded_rect_path(viewbox[2], viewbox[3])}\" fill=\"{background}\"/>",
             1,
         )
+    if description:
+        content = re.sub(r"<desc[^>]*>.*?</desc>", f"<desc id=\"desc\">{description}</desc>", content, count=1, flags=re.S)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(content, encoding="utf-8")
+    destination.write_text(_path_only(content), encoding="utf-8")
 
 
-def _body(svg: Path, remove_rect: bool = False) -> str:
+def _body(svg: Path, remove_context_background: bool = False) -> str:
     root = ET.parse(svg).getroot()
     pieces = []
     for child in root:
         tag = child.tag.rsplit("}", 1)[-1]
-        if tag in {"title", "desc"} or (remove_rect and tag == "rect"):
+        if tag in {"title", "desc"}:
             continue
-        pieces.append(ET.tostring(child, encoding="unicode").replace("ns0:", ""))
+        if remove_context_background and tag == "path" and child.attrib.get("fill") == NAVY and "stroke" not in child.attrib:
+            continue
+        piece = ET.tostring(child, encoding="unicode")
+        piece = re.sub(r'\s+xmlns:ns0="[^"]*"', "", piece).replace("ns0:", "")
+        pieces.append(re.sub(r"[ \t]+(?=\n)", "", piece).strip())
     return "\n  ".join(pieces)
 
 
 def _write_lockup(symbol: Path, wordmark: Path, destination: Path, variant: str) -> None:
     background = (
-        f'\n  <rect width="760" height="180" rx="24" fill="{NAVY}"/>'
+        f'\n  <path d="{_rounded_rect_path("760", "180", "24")}" fill="{NAVY}"/>'
         if variant == "reverse"
         else ""
     )
-    contents = _body(symbol, remove_rect=True)
-    lettering = _body(wordmark, remove_rect=True)
+    contents = _body(symbol, remove_context_background=variant == "reverse")
+    lettering = _body(wordmark, remove_context_background=variant == "reverse")
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(
         f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 180" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
@@ -83,6 +141,18 @@ def _write_lockup(symbol: Path, wordmark: Path, destination: Path, variant: str)
 def _aspect_ratio(path: Path) -> float:
     values = ET.parse(path).getroot().attrib["viewBox"].replace(",", " ").split()
     return float(values[2]) / float(values[3])
+
+
+def _remove_unexpected_files(directory: Path, expected: frozenset[str]) -> None:
+    """Remove stale managed files only below one official output directory."""
+    if not directory.exists():
+        return
+    for path in sorted((path for path in directory.rglob("*") if path.is_file()), reverse=True):
+        if path.relative_to(directory).as_posix() not in expected:
+            path.unlink()
+    for path in sorted((path for path in directory.rglob("*") if path.is_dir()), reverse=True):
+        if not any(path.iterdir()):
+            path.rmdir()
 
 
 def _render_exports(symbol: Path, wordmark: Path) -> None:
@@ -186,7 +256,7 @@ def _arc_segments(x1: float, y1: float, rx: float, ry: float, rotation: float, l
 _TOKENS = re.compile(r"[AaCcHhLlMmVvZz]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?")
 
 
-def _path_commands(data: str, matrix: tuple[float, float, float, float, float, float], page_scale: float, page_height: float, margin: float) -> list[str]:
+def _path_commands(data: str, matrix: tuple[float, float, float, float, float, float], page_scale: float, page_height: float, offset_x: float, offset_y: float) -> list[str]:
     tokens = _TOKENS.findall(data)
     position = 0
     command = ""
@@ -198,7 +268,7 @@ def _path_commands(data: str, matrix: tuple[float, float, float, float, float, f
         value = float(tokens[position]); position += 1; return value
     def emit(point: tuple[float, float]) -> str:
         x, y = _point(matrix, *point)
-        return f"{margin + x * page_scale:.5f} {page_height - margin - y * page_scale:.5f}"
+        return f"{offset_x + x * page_scale:.5f} {page_height - offset_y - y * page_scale:.5f}"
     while position < len(tokens):
         if tokens[position].isalpha():
             command = tokens[position]; position += 1
@@ -235,12 +305,28 @@ def _circle_path(cx: float, cy: float, radius: float) -> str:
             f"C{cx + k} {cy - radius} {cx + radius} {cy - k} {cx + radius} {cy} Z")
 
 
+def _svg_ink_bounds(svg: Path, raw_width: float, raw_height: float) -> tuple[float, float, float, float]:
+    supersample = 8
+    with TemporaryDirectory() as directory:
+        rendered = Path(directory) / "ink.png"
+        render_svg_png(svg, rendered, round(raw_width * supersample), round(raw_height * supersample))
+        with Image.open(rendered).convert("RGBA") as image:
+            alpha = image.getchannel("A").point(lambda value: 255 if value else 0)
+            bounds = alpha.getbbox()
+    if bounds is None:
+        raise ValueError(f"{svg} contains no visible artwork")
+    return tuple(value / supersample for value in bounds)
+
+
 def _pdf_drawing(svg: Path) -> bytes:
     root = ET.parse(svg).getroot()
     _, _, raw_width, raw_height = (float(value) for value in root.attrib["viewBox"].split())
     width, height = PDF_PAGE
     margin = 72.0
     scale = min((width - 2 * margin) / raw_width, (height - 2 * margin) / raw_height)
+    left, top, right, bottom = _svg_ink_bounds(svg, raw_width, raw_height)
+    offset_x = width / 2 - (left + right) * scale / 2
+    offset_y = height / 2 - (top + bottom) * scale / 2
     commands: list[str] = []
     def color(value: str) -> str:
         value = value.lstrip("#")
@@ -266,7 +352,7 @@ def _pdf_drawing(svg: Path) -> bytes:
             commands.extend((f"{color(stroke)} RG", f"{float(style.get('stroke-width', '1')) * abs(matrix[0]) * scale:.5f} w"))
             if style.get("stroke-linecap") == "round": commands.append("1 J")
             if style.get("stroke-linejoin") == "round": commands.append("1 j")
-        commands.extend(_path_commands(data, matrix, scale, height, margin))
+        commands.extend(_path_commands(data, matrix, scale, height, offset_x, offset_y))
         commands.append("B" if fill != "none" and stroke != "none" else "f" if fill != "none" else "S")
     visit(root, {}, (1.0, 0.0, 0.0, 1.0, 0.0, 0.0))
     return ("\n".join(commands) + "\n").encode("ascii")
@@ -295,15 +381,10 @@ def _write_pdf(source: Path, destination: Path) -> None:
 
 def _write_print_exports(masters: Path) -> None:
     print_root = BRAND / "exports/print"
-    expected = set()
     for role in ("symbol", "wordmark", "lockup"):
         for variant in ("color", "mono"):
             output = print_root / f"iroa-{role}-{variant}.pdf"
-            expected.add(output.name)
             _write_pdf(masters / role / f"iroa-{role}-{variant}.svg", output)
-    extras = {path.name for path in print_root.glob("*.pdf")} - expected
-    if extras:
-        raise ValueError(f"print export directory contains unexpected PDFs: {sorted(extras)}")
 
 
 def promote(winner: str) -> None:
@@ -318,14 +399,18 @@ def promote(winner: str) -> None:
     masters = BRAND / "masters"
     symbol = masters / "symbol"
     wordmark = masters / "wordmark"
+    _remove_unexpected_files(masters, OFFICIAL_MASTER_FILES)
+    _remove_unexpected_files(BRAND / "exports/digital", OFFICIAL_DIGITAL_FILES)
+    _remove_unexpected_files(BRAND / "exports/icons", OFFICIAL_ICON_FILES)
+    _remove_unexpected_files(BRAND / "exports/print", OFFICIAL_PRINT_FILES)
     symbol.mkdir(parents=True, exist_ok=True)
     wordmark.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(candidate / "symbol.svg", symbol / "iroa-symbol-color.svg")
-    _recolor(candidate / "symbol.svg", symbol / "iroa-symbol-mono.svg", {NAVY: INK, CORAL: INK, TEAL: INK})
-    _recolor(candidate / "symbol.svg", symbol / "iroa-symbol-reverse.svg", {NAVY: "#FFFFFF", TEAL: LIGHT_TEAL}, NAVY)
-    shutil.copyfile(candidate / "wordmark.svg", wordmark / "iroa-wordmark-color.svg")
-    shutil.copyfile(candidate / "wordmark-mono.svg", wordmark / "iroa-wordmark-mono.svg")
-    shutil.copyfile(candidate / "wordmark-reverse.svg", wordmark / "iroa-wordmark-reverse.svg")
+    _recolor(candidate / "symbol.svg", symbol / "iroa-symbol-color.svg", {})
+    _recolor(candidate / "symbol.svg", symbol / "iroa-symbol-mono.svg", {NAVY: INK, CORAL: INK, TEAL: INK}, description="A single-ink open loop with one action point centered in its opening.")
+    _recolor(candidate / "symbol.svg", symbol / "iroa-symbol-reverse.svg", {NAVY: "#FFFFFF", TEAL: LIGHT_TEAL}, NAVY, description="A reverse open loop with one coral action point centered in its opening.")
+    _recolor(candidate / "wordmark.svg", wordmark / "iroa-wordmark-color.svg", {})
+    _recolor(candidate / "wordmark-mono.svg", wordmark / "iroa-wordmark-mono.svg", {})
+    _recolor(candidate / "wordmark-reverse.svg", wordmark / "iroa-wordmark-reverse.svg", {})
     for variant in ("color", "mono", "reverse"):
         _write_lockup(symbol / f"iroa-symbol-{variant}.svg", wordmark / f"iroa-wordmark-{variant}.svg", masters / "lockup" / f"iroa-lockup-{variant}.svg", variant)
     shutil.copyfile(symbol / "iroa-symbol-color.svg", BRAND / "iroa-symbol.svg")

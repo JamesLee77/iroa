@@ -8,10 +8,11 @@ from tempfile import TemporaryDirectory
 import unittest
 from xml.etree import ElementTree as ET
 
-from PIL import Image
+from PIL import Image, ImageChops
 
-from tools.brand.audit_assets import audit_png, contrast_ratio, audit_svg
+from tools.brand.audit_assets import _audit_pdf, audit_official_assets, audit_png, contrast_ratio, audit_svg
 from tools.brand.brand_contract import CandidatePaths, OFFICIAL_PNG_SIZES
+from tools.brand.promote_candidate import _remove_unexpected_files
 from tools.brand.render_assets import render_svg_png
 
 
@@ -375,6 +376,21 @@ class BrandContractTest(unittest.TestCase):
             render_svg_png(source, destination, 32, 24)
             audit_png(destination, 32, 24)
 
+    def test_render_svg_png_matches_direct_target_resolution_svg_rendering(self):
+        source = Path("docs/brand/candidates/track-a/symbol.svg")
+        with TemporaryDirectory() as directory:
+            target = Path(directory) / "target.png"
+            direct = Path(directory) / "direct.png"
+            render_svg_png(source, target, 1024, 1024)
+            subprocess.run(
+                ["sips", "-s", "format", "png", "-z", "1024", "1024", str(source), "--out", str(direct)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            with Image.open(target).convert("RGBA") as rendered, Image.open(direct).convert("RGBA") as expected:
+                self.assertEqual(rendered.tobytes(), expected.tobytes())
+
     def test_candidate_cli_renders_each_variant_at_review_sizes(self):
         square_source = Path("tests/brand/fixtures/accessible-symbol.svg")
         wide_svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 20" role="img" aria-labelledby="title desc">
@@ -447,7 +463,7 @@ class BrandContractTest(unittest.TestCase):
         )
         self.assertEqual(result.stdout.strip(), "official asset audit passed")
 
-    def test_official_color_masters_are_the_selected_track_a_masters(self):
+    def test_official_color_masters_preserve_the_selected_track_a_geometry(self):
         pairs = (
             (
                 Path("docs/brand/candidates/track-a/symbol.svg"),
@@ -459,7 +475,11 @@ class BrandContractTest(unittest.TestCase):
             ),
         )
         for selected, official in pairs:
-            self.assertEqual(selected.read_bytes(), official.read_bytes())
+            ratio = _svg_aspect_ratio(selected)
+            width, height = round(1024 * ratio), 1024
+            selected_render = _render_rgba(selected, width, height)
+            official_render = _render_rgba(official, width, height)
+            self.assertIsNone(ImageChops.difference(selected_render, official_render).getbbox(), official)
 
     def test_official_svg_masters_are_accessible_vector_only_artwork(self):
         root = Path("docs/brand/masters")
@@ -474,8 +494,28 @@ class BrandContractTest(unittest.TestCase):
                 self.assertTrue(path.is_file(), path)
                 audit_svg(path)
                 tags = {_local_tag(element.tag) for element in ET.parse(path).iter()}
-                self.assertNotIn("text", tags, path)
-                self.assertNotIn("image", tags, path)
+                self.assertLessEqual(tags, {"svg", "title", "desc", "g", "path"}, (path, tags))
+
+    def test_official_audit_rejects_extraneous_managed_asset_in_a_temp_tree(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            shutil.copytree("docs/brand", root / "docs/brand")
+            (root / "docs/brand/exports/digital/track-b-leak.png").write_bytes(b"not an asset")
+            with self.assertRaisesRegex(ValueError, "unexpected files"):
+                audit_official_assets(root)
+
+    def test_promotion_cleanup_removes_only_stale_managed_files(self):
+        with TemporaryDirectory() as directory:
+            managed = Path(directory) / "managed"
+            outside = Path(directory) / "outside.txt"
+            managed.mkdir()
+            (managed / "keep.png").write_bytes(b"keep")
+            (managed / "track-b-leak.png").write_bytes(b"stale")
+            outside.write_bytes(b"preserve")
+            _remove_unexpected_files(managed, frozenset({"keep.png"}))
+            self.assertTrue((managed / "keep.png").is_file())
+            self.assertFalse((managed / "track-b-leak.png").exists())
+            self.assertEqual(outside.read_bytes(), b"preserve")
 
     def test_official_png_exports_have_exact_dimensions_alpha_and_safe_area(self):
         digital = Path("docs/brand/exports/digital")
@@ -541,6 +581,51 @@ class BrandContractTest(unittest.TestCase):
                 self.assertEqual(render.stderr, "", render.stderr)
                 with Image.open(rendered.with_suffix(".png")) as image:
                     self.assertGreater(image.getbbox()[2], 0)
+
+    def test_pdf_audit_rejects_blank_text_and_jpeg_backed_documents(self):
+        def write_pdf(path: Path, content: bytes, resources: bytes = b"<< >>", jpeg: bool = False) -> None:
+            objects = [
+                b"<< /Type /Catalog /Pages 2 0 R >>",
+                b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources " + resources + b" /Contents 4 0 R >>",
+                b"<< /Length " + str(len(content)).encode() + b" >>\nstream\n" + content + b"\nendstream",
+            ]
+            if jpeg:
+                objects.append(b"<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length 1 >>\nstream\n0\nendstream")
+            payload = bytearray(b"%PDF-1.4\n")
+            offsets = [0]
+            for index, object_ in enumerate(objects, 1):
+                offsets.append(len(payload)); payload.extend(f"{index} 0 obj\n".encode()); payload.extend(object_); payload.extend(b"\nendobj\n")
+            xref = len(payload)
+            payload.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode())
+            payload.extend(b"".join(f"{offset:010d} 00000 n \n".encode() for offset in offsets[1:]))
+            payload.extend(f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode())
+            path.write_bytes(payload)
+
+        with TemporaryDirectory() as directory:
+            blank = Path(directory) / "blank.pdf"
+            text = Path(directory) / "text.pdf"
+            image = Path(directory) / "image.pdf"
+            write_pdf(blank, b"\n")
+            write_pdf(text, b"BT ET\n")
+            write_pdf(image, b"q /Im1 Do Q\n", b"<< /XObject << /Im1 5 0 R >> >>", jpeg=True)
+            for path in (blank, text, image):
+                with self.assertRaises(ValueError):
+                    _audit_pdf(path)
+
+    def test_print_pdf_foreground_ink_is_centered_on_a4(self):
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "page"
+            for path in sorted(Path("docs/brand/exports/print").glob("*.pdf")):
+                subprocess.run(["pdftocairo", "-r", "150", "-png", "-singlefile", str(path), str(output)], check=True, capture_output=True, text=True)
+                with Image.open(output.with_suffix(".png")).convert("RGB") as image:
+                    ink = Image.eval(image.convert("L"), lambda channel: 255 if channel < 245 else 0)
+                    bounds = ink.getbbox()
+                    self.assertIsNotNone(bounds, path)
+                    center_x = (bounds[0] + bounds[2]) / 2
+                    center_y = (bounds[1] + bounds[3]) / 2
+                    self.assertLessEqual(abs(center_x - image.width / 2), 3, (path, bounds))
+                    self.assertLessEqual(abs(center_y - image.height / 2), 3, (path, bounds))
 
 
 if __name__ == "__main__":
