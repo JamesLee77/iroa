@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import App from './App';
 import { homeKo } from './content/home.ko';
@@ -35,5 +35,41 @@ describe('approved homepage content', () => {
     expect(homeKo.settlement.asset).toBe('Circle Native USDC');
     expect(homeKo.settlement.consumerPayment).toContain('원화');
     expect(homeKo.settlement.consumerPayment).toContain('카드');
+  });
+});
+
+describe('header and hero navigation', () => {
+  it('links the primary and secondary actions to existing homepage sections', () => {
+    render(<App />);
+
+    expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'IROA.AI 홈' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '기관 도입·PoC 상담' })).toHaveAttribute(
+      'href',
+      '#contact',
+    );
+    expect(screen.getByRole('link', { name: 'IROA 작동 방식 보기' })).toHaveAttribute(
+      'href',
+      '#how-it-works',
+    );
+  });
+
+  it('opens and closes the mobile menu with button and Escape', () => {
+    render(<App />);
+
+    const menuButton = screen.getByRole('button', { name: '메뉴 열기' });
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(menuButton);
+    expect(screen.getByRole('button', { name: '메뉴 닫기' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByRole('button', { name: '메뉴 열기' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 });

@@ -1,7 +1,17 @@
+import { Hero } from './components/Hero';
+import { SiteHeader } from './components/SiteHeader';
+import { homeKo } from './content/home.ko';
+
 export default function App() {
   return (
-    <main>
-      <h1>말로 요청하면, 현실의 일이 안전하게 완료됩니다.</h1>
-    </main>
+    <>
+      <a className="skip-link" href="#main-content">
+        본문으로 바로가기
+      </a>
+      <SiteHeader navigation={homeKo.navigation} wordmarkUrl={homeKo.assets.wordmarkUrl} />
+      <main id="main-content">
+        <Hero content={homeKo.hero} />
+      </main>
+    </>
   );
 }
