@@ -1,6 +1,6 @@
 # IROA.AI 브랜드 자산 안내
 
-이 디렉터리의 BI v1.0 공식 자산은 사용자가 선택한 **Track A**에서 승격한 `masters/`와 그로부터 생성한 `exports/`다. 운영 규칙은 [한국어 BI 가이드](IROA_BI_GUIDE_KO.md), 실제 적용 인상은 [사용 예시 보드](examples/usage-overview.png), 선택 근거는 [SELECTION.md](candidates/SELECTION.md)를 기준으로 한다.
+이 디렉터리의 BI v1.0 공식 자산은 사용자가 선택한 **Track A**에서 승격한 `masters/`와 그로부터 생성한 `exports/`다. 운영 규칙은 [한국어 BI 가이드](IROA_BI_GUIDE_KO.md), 실제 적용 인상은 [사용 예시 보드](examples/usage-overview.png), 선택 근거는 [SELECTION.md](candidates/SELECTION.md)를 기준으로 한다. 현재 소스·관리 출력·문서 배포본의 재현 검증 범위와 외부 게이트는 [BI v1.0 최종 검증 영수증](BI_V1_VERIFICATION.md)에 기록한다.
 
 ## 저장소 역할 계약
 
