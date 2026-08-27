@@ -106,7 +106,13 @@ def _font(
     size: int,
     bold: bool = False,
 ) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(font_paths[bold]), size)
+    # Pin Pillow's layout backend so hosts with optional libraqm installed do
+    # not shape the same bundled fonts differently from hosts without it.
+    return ImageFont.truetype(
+        str(font_paths[bold]),
+        size,
+        layout_engine=ImageFont.Layout.BASIC,
+    )
 
 
 def _rounded(

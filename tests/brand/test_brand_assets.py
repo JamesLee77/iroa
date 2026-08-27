@@ -13,7 +13,7 @@ from urllib.parse import unquote, urlsplit
 import zipfile
 from xml.etree import ElementTree as ET
 
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageFont
 
 from tools.brand.audit_assets import _audit_pdf, audit_official_assets, audit_png, contrast_ratio, audit_svg
 from tools.brand.brand_contract import (
@@ -26,6 +26,7 @@ from tools.brand.brand_contract import (
 )
 from tools.brand.promote_candidate import _remove_unexpected_files
 from tools.brand.render_assets import render_svg_png
+from tools.brand.build_usage_overview import _font, _verified_font_paths
 
 
 def _digest(path: Path) -> str:
@@ -1228,6 +1229,11 @@ class BrandContractTest(unittest.TestCase):
             with Image.open(outputs[0]) as image:
                 self.assertEqual(image.size, (2560, 1600))
                 self.assertEqual(image.mode, "RGB")
+
+    def test_usage_overview_pins_basic_text_layout_engine(self):
+        font_paths = _verified_font_paths(Path("docs/brand/assets/fonts"))
+        face = _font(font_paths, 20)
+        self.assertEqual(face.layout_engine, ImageFont.Layout.BASIC)
 
     def test_usage_overview_builder_fails_closed_for_pinned_font_drift(self):
         source_fonts = Path("docs/brand/assets/fonts")

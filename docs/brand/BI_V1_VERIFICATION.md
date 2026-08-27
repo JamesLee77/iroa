@@ -36,7 +36,7 @@ python3 tools/brand/audit_assets.py official
 # official asset audit passed
 
 python3 -m unittest discover -s tests/brand -p 'test*.py' -v
-# Ran 66 tests in 100.824s
+# Ran 67 tests in 155.039s
 # OK
 
 python3 tools/brand/verify_comparison.py docs/brand/candidates/comparison/iroa-bi-candidates.html
@@ -141,7 +141,7 @@ cmp docs/brand/iroa-wordmark-reverse.svg docs/brand/masters/wordmark/iroa-wordma
 ## 네이티브 검사와 시각 확인 범위
 
 - SVG: 9개 공식 마스터와 `favicon.svg`의 viewBox를 확인했다. 심볼은 `160×160`, 워드마크는 `600×180`, 락업은 `760×180`이며, 공식 감사가 path-only·접근성 메타데이터·비래스터 계약을 통과했다. 컬러 락업 SVG를 별도 PNG로 렌더해 확인했다.
-- PNG: 공식 디지털·아이콘 32개와 루트 PNG 2개, 총 34개를 RGBA와 네이티브 크기로 검사했다. Apple 터치·앱·마스크 가능 5개는 Navy 풀블리드·완전 불투명이며 같은 크기의 일반 투명 심볼과 바이트가 다르다. maskable 192/512는 핵심 심볼이 중앙 반지름 40% 원형 안전영역을 통과하고, 일반 디지털·파비콘·워치·키오스크는 투명도를 유지한다. 루트 심볼은 `512×512`, 루트 워드마크는 `1200×360`이다.
+- PNG: 공식 디지털·아이콘 32개와 루트 PNG 2개, 총 34개를 RGBA와 네이티브 크기로 검사했다. Apple 터치·앱·마스크 가능 5개는 Navy 풀블리드·완전 불투명이며 같은 크기의 일반 투명 심볼과 바이트가 다르다. maskable 192/512는 핵심 심볼이 중앙 반지름 40% 원형 안전영역을 통과하고, 일반 디지털·파비콘·워치·키오스크는 투명도를 유지한다. 루트 심볼은 `512×512`, 루트 워드마크는 `1200×360`이다. 사용 예시 보드는 Pillow의 선택적 `libraqm` 유무와 무관하게 동일한 픽셀을 내도록 BASIC 텍스트 레이아웃 엔진을 명시하며, 시스템·번들 Python 생성본의 PNG 및 manifest 바이트가 일치했다.
 - 인쇄 PDF: color/mono 심볼·워드마크·락업 **6개 전부** `pdfinfo`, `pdffonts`, Poppler 렌더로 검사했다. 각각 1쪽 A4, 글꼴 행 0, Poppler stderr 0 bytes였다. 컬러 락업의 렌더도 육안으로 확인했다.
 - 비교 PDF: 2쪽 표준 A4, 글꼴 행 0, Poppler stderr 0 bytes였다. 두 비교 보드의 렌더를 확인했으며 비교 검증기는 8개 씬에서 Track A/B 워드마크 잉크 높이 차이 `0px`를 보고했다. 비교 PDF는 호환성 목적의 이미지 기반 PDF이며, 공식 관리 디렉터리의 소비자 자산은 아니다.
 - 가이드 DOCX/PDF: 문서 PDF는 15쪽 A4, `LibreOffice 26.2.5.2 (AARCH64)` 산출본이며 Poppler stderr 0 bytes다. `pdffonts`는 NotoSansKR-Bold subset 1행, NotoSansKR-Medium subset 2행과 의도된 Helvetica subset 1행만 보이고 모든 행이 `emb/sub/uni=yes`다. DOCX의 A4 토큰·실제 번호 매기기·정확한 표 geometry·공식 inline 이미지와 alt text·고정 Noto 글꼴 내장·스타일 상속 계약을 재실행해 통과했다. ZIP 엔트리 이름은 정렬되고 모든 엔트리 시각은 `1980-01-01 00:00:00`으로 정규화되며 2.1초 간격의 두 빌드가 바이트 단위로 동일했다.
