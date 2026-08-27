@@ -1,5 +1,7 @@
 import { Hero } from './components/Hero';
 import { OrchestrationFlow } from './components/OrchestrationFlow';
+import { InstitutionalModels } from './components/InstitutionalModels';
+import { ScenarioStories } from './components/ScenarioStories';
 import { SiteHeader } from './components/SiteHeader';
 import { homeKo } from './content/home.ko';
 
@@ -13,6 +15,8 @@ export default function App() {
       <main id="main-content">
         <Hero content={homeKo.hero} />
         <OrchestrationFlow steps={homeKo.lifecycle} protections={homeKo.protections} />
+        <ScenarioStories stories={homeKo.scenarios} />
+        <InstitutionalModels models={homeKo.institutions} />
       </main>
     </>
   );

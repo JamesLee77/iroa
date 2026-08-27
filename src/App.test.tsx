@@ -94,3 +94,22 @@ describe('IROA request lifecycle', () => {
     expect(screen.getByRole('heading', { name: '완료 책임' })).toBeInTheDocument();
   });
 });
+
+describe('scenario stories and institution models', () => {
+  it('labels all three stories as target experiences, not live services', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: '실제 활용 시나리오' });
+    expect(within(region).getAllByRole('article')).toHaveLength(3);
+    expect(within(region).getAllByText('목표 경험')).toHaveLength(3);
+    expect(within(region).queryByText('운영 중')).not.toBeInTheDocument();
+  });
+
+  it('names the three approved institutional adoption models', () => {
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: '지자체·복지기관' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '병원·돌봄기관' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '기업·프랜차이즈·CSR' })).toBeInTheDocument();
+  });
+});
