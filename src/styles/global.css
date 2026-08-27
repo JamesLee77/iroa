@@ -451,3 +451,213 @@ p {
     margin-top: var(--space-8);
   }
 }
+
+.section {
+  padding: clamp(5rem, 10vw, 9rem) 1rem;
+}
+
+.section__inner {
+  width: min(100%, var(--container));
+  margin-inline: auto;
+}
+
+.section-intro {
+  display: grid;
+  max-width: 52rem;
+  margin-bottom: clamp(3rem, 7vw, 5rem);
+}
+
+.section-intro__eyebrow {
+  margin-bottom: var(--space-4);
+  color: var(--color-teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.section-intro h2 {
+  margin-bottom: var(--space-5);
+  font-size: clamp(2.25rem, 5vw, 4.6rem);
+  letter-spacing: -0.05em;
+  line-height: 1.13;
+}
+
+.section-intro__lead {
+  max-width: 46rem;
+  margin-bottom: 0;
+  color: var(--color-muted);
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+}
+
+.section-intro[data-inverse] .section-intro__eyebrow {
+  color: var(--color-light-teal);
+}
+
+.section-intro[data-inverse] h2 {
+  color: var(--color-white);
+}
+
+.section-intro[data-inverse] .section-intro__lead {
+  color: rgb(255 255 255 / 76%);
+}
+
+.orchestration {
+  background: var(--color-white);
+}
+
+.flow {
+  display: grid;
+  padding: 0;
+  margin: 0;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.flow__step {
+  position: relative;
+  min-height: 13rem;
+  padding: var(--space-5);
+  border: 1px solid rgb(22 38 61 / 14%);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.flow__step[data-recovery] {
+  border-color: rgb(240 109 94 / 45%);
+  background: var(--color-surface-coral);
+}
+
+.flow__number {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: var(--space-5);
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: var(--color-white);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.flow__step[data-recovery] .flow__number {
+  background: var(--color-coral);
+  color: var(--color-navy);
+}
+
+.flow__step h3 {
+  margin-bottom: var(--space-3);
+  font-size: 1.125rem;
+  line-height: 1.35;
+}
+
+.flow__step p {
+  margin-bottom: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+.flow__connector {
+  position: absolute;
+  z-index: 2;
+  top: 100%;
+  left: calc(var(--space-5) + 1.625rem);
+  width: 2px;
+  height: 1.5rem;
+  background: var(--color-teal);
+}
+
+.flow__connector::after {
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--color-teal);
+  border-bottom: 2px solid var(--color-teal);
+  content: '';
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.protection-rails {
+  display: grid;
+  margin-top: clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid rgb(22 38 61 / 15%);
+}
+
+.protection-rails article {
+  position: relative;
+  padding: var(--space-6) 0;
+  border-bottom: 1px solid rgb(22 38 61 / 15%);
+}
+
+.protection-rails article > span {
+  display: inline-block;
+  margin-bottom: var(--space-3);
+  color: var(--color-teal);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+}
+
+.protection-rails h3 {
+  margin-bottom: var(--space-3);
+  font-size: 1.25rem;
+}
+
+.protection-rails p {
+  max-width: 34rem;
+  margin-bottom: 0;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 768px) {
+  .protection-rails {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .protection-rails article {
+    padding: var(--space-6);
+    border-bottom: 0;
+    border-left: 1px solid rgb(22 38 61 / 15%);
+  }
+
+  .protection-rails article:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .flow {
+    gap: 1.25rem;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .flow__step {
+    min-height: 18rem;
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .flow__connector {
+    top: calc(var(--space-5) + 1.625rem);
+    left: 100%;
+    width: 1.25rem;
+    height: 2px;
+  }
+
+  .flow__connector::after {
+    right: -1px;
+    bottom: auto;
+    left: auto;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 0;
+    border-top: 2px solid var(--color-teal);
+    border-right: 2px solid var(--color-teal);
+    transform: translateY(-50%) rotate(45deg);
+  }
+}

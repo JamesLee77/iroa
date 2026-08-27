@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import App from './App';
 import { homeKo } from './content/home.ko';
@@ -71,5 +71,26 @@ describe('header and hero navigation', () => {
       'aria-expanded',
       'false',
     );
+  });
+});
+
+describe('IROA request lifecycle', () => {
+  it('renders all seven steps in whitepaper order with recovery last', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: 'IROA 작동 방식' });
+    const lifecycle = within(region).getByRole('list', { name: '요청 생명주기' });
+    const steps = within(lifecycle).getAllByRole('listitem');
+
+    expect(steps).toHaveLength(7);
+    expect(within(steps.at(-1)!).getByRole('heading', { name: '복구·사람 인계' })).toBeInTheDocument();
+  });
+
+  it('explains the three protection rails', () => {
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: '사용자 통제' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '사람 연결' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '완료 책임' })).toBeInTheDocument();
   });
 });

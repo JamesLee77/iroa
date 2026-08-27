@@ -1,4 +1,5 @@
 import { Hero } from './components/Hero';
+import { OrchestrationFlow } from './components/OrchestrationFlow';
 import { SiteHeader } from './components/SiteHeader';
 import { homeKo } from './content/home.ko';
 
@@ -11,6 +12,7 @@ export default function App() {
       <SiteHeader navigation={homeKo.navigation} wordmarkUrl={homeKo.assets.wordmarkUrl} />
       <main id="main-content">
         <Hero content={homeKo.hero} />
+        <OrchestrationFlow steps={homeKo.lifecycle} protections={homeKo.protections} />
       </main>
     </>
   );
