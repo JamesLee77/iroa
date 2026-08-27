@@ -9,6 +9,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from urllib.parse import unquote, urlsplit
+import zipfile
 from xml.etree import ElementTree as ET
 
 from PIL import Image, ImageChops
@@ -190,6 +191,69 @@ def _section_inline_asset_paths(
     return tuple(destinations)
 
 
+_WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+_CORE_NS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+_DC_NS = "http://purl.org/dc/elements/1.1/"
+_W = f"{{{_WORD_NS}}}"
+
+
+def _docx_xml(path: Path, member: str) -> ET.Element:
+    with zipfile.ZipFile(path) as archive:
+        return ET.fromstring(archive.read(member))
+
+
+def _word_text(element: ET.Element) -> str:
+    return "".join(node.text or "" for node in element.iter(f"{_W}t"))
+
+
+def _normalized_visible_text(value: str) -> str:
+    return " ".join(value.split())
+
+
+def _markdown_visible_units(path: Path) -> tuple[str, ...]:
+    units = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("|"):
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if all(re.fullmatch(r":?-+:?", cell) for cell in cells):
+                continue
+            candidates = cells
+        else:
+            is_heading = bool(re.match(r"^#{1,6}\s+", line))
+            line = re.sub(r"^#{1,6}\s+", "", line)
+            line = re.sub(r"^>\s?", "", line)
+            if not is_heading:
+                line = re.sub(r"^(?:[-+*]|\d+\.)\s+", "", line)
+            candidates = [line]
+        for candidate in candidates:
+            candidate = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", candidate)
+            candidate = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", candidate)
+            candidate = candidate.replace("**", "").replace("__", "")
+            candidate = candidate.replace("`", "").strip()
+            normalized = _normalized_visible_text(candidate)
+            if normalized:
+                units.append(normalized)
+    return tuple(units)
+
+
+def _pdf_info(path: Path) -> dict[str, str]:
+    result = subprocess.run(
+        ["pdfinfo", str(path)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return {
+        key.strip(): value.strip()
+        for line in result.stdout.splitlines()
+        if ":" in line
+        for key, value in [line.split(":", 1)]
+    }
+
+
 class BrandContractTest(unittest.TestCase):
     def test_bi_guide_has_v1_contract(self):
         guide = Path("docs/brand/IROA_BI_GUIDE_KO.md").read_text(encoding="utf-8")
@@ -308,6 +372,331 @@ class BrandContractTest(unittest.TestCase):
         self.assertEqual(rows["큰 텍스트"]["최소 대비"], "3:1")
         self.assertEqual(rows["큰 텍스트"]["정의"], "18pt 이상 일반 또는 14pt 이상 굵게")
         self.assertEqual(rows["비텍스트 UI·그래픽"]["최소 대비"], "3:1")
+
+    def test_guide_exports_exist_and_are_nonempty(self):
+        for path in (
+            Path("docs/brand/IROA_BI_GUIDE_KO.docx"),
+            Path("docs/brand/IROA_BI_GUIDE_KO.pdf"),
+        ):
+            self.assertTrue(path.is_file(), path)
+            self.assertGreater(path.stat().st_size, 100_000, path)
+
+    def test_guide_docx_metadata_identifies_the_v1_distribution_source(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        self.assertTrue(Path("tools/brand/build_guide.py").is_file())
+        core = _docx_xml(path, "docProps/core.xml")
+        self.assertEqual(core.findtext(f"{{{_DC_NS}}}title"), "IROA.AI Brand Identity Guide")
+        self.assertEqual(
+            core.findtext(f"{{{_DC_NS}}}subject"),
+            "IROA.AI 브랜드 아이덴티티 가이드 · v1.0 · 2026-08-27",
+        )
+        self.assertEqual(core.findtext(f"{{{_CORE_NS}}}version"), "1.0")
+        self.assertEqual(
+            core.findtext(f"{{{_CORE_NS}}}category"),
+            "compact_reference_guide / editorial_cover / A4 / IROA palette",
+        )
+        description = core.findtext(f"{{{_DC_NS}}}description") or ""
+        self.assertIn("docs/brand/IROA_BI_GUIDE_KO.md", description)
+        self.assertIn("Track A", description)
+
+    def test_guide_docx_carries_the_named_a4_reference_tokens(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        document = _docx_xml(path, "word/document.xml")
+        sections = tuple(document.iter(f"{_W}sectPr"))
+        self.assertTrue(sections)
+        for section in sections:
+            page = section.find(f"{_W}pgSz")
+            margins = section.find(f"{_W}pgMar")
+            self.assertEqual((page.get(f"{_W}w"), page.get(f"{_W}h")), ("11906", "16838"))
+            self.assertEqual(page.get(f"{_W}orient", "portrait"), "portrait")
+            self.assertEqual(margins.get(f"{_W}top"), "1134")
+            self.assertEqual(margins.get(f"{_W}right"), "1020")
+            self.assertEqual(margins.get(f"{_W}bottom"), "1020")
+            self.assertEqual(margins.get(f"{_W}left"), "1020")
+            self.assertEqual(margins.get(f"{_W}header"), "567")
+            self.assertEqual(margins.get(f"{_W}footer"), "567")
+
+        styles = _docx_xml(path, "word/styles.xml")
+        style_map = {
+            style.get(f"{_W}styleId"): style
+            for style in styles.findall(f"{_W}style")
+        }
+        expected = {
+            "Normal": ("21", "19222E", "0", "120", "300"),
+            "Title": ("56", "16263D", "0", "240", "300"),
+            "Heading1": ("32", "16263D", "360", "200", "300"),
+            "Heading2": ("26", "16263D", "280", "140", "300"),
+            "Heading3": ("24", "19222E", "200", "100", "300"),
+        }
+        for style_id, tokens in expected.items():
+            style = style_map[style_id]
+            rpr = style.find(f"{_W}rPr")
+            ppr = style.find(f"{_W}pPr")
+            fonts = rpr.find(f"{_W}rFonts")
+            spacing = ppr.find(f"{_W}spacing")
+            self.assertEqual(fonts.get(f"{_W}ascii"), "Noto Sans KR")
+            self.assertEqual(fonts.get(f"{_W}eastAsia"), "Noto Sans KR")
+            self.assertEqual(rpr.find(f"{_W}sz").get(f"{_W}val"), tokens[0])
+            self.assertEqual(rpr.find(f"{_W}color").get(f"{_W}val"), tokens[1])
+            self.assertEqual(spacing.get(f"{_W}before"), tokens[2])
+            self.assertEqual(spacing.get(f"{_W}after"), tokens[3])
+            self.assertEqual(spacing.get(f"{_W}line"), tokens[4])
+            self.assertEqual(spacing.get(f"{_W}lineRule"), "auto")
+        self.assertIn("IROACaption", style_map)
+        self.assertIn("IROANote", style_map)
+
+    def test_guide_docx_uses_real_word_numbering(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        numbering = _docx_xml(path, "word/numbering.xml")
+        formats = {
+            node.get(f"{_W}val")
+            for node in numbering.iter(f"{_W}numFmt")
+        }
+        self.assertIn("bullet", formats)
+        self.assertIn("decimal", formats)
+
+        document = _docx_xml(path, "word/document.xml")
+        numbered = [
+            paragraph
+            for paragraph in document.iter(f"{_W}p")
+            if paragraph.find(f"{_W}pPr/{_W}numPr") is not None
+        ]
+        self.assertGreaterEqual(len(numbered), 35)
+        self.assertTrue(all(_word_text(paragraph).strip() for paragraph in numbered))
+        for paragraph in document.iter(f"{_W}p"):
+            text = _word_text(paragraph).lstrip()
+            self.assertFalse(text.startswith(("- ", "• ", "● ")), text)
+
+        footer_codes = []
+        with zipfile.ZipFile(path) as archive:
+            for member in archive.namelist():
+                if re.fullmatch(r"word/footer\d+\.xml", member):
+                    footer = ET.fromstring(archive.read(member))
+                    footer_codes.extend(
+                        (node.text or "").strip()
+                        for node in footer.iter(f"{_W}instrText")
+                    )
+        self.assertIn("PAGE", footer_codes)
+        self.assertIn("NUMPAGES", footer_codes)
+
+    def test_guide_docx_tables_have_exact_fixed_geometry(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        document = _docx_xml(path, "word/document.xml")
+        tables = tuple(document.iter(f"{_W}tbl"))
+        self.assertGreaterEqual(len(tables), 15)
+        for table in tables:
+            properties = table.find(f"{_W}tblPr")
+            self.assertEqual(properties.find(f"{_W}tblW").get(f"{_W}w"), "9866")
+            self.assertEqual(properties.find(f"{_W}tblW").get(f"{_W}type"), "dxa")
+            self.assertEqual(properties.find(f"{_W}tblInd").get(f"{_W}w"), "120")
+            self.assertEqual(properties.find(f"{_W}tblInd").get(f"{_W}type"), "dxa")
+            self.assertEqual(properties.find(f"{_W}tblLayout").get(f"{_W}type"), "fixed")
+            margins = properties.find(f"{_W}tblCellMar")
+            expected_margins = {"top": "80", "bottom": "80", "start": "120", "end": "120"}
+            for name, expected in expected_margins.items():
+                node = margins.find(f"{_W}{name}")
+                self.assertEqual(node.get(f"{_W}w"), expected)
+                self.assertEqual(node.get(f"{_W}type"), "dxa")
+
+            grid = [
+                int(column.get(f"{_W}w"))
+                for column in table.find(f"{_W}tblGrid").findall(f"{_W}gridCol")
+            ]
+            self.assertEqual(sum(grid), 9866)
+            rows = table.findall(f"{_W}tr")
+            self.assertIsNotNone(rows[0].find(f"{_W}trPr/{_W}tblHeader"))
+            for row in rows:
+                self.assertIsNone(row.find(f"{_W}trPr/{_W}trHeight"))
+                self.assertIsNotNone(row.find(f"{_W}trPr/{_W}cantSplit"))
+                widths = [
+                    int(cell.find(f"{_W}tcPr/{_W}tcW").get(f"{_W}w"))
+                    for cell in row.findall(f"{_W}tc")
+                ]
+                self.assertEqual(widths, grid)
+                self.assertTrue(
+                    all(
+                        cell.find(f"{_W}tcPr/{_W}vAlign").get(f"{_W}val") == "center"
+                        for cell in row.findall(f"{_W}tc")
+                    )
+                )
+
+    def test_guide_docx_images_are_official_and_have_alt_text(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        document = _docx_xml(path, "word/document.xml")
+        drawing_properties = [
+            node
+            for node in document.iter()
+            if node.tag.endswith("}docPr")
+        ]
+        self.assertGreaterEqual(len(drawing_properties), 4)
+        descriptions = [node.get("descr", "").strip() for node in drawing_properties]
+        self.assertTrue(all(descriptions), descriptions)
+        self.assertTrue(any("usage-overview.png" in value for value in descriptions))
+        self.assertTrue(any("iroa-wordmark" in value for value in descriptions))
+        self.assertTrue(any("iroa-symbol" in value for value in descriptions))
+        self.assertTrue(all("track-b" not in value.lower() for value in descriptions))
+
+    def test_guide_docx_embeds_the_two_pinned_noto_fonts(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        relationship_ns = "http://schemas.openxmlformats.org/package/2006/relationships"
+        office_relationship_ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        with zipfile.ZipFile(path) as archive:
+            self.assertIn("word/_rels/fontTable.xml.rels", archive.namelist())
+            font_table = ET.fromstring(archive.read("word/fontTable.xml"))
+            rels = ET.fromstring(archive.read("word/_rels/fontTable.xml.rels"))
+            relationships = {
+                node.get("Id"): node.get("Target")
+                for node in rels.findall(f"{{{relationship_ns}}}Relationship")
+            }
+            noto = next(
+                node
+                for node in font_table.findall(f"{_W}font")
+                if node.get(f"{_W}name") == "Noto Sans KR"
+            )
+            embedded = {
+                "embedRegular": Path("docs/brand/assets/fonts/NotoSansKR-Medium.otf"),
+                "embedBold": Path("docs/brand/assets/fonts/NotoSansKR-Bold.otf"),
+            }
+            for role, source in embedded.items():
+                node = noto.find(f"{_W}{role}")
+                relationship_id = node.get(f"{{{office_relationship_ns}}}id")
+                font_key = bytes.fromhex(node.get(f"{_W}fontKey").strip("{}").replace("-", ""))[::-1]
+                payload = bytearray(archive.read(f"word/{relationships[relationship_id]}"))
+                for index in range(32):
+                    payload[index] ^= font_key[index % 16]
+                self.assertEqual(hashlib.sha256(payload).hexdigest(), _digest(source))
+
+    def test_guide_docx_preserves_every_markdown_content_unit(self):
+        source = Path("docs/brand/IROA_BI_GUIDE_KO.md")
+        output = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        document = _docx_xml(output, "word/document.xml")
+        actual = {
+            _normalized_visible_text(_word_text(paragraph))
+            for paragraph in document.iter(f"{_W}p")
+            if _normalized_visible_text(_word_text(paragraph))
+        }
+        missing = [unit for unit in _markdown_visible_units(source) if unit not in actual]
+        self.assertEqual(missing, [])
+
+        corpus = "\n".join(sorted(actual))
+        for required in (
+            "공식 관리 출력 인벤토리 (49개)",
+            "iroa.ai 도메인은 확보 완료 상태다.",
+            "그러나 도메인 보유는 상표권 확보와는 별개의 문제다.",
+            "이 문서는 브랜드 운영 기준이지 법률 의견, 상표 등록 증명 또는 접근성 인증서가 아니다.",
+            "1.0",
+            "2026-08-27",
+        ):
+            self.assertIn(required, corpus)
+        self.assertNotRegex(
+            corpus,
+            r"(?:TODO|TBD|FIXME|XXX|Lorem|Ipsum|placeholder|:codex-file-citation|turn\d+(?:search|fetch)\d+|【\d+†)",
+        )
+
+    def test_guide_pdf_is_a4_metadata_complete_and_poppler_clean(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
+        info = _pdf_info(path)
+        self.assertEqual(info["Title"], "IROA.AI Brand Identity Guide")
+        self.assertEqual(
+            info["Subject"],
+            "IROA.AI 브랜드 아이덴티티 가이드 · v1.0 · 2026-08-27",
+        )
+        self.assertIn("595.304 x 841.89 pts (A4)", info["Page size"])
+        self.assertGreaterEqual(int(info["Pages"]), 10)
+        self.assertGreater(path.stat().st_size, 100_000)
+
+        fonts = subprocess.run(
+            ["pdffonts", str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotIn("Type 3", fonts.stdout)
+        font_rows = fonts.stdout.splitlines()[2:]
+        self.assertTrue(font_rows)
+        for row in font_rows:
+            columns = row.split()
+            self.assertIn("yes", columns[3:6], row)
+
+        text_result = subprocess.run(
+            ["pdftotext", "-layout", str(path), "-"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        visible = _normalized_visible_text(text_result.stdout)
+        self.assertIn("IROA.AI 브랜드 아이덴티티 가이드", visible)
+        self.assertIn("공식 관리 출력 인벤토리 (49개)", visible)
+        self.assertIn("iroa.ai 도메인은 확보 완료 상태다.", visible)
+        self.assertNotRegex(visible, r"(?:TODO|TBD|FIXME|XXX|:codex-file-citation|【\d+†)")
+
+        with TemporaryDirectory() as directory:
+            prefix = Path(directory) / "page"
+            render = subprocess.run(
+                ["pdftoppm", "-r", "72", "-png", str(path), str(prefix)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(render.returncode, 0, render.stderr)
+            self.assertEqual(render.stderr, "", render.stderr)
+            pages = sorted(Path(directory).glob("page-*.png"))
+            self.assertEqual(len(pages), int(info["Pages"]))
+            for page in pages:
+                with Image.open(page) as image:
+                    self.assertIn(image.size, {(596, 842), (595, 842)}, page)
+
+    def test_guide_pdf_pages_match_a_fresh_docx_conversion(self):
+        committed = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            profile = root / "lo-profile"
+            profile.mkdir()
+            environment = os.environ.copy()
+            environment["SAL_FONTPATH"] = str(Path("docs/brand/assets/fonts").resolve())
+            result = subprocess.run(
+                [
+                    "soffice",
+                    "--headless",
+                    f"-env:UserInstallation={profile.resolve().as_uri()}",
+                    "--convert-to",
+                    "pdf",
+                    "--outdir",
+                    str(root),
+                    "docs/brand/IROA_BI_GUIDE_KO.docx",
+                ],
+                capture_output=True,
+                text=True,
+                env=environment,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            converted = root / "IROA_BI_GUIDE_KO.pdf"
+            self.assertTrue(converted.is_file(), result.stdout)
+            committed_info = _pdf_info(committed)
+            converted_info = _pdf_info(converted)
+            self.assertEqual(converted_info["Pages"], committed_info["Pages"])
+            self.assertEqual(converted_info["Page size"], committed_info["Page size"])
+
+    def test_guide_pdf_has_no_blank_or_nearly_empty_interior_page(self):
+        path = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
+        page_count = int(_pdf_info(path)["Pages"])
+        for page_number in range(2, page_count + 1):
+            result = subprocess.run(
+                [
+                    "pdftotext",
+                    "-f",
+                    str(page_number),
+                    "-l",
+                    str(page_number),
+                    str(path),
+                    "-",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            visible = re.sub(r"\s+", "", result.stdout)
+            minimum = 140 if page_number == page_count else 250
+            self.assertGreaterEqual(len(visible), minimum, (page_number, visible))
 
     def test_usage_overview_builder_is_deterministic_and_rgb(self):
         with TemporaryDirectory() as directory:
