@@ -1,7 +1,9 @@
+import { EcosystemDiagram } from './components/EcosystemDiagram';
 import { Hero } from './components/Hero';
 import { OrchestrationFlow } from './components/OrchestrationFlow';
 import { InstitutionalModels } from './components/InstitutionalModels';
 import { ScenarioStories } from './components/ScenarioStories';
+import { SafetyLayers } from './components/SafetyLayers';
 import { SiteHeader } from './components/SiteHeader';
 import { homeKo } from './content/home.ko';
 
@@ -17,6 +19,8 @@ export default function App() {
         <OrchestrationFlow steps={homeKo.lifecycle} protections={homeKo.protections} />
         <ScenarioStories stories={homeKo.scenarios} />
         <InstitutionalModels models={homeKo.institutions} />
+        <SafetyLayers layers={homeKo.safety} boundaries={homeKo.safetyBoundaries} />
+        <EcosystemDiagram layers={homeKo.ecosystem} />
       </main>
     </>
   );

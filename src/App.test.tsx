@@ -113,3 +113,26 @@ describe('scenario stories and institution models', () => {
     expect(screen.getByRole('heading', { name: '기업·프랜차이즈·CSR' })).toBeInTheDocument();
   });
 });
+
+describe('safety and ecosystem boundaries', () => {
+  it('renders five safety layers and the public-chain data boundary', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: '안전과 신뢰' });
+    expect(within(region).getAllByRole('article')).toHaveLength(5);
+    expect(
+      within(region).getByText('민감정보는 퍼블릭 블록체인에 기록하지 않습니다.'),
+    ).toBeInTheDocument();
+  });
+
+  it('connects all five ecosystem layers and marks Robot as long-term', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: 'IROA 생태계' });
+    ['사용자 접점', 'IROA Agent', 'Orchestration & Safety Core', '현실 실행 네트워크', '검증 가능한 정산'].forEach(
+      (name) => expect(within(region).getByRole('heading', { name })).toBeInTheDocument(),
+    );
+    expect(within(region).getByText('Robot')).toBeInTheDocument();
+    expect(within(region).getByText('장기')).toBeInTheDocument();
+  });
+});
