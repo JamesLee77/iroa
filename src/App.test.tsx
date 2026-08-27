@@ -136,3 +136,39 @@ describe('safety and ecosystem boundaries', () => {
     expect(within(region).getByText('장기')).toBeInTheDocument();
   });
 });
+
+describe('settlement, roadmap, and contact truth boundaries', () => {
+  it('presents Base Native USDC only as B2B settlement after consumer payment', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: '네트워크와 정산' });
+    expect(within(region).getByText('Base')).toBeInTheDocument();
+    expect(within(region).getByText('Circle Native USDC')).toBeInTheDocument();
+    expect(within(region).getByText('원화·카드·계좌')).toBeInTheDocument();
+    expect(within(region).getAllByText(/B2B 정산/).length).toBeGreaterThan(0);
+    expect(
+      within(region).getByText('가스와 지갑은 사용자에게 보이지 않습니다.'),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps roadmap status in approved order', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: 'IROA 로드맵' });
+    expect(
+      within(region)
+        .getAllByTestId('roadmap-status')
+        .map((status) => status.textContent),
+    ).toEqual(['현재', '다음', '계획', '장기']);
+  });
+
+  it('does not collect contact data before an official channel exists', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: '기관 도입 문의' });
+    expect(within(region).queryByRole('form')).not.toBeInTheDocument();
+    expect(
+      within(region).getByText('공식 문의 채널 연결 전에는 개인정보를 수집하지 않습니다.'),
+    ).toBeInTheDocument();
+  });
+});

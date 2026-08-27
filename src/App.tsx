@@ -1,9 +1,13 @@
 import { EcosystemDiagram } from './components/EcosystemDiagram';
 import { Hero } from './components/Hero';
 import { OrchestrationFlow } from './components/OrchestrationFlow';
+import { PilotContact } from './components/PilotContact';
+import { Roadmap } from './components/Roadmap';
 import { InstitutionalModels } from './components/InstitutionalModels';
 import { ScenarioStories } from './components/ScenarioStories';
 import { SafetyLayers } from './components/SafetyLayers';
+import { SettlementNetwork } from './components/SettlementNetwork';
+import { SiteFooter } from './components/SiteFooter';
 import { SiteHeader } from './components/SiteHeader';
 import { homeKo } from './content/home.ko';
 
@@ -21,7 +25,15 @@ export default function App() {
         <InstitutionalModels models={homeKo.institutions} />
         <SafetyLayers layers={homeKo.safety} boundaries={homeKo.safetyBoundaries} />
         <EcosystemDiagram layers={homeKo.ecosystem} />
+        <SettlementNetwork settlement={homeKo.settlement} />
+        <Roadmap phases={homeKo.roadmap} />
+        <PilotContact contact={homeKo.contact} whitepaperUrl={homeKo.assets.whitepaperUrl} />
       </main>
+      <SiteFooter
+        wordmarkUrl={homeKo.assets.wordmarkUrl}
+        whitepaperUrl={homeKo.assets.whitepaperUrl}
+        photoManifestUrl={homeKo.assets.photoManifestUrl}
+      />
     </>
   );
 }
