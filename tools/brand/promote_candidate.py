@@ -40,6 +40,7 @@ TEAL = "#3D8B83"
 LIGHT_TEAL = "#83CDC4"
 INK = "#19222E"
 PDF_PAGE = (595.0, 842.0)
+PLATFORM_ICON_BACKGROUND = (22, 38, 61, 255)
 
 
 def _selection_winner() -> str:
@@ -155,7 +156,21 @@ def _remove_unexpected_files(directory: Path, expected: frozenset[str]) -> None:
             path.rmdir()
 
 
-def _render_exports(symbol: Path, wordmark: Path) -> None:
+def _render_platform_icon(source: Path, destination: Path, size: int, artwork_scale: float) -> None:
+    """Render reverse artwork over a full-bleed official navy platform canvas."""
+    artwork_size = round(size * artwork_scale)
+    with TemporaryDirectory() as directory:
+        artwork_path = Path(directory) / "artwork.png"
+        render_svg_png(source, artwork_path, artwork_size, artwork_size)
+        with Image.open(artwork_path).convert("RGBA") as artwork:
+            canvas = Image.new("RGBA", (size, size), PLATFORM_ICON_BACKGROUND)
+            offset = ((size - artwork_size) // 2, (size - artwork_size) // 2)
+            canvas.alpha_composite(artwork, offset)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            canvas.save(destination, format="PNG", optimize=True)
+
+
+def _render_exports(symbol: Path, wordmark: Path, reverse_symbol: Path) -> None:
     digital = BRAND / "exports/digital"
     icons = BRAND / "exports/icons"
     digital.mkdir(parents=True, exist_ok=True)
@@ -171,11 +186,11 @@ def _render_exports(symbol: Path, wordmark: Path) -> None:
     shutil.copyfile(symbol, icons / "favicon.svg")
     for size in (16, 32, 48):
         render_svg_png(symbol, icons / f"favicon-{size}.png", size, size)
-    for size in (180, 192, 512):
-        name = "apple-touch-icon-180.png" if size == 180 else f"app-icon-{size}.png"
-        render_svg_png(symbol, icons / name, size, size)
+    _render_platform_icon(reverse_symbol, icons / "apple-touch-icon-180.png", 180, .78)
     for size in (192, 512):
-        render_svg_png(symbol, icons / f"maskable-icon-{size}.png", size, size)
+        _render_platform_icon(reverse_symbol, icons / f"app-icon-{size}.png", size, .78)
+    for size in (192, 512):
+        _render_platform_icon(reverse_symbol, icons / f"maskable-icon-{size}.png", size, .68)
     render_svg_png(symbol, icons / "symbol-watch-48.png", 48, 48)
     render_svg_png(symbol, icons / "symbol-kiosk-1024.png", 1024, 1024)
     render_svg_png(symbol, BRAND / "iroa-symbol.png", 512, 512)
@@ -417,7 +432,11 @@ def promote(winner: str) -> None:
     shutil.copyfile(wordmark / "iroa-wordmark-color.svg", BRAND / "iroa-wordmark.svg")
     shutil.copyfile(wordmark / "iroa-wordmark-mono.svg", BRAND / "iroa-wordmark-mono.svg")
     shutil.copyfile(wordmark / "iroa-wordmark-reverse.svg", BRAND / "iroa-wordmark-reverse.svg")
-    _render_exports(symbol / "iroa-symbol-color.svg", wordmark / "iroa-wordmark-color.svg")
+    _render_exports(
+        symbol / "iroa-symbol-color.svg",
+        wordmark / "iroa-wordmark-color.svg",
+        symbol / "iroa-symbol-reverse.svg",
+    )
     _write_print_exports(masters)
 
 

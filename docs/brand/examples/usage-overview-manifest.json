@@ -87,7 +87,7 @@
       ]
     }
   },
-  "sha256": "c0045411d38fa7c397a8b72433ddfb8f8cc14f31045dd030320ebec1ec0fde54",
+  "sha256": "bc35ae208656ce304dff4c644e643bf30c3359188b36dc21c5c039771828ada1",
   "text_runs": [
     {
       "background": "#F7F3EA",
@@ -106,7 +106,7 @@
     {
       "background": "#F7F3EA",
       "bounds": [
-        2143,
+        2146,
         159,
         2460,
         204
@@ -134,7 +134,7 @@
     {
       "background": "#FFFFFF",
       "bounds": [
-        991,
+        993,
         415,
         1178,
         437
@@ -150,7 +150,7 @@
       "bounds": [
         192,
         569,
-        532,
+        535,
         623
       ],
       "context": "web.headline",
@@ -164,7 +164,7 @@
       "bounds": [
         192,
         638,
-        630,
+        632,
         668
       ],
       "context": "web.copy",
@@ -176,9 +176,9 @@
     {
       "background": "#F06D5E",
       "bounds": [
-        225,
+        226,
         703,
-        405,
+        403,
         723
       ],
       "context": "web.action",
@@ -192,7 +192,7 @@
       "bounds": [
         1347,
         347,
-        1388,
+        1387,
         362
       ],
       "context": "app.label",
@@ -204,7 +204,7 @@
     {
       "background": "#FFFFFF",
       "bounds": [
-        1485,
+        1484,
         592,
         1623,
         617
@@ -218,9 +218,9 @@
     {
       "background": "#FFFFFF",
       "bounds": [
-        1464,
+        1462,
         632,
-        1643,
+        1645,
         650
       ],
       "context": "app.copy",
@@ -232,9 +232,9 @@
     {
       "background": "#16263D",
       "bounds": [
-        1521,
+        1520,
         698,
-        1587,
+        1588,
         716
       ],
       "context": "app.action",
@@ -262,7 +262,7 @@
       "bounds": [
         1900,
         347,
-        1970,
+        1972,
         362
       ],
       "context": "watch.label",
@@ -274,9 +274,9 @@
     {
       "background": "#19222E",
       "bounds": [
-        2086,
+        2088,
         595,
-        2230,
+        2228,
         614
       ],
       "context": "watch.copy",
@@ -288,9 +288,9 @@
     {
       "background": "#19222E",
       "bounds": [
-        2117,
+        2115,
         631,
-        2199,
+        2200,
         647
       ],
       "context": "watch.actions",
@@ -304,7 +304,7 @@
       "bounds": [
         1900,
         763,
-        2015,
+        2016,
         783
       ],
       "context": "watch.caption",
@@ -332,7 +332,7 @@
       "bounds": [
         566,
         1058,
-        682,
+        683,
         1099
       ],
       "context": "kiosk.headline1",
@@ -346,7 +346,7 @@
       "bounds": [
         566,
         1115,
-        819,
+        822,
         1156
       ],
       "context": "kiosk.headline2",
@@ -360,7 +360,7 @@
       "bounds": [
         566,
         1185,
-        748,
+        746,
         1209
       ],
       "context": "kiosk.options",
@@ -374,7 +374,7 @@
       "bounds": [
         671,
         1267,
-        830,
+        828,
         1290
       ],
       "context": "kiosk.action",
@@ -388,7 +388,7 @@
       "bounds": [
         144,
         1452,
-        442,
+        440,
         1472
       ],
       "context": "kiosk.caption",
@@ -416,7 +416,7 @@
       "bounds": [
         1340,
         1142,
-        1557,
+        1558,
         1169
       ],
       "context": "document.title",
@@ -430,7 +430,7 @@
       "bounds": [
         1340,
         1187,
-        1560,
+        1565,
         1204
       ],
       "context": "document.copy",
@@ -444,7 +444,7 @@
       "bounds": [
         1204,
         1465,
-        1434,
+        1439,
         1483
       ],
       "context": "document.caption",
@@ -458,7 +458,7 @@
       "bounds": [
         1920,
         909,
-        2138,
+        2141,
         924
       ],
       "context": "system.label",
@@ -472,7 +472,7 @@
       "bounds": [
         1920,
         977,
-        2136,
+        2139,
         1022
       ],
       "context": "system.headline1",
@@ -486,7 +486,7 @@
       "bounds": [
         1920,
         1031,
-        2185,
+        2188,
         1072
       ],
       "context": "system.headline2",
@@ -500,7 +500,7 @@
       "bounds": [
         1920,
         1099,
-        2072,
+        2070,
         1122
       ],
       "context": "system.platforms1",
@@ -514,7 +514,7 @@
       "bounds": [
         1920,
         1141,
-        2081,
+        2079,
         1164
       ],
       "context": "system.platforms2",
@@ -528,7 +528,7 @@
       "bounds": [
         2148,
         1236,
-        2288,
+        2286,
         1257
       ],
       "context": "system.principle1",
@@ -542,7 +542,7 @@
       "bounds": [
         2148,
         1306,
-        2288,
+        2286,
         1327
       ],
       "context": "system.principle2",
@@ -556,7 +556,7 @@
       "bounds": [
         1920,
         1439,
-        2159,
+        2156,
         1453
       ],
       "context": "system.footer",

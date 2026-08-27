@@ -44,7 +44,7 @@
 `exports`는 공식 마스터에서 결정적으로 생성한 배포본이다. 소비자는 여기서 알맞은 파일을 선택하며 파일 자체를 편집하지 않는다.
 
 - `digital/`: 심볼과 워드마크의 RGBA PNG. 각 계열에 `16, 24, 32, 48, 64, 128, 180, 192, 256, 512, 1024` 크기가 있다. 파일 숫자는 높이다.
-- `icons/`: `exports/icons/favicon.svg`, 16/32/48px 파비콘, 180px Apple 터치 아이콘, 192/512px 앱 아이콘, 192/512px 마스크 가능 아이콘, 48px 워치 심볼, 1024px 키오스크 심볼이다.
+- `icons/`: `exports/icons/favicon.svg`, 16/32/48px 파비콘, 180px Apple 터치 아이콘, 192/512px 앱 아이콘, 192/512px 마스크 가능 아이콘, 48px 워치 심볼, 1024px 키오스크 심볼이다. Apple 터치·앱·마스크 가능 아이콘은 공식 Navy 배경을 사방 끝까지 채운 완전 불투명 전용 파일이며, 일반 심볼 PNG의 투명 배경 복제본이 아니다. 마스크 가능 아이콘의 핵심 심볼은 중앙 기준 반지름 40% 원형 안전영역 안에 둔다.
 - `print/`: 심볼·워드마크·락업의 color/mono PDF 6개다.
 
 크기별 전용 형상은 없다. 하나의 승인된 Track A 구성 형상이 모든 크기의 마스터와 내보내기에 사용되며, 16·24·32px PNG도 기하를 바꾸지 않고 같은 형상을 래스터화한다.
@@ -111,5 +111,21 @@ Track B 또는 비교 보드의 일부를 공식 Track A 자산과 시각적으�
 4. `python3 tools/brand/audit_assets.py official`로 인벤토리, SVG, PNG, 아이콘 안전 영역과 PDF 호환성을 감사한다.
 5. 전체 브랜드 테스트와 Markdown 상대 링크 검사를 실행한다.
 6. `python3 tools/brand/build_usage_overview.py`로 사용 예시 PNG와 manifest를 다시 만들고 원본 크기로 확인한다.
+
+### 가이드 DOCX/PDF 정확한 재생성
+
+아래 명령은 저장소 루트에서 실행한다. DOCX 빌더는 ZIP 엔트리 순서·시각·속성·압축을 정규화하므로 같은 입력의 연속 빌드는 바이트 단위로 같다. PDF는 검증 기준인 LibreOffice 26.2.5.2와 고정 글꼴 경로를 사용한다.
+
+```bash
+/Users/hyunsuklee/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 tools/brand/build_guide.py --source docs/brand/IROA_BI_GUIDE_KO.md --output docs/brand/IROA_BI_GUIDE_KO.docx
+
+iroa_guide_tmp="$(mktemp -d /private/tmp/iroa-guide-build.XXXXXX)"
+mkdir -p "$iroa_guide_tmp/home" "$iroa_guide_tmp/tmp" "$iroa_guide_tmp/profile"
+HOME="$iroa_guide_tmp/home" TMPDIR="$iroa_guide_tmp/tmp" SAL_FONTPATH="$(pwd)/docs/brand/assets/fonts" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=Asia/Seoul /opt/homebrew/bin/soffice --headless "-env:UserInstallation=file://$iroa_guide_tmp/profile" --convert-to pdf --outdir docs/brand docs/brand/IROA_BI_GUIDE_KO.docx
+
+/Users/hyunsuklee/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 /Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/documents/scripts/a11y_audit.py docs/brand/IROA_BI_GUIDE_KO.docx --out_json /private/tmp/iroa-guide-a11y-report.json
+```
+
+접근성 영수증은 같은 번들의 감사 도구로 다시 생성하고 `source_sha256`을 현재 DOCX SHA-256으로 갱신한다. 커밋된 `IROA_BI_GUIDE_KO.a11y.json`은 도구 번들 버전·도구 SHA-256·실행 명령·현재 DOCX 해시와 high/medium/low 결과를 함께 고정한다.
 
 도메인 보유, 상표권, 파트너십, 인증과 접근성 인증은 자산 파일의 존재로 자동 확정되지 않는다. 법적·운영 상태는 [BI 가이드의 도메인과 상표권 상태](IROA_BI_GUIDE_KO.md#13-도메인과-상표권-상태)를 따른다.

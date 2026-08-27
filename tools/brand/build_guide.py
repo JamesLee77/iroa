@@ -58,6 +58,7 @@ INK = "19222E"
 WHITE = "FFFFFF"
 
 PAGE_BREAK_HEADINGS: set[str] = set()
+DOCX_ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 
 
 def _append(parent, tag: str, **attributes: str):
@@ -727,9 +728,19 @@ def _embed_pinned_fonts(path: Path) -> None:
     with NamedTemporaryFile(dir=path.parent, suffix=".docx", delete=False) as handle:
         temporary = Path(handle.name)
     try:
-        with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as destination:
+        with zipfile.ZipFile(temporary, "w") as destination:
             for name in sorted(entries):
-                destination.writestr(name, entries[name])
+                member = zipfile.ZipInfo(name, date_time=DOCX_ZIP_TIMESTAMP)
+                member.compress_type = zipfile.ZIP_DEFLATED
+                member.create_system = 0
+                member.external_attr = 0
+                member.internal_attr = 0
+                destination.writestr(
+                    member,
+                    entries[name],
+                    compress_type=zipfile.ZIP_DEFLATED,
+                    compresslevel=9,
+                )
         temporary.replace(path)
     finally:
         temporary.unlink(missing_ok=True)

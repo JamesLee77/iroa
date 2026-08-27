@@ -1,7 +1,7 @@
 # IROA.AI BI v1.0 최종 검증 영수증
 
 검증일: 2026-08-27
-검증 기준 커밋: `206428bd2f3bc46d9f0622bc75a0518896bac25f` (`test: require exact guide PDF binding`)
+최종 수정 wave 시작 기준 커밋: `9a3204b` (`docs: record IROA BI v1 verification`)
 
 ## 판정 범위
 
@@ -23,6 +23,7 @@
 | Track A 공식 승격 | `b4d8ce4b7623cdec15a102613aee892a42816cae`, `6cbff620757a61cb85cad4d47dcd8662323c2189` |
 | 가이드·예시 보드 | `2ef82b9b8e834d88ee0f75096a4489cb089cdba2`, `0108782871e3c141f96192c03f31a8330899f427`, `b5cdb909641ed8e45c7b63c8a85d788bb2cdbb3e` |
 | DOCX/PDF 배포 바인딩 | `5ea78c4f8087e3f72f956a68d415728568cb9d54`, `5c7b3c7041672a2f73764d8d15c4a7dc56ec30d6`, `206428bd2f3bc46d9f0622bc75a0518896bac25f` |
+| 플랫폼 아이콘·결정적 DOCX 최종 수정 | 이 영수증과 같은 최종 수정 커밋 |
 
 Track B는 `candidates/track-b/`와 비교 기록에만 남는다. 최종 감사에서 `masters/` 및 `exports/` 경로·텍스트를 각각 검색해 Track B 참조가 없음을 확인했다.
 
@@ -34,8 +35,8 @@ Track B는 `candidates/track-b/`와 비교 기록에만 남는다. 최종 감사
 python3 tools/brand/audit_assets.py official
 # official asset audit passed
 
-python3 -m unittest discover -s tests/brand -p 'test_*.py' -v
-# Ran 63 tests in 40.645s
+python3 -m unittest discover -s tests/brand -p 'test*.py' -v
+# Ran 66 tests in 100.824s
 # OK
 
 python3 tools/brand/verify_comparison.py docs/brand/candidates/comparison/iroa-bi-candidates.html
@@ -60,7 +61,7 @@ git diff --check
 # all exit 0
 ```
 
-공식 감사는 10개 마스터, 22개 디지털 PNG, 11개 아이콘, 6개 인쇄 PDF의 정확한 파일 집합을 닫힌 실패 방식으로 검사한다. SVG는 title/desc/viewBox와 path 기반 벡터만 허용하고, 라이브 텍스트·래스터 참조를 거부한다. PNG는 정해진 RGBA 크기와 투명도, 마스크 가능 아이콘의 10% 안전 영역을 검사한다. 인쇄 PDF는 1쪽 A4, 비어 있지 않은 벡터 패스, 글꼴·텍스트 연산·이미지 XObject 부재, Poppler 무오류 렌더를 요구한다.
+공식 감사는 10개 마스터, 22개 디지털 PNG, 11개 아이콘, 6개 인쇄 PDF의 정확한 파일 집합을 닫힌 실패 방식으로 검사한다. SVG는 title/desc/viewBox와 path 기반 벡터만 허용하고, 라이브 텍스트·래스터 참조를 거부한다. PNG는 자산별 alpha 정책을 적용한다. 디지털·파비콘·워치·키오스크는 투명도를 요구하고 Apple 터치·앱·마스크 가능 파일은 RGBA 완전 불투명을 요구한다. 마스크 가능 아이콘은 핵심 심볼이 중앙 반지름 40% 원형 안전영역 안에 있어야 한다. 인쇄 PDF는 1쪽 A4, 비어 있지 않은 벡터 패스, 글꼴·텍스트 연산·이미지 XObject 부재, Poppler 무오류 렌더를 요구한다.
 
 ## 호환 경로와 공식 인벤토리
 
@@ -119,15 +120,15 @@ cmp docs/brand/iroa-wordmark-reverse.svg docs/brand/masters/wordmark/iroa-wordma
 | `exports/digital/iroa-wordmark-256.png` | `4451958e7afa818a42816f135271ca6ee4fcb59739e86992b4cbf0337a3a3c26` |
 | `exports/digital/iroa-wordmark-512.png` | `7cbeab2d53bd953666b26b4d8e324dce82bafa5b6dbd4b6ae08380b6aa4ce09b` |
 | `exports/digital/iroa-wordmark-1024.png` | `ad09e817343879c0ad92008b447aac3933a9457540b6a1e113ffa8183c710422` |
-| `exports/icons/app-icon-192.png` | `d4cf0404f9b7051e85128349f732789b238331c4a7041baa2ad8c4a6ee7aa53b` |
-| `exports/icons/app-icon-512.png` | `9cd1c783d06ad629718a49a61c5e2cd4e6e61fb5fe5da05485f6cb65ccb5ab52` |
-| `exports/icons/apple-touch-icon-180.png` | `35a4f93076caa61f731b5dda269d2c510f4878efa8579cf5ce7243bcecc9ffe8` |
+| `exports/icons/app-icon-192.png` | `4cc067cc9d591413f8a74ab6fd5f953ff4d09e1733fd83c574fd8f9b04374221` |
+| `exports/icons/app-icon-512.png` | `ac53f6fc6363150d8c191eba7a592762d52b822bb6cd1b63888f318781eea0fa` |
+| `exports/icons/apple-touch-icon-180.png` | `4fa245f9a3d1429ecd69055772f45635aa3a21c5cca8cb0f637fff200db7a7dc` |
 | `exports/icons/favicon-16.png` | `fa0961cda6540e93eb285c2f29c138932fce1e326cf23fb989afb2ba0b0c1458` |
 | `exports/icons/favicon-32.png` | `634bbdc7b4cb2d6937ddace8f3387b0db2c3bdfa44aa38a6a6c93287ae26cdfd` |
 | `exports/icons/favicon-48.png` | `367131165bda091100878b8be4cd7c0ae0051ff53d9f2b3858569761701fd01e` |
 | `exports/icons/favicon.svg` | `9287edb52fb8f1f98ff5b7f413ca3042ac55c692e0999194965424b9e4f0ed07` |
-| `exports/icons/maskable-icon-192.png` | `d4cf0404f9b7051e85128349f732789b238331c4a7041baa2ad8c4a6ee7aa53b` |
-| `exports/icons/maskable-icon-512.png` | `9cd1c783d06ad629718a49a61c5e2cd4e6e61fb5fe5da05485f6cb65ccb5ab52` |
+| `exports/icons/maskable-icon-192.png` | `425d023e374a80c3a635fc9ceacd492ca657d47033fd93d2d1a76de25213d103` |
+| `exports/icons/maskable-icon-512.png` | `4ab7be63a02061e448c1e165ee209d8a0bb4b303607d4996eaaa69ed6748e7dc` |
 | `exports/icons/symbol-kiosk-1024.png` | `0a6b23c32e803a39ae3b7892c8adc755aa8cc267dafd8c980e430015ed10aedf` |
 | `exports/icons/symbol-watch-48.png` | `367131165bda091100878b8be4cd7c0ae0051ff53d9f2b3858569761701fd01e` |
 | `exports/print/iroa-lockup-color.pdf` | `7a0ba2d8150117d7b226cab9dd2910185c7e5d37fb42b0d19d0c5af69cefb209` |
@@ -140,12 +141,13 @@ cmp docs/brand/iroa-wordmark-reverse.svg docs/brand/masters/wordmark/iroa-wordma
 ## 네이티브 검사와 시각 확인 범위
 
 - SVG: 9개 공식 마스터와 `favicon.svg`의 viewBox를 확인했다. 심볼은 `160×160`, 워드마크는 `600×180`, 락업은 `760×180`이며, 공식 감사가 path-only·접근성 메타데이터·비래스터 계약을 통과했다. 컬러 락업 SVG를 별도 PNG로 렌더해 확인했다.
-- PNG: 공식 디지털·아이콘 32개와 루트 PNG 2개, 총 34개를 RGBA와 네이티브 크기로 검사했다. 루트 심볼은 `512×512`, 루트 워드마크는 `1200×360`이다. 1024px 심볼과 워드마크를 원본 크기로 확인했다.
+- PNG: 공식 디지털·아이콘 32개와 루트 PNG 2개, 총 34개를 RGBA와 네이티브 크기로 검사했다. Apple 터치·앱·마스크 가능 5개는 Navy 풀블리드·완전 불투명이며 같은 크기의 일반 투명 심볼과 바이트가 다르다. maskable 192/512는 핵심 심볼이 중앙 반지름 40% 원형 안전영역을 통과하고, 일반 디지털·파비콘·워치·키오스크는 투명도를 유지한다. 루트 심볼은 `512×512`, 루트 워드마크는 `1200×360`이다.
 - 인쇄 PDF: color/mono 심볼·워드마크·락업 **6개 전부** `pdfinfo`, `pdffonts`, Poppler 렌더로 검사했다. 각각 1쪽 A4, 글꼴 행 0, Poppler stderr 0 bytes였다. 컬러 락업의 렌더도 육안으로 확인했다.
 - 비교 PDF: 2쪽 표준 A4, 글꼴 행 0, Poppler stderr 0 bytes였다. 두 비교 보드의 렌더를 확인했으며 비교 검증기는 8개 씬에서 Track A/B 워드마크 잉크 높이 차이 `0px`를 보고했다. 비교 PDF는 호환성 목적의 이미지 기반 PDF이며, 공식 관리 디렉터리의 소비자 자산은 아니다.
-- 가이드 DOCX/PDF: 문서 PDF는 15쪽 A4, `LibreOffice 26.2.5.2 (AARCH64)` 산출본이며 Poppler stderr 0 bytes다. `pdffonts`는 NotoSansKR-Bold, NotoSansKR-Medium 두 subset 및 의도된 Helvetica만 보이고 모든 행이 `emb/sub/uni=yes`다. DOCX의 A4 토큰·실제 번호 매기기·정확한 표 geometry·공식 inline 이미지와 alt text·고정 Noto 글꼴 내장·스타일 상속 계약 6개를 재실행해 통과했다. DOCX 접근성 감사 결과는 high/medium/low=`0/0/0`이다.
-- 배포 바인딩: 고정 LibreOffice 변환본과 커밋 PDF는 15/15쪽 정규화 텍스트·페이지 geometry·144dpi 래스터가 페이지별 완전히 일치해야 하는 권위 계약을 통과했다. 독립 패키지 렌더러는 호환성 진단으로 A4/geometry를 유지하고 `NMAE ≤ 0.003`, material pixel fraction `≤ 0.015` 계약을 통과했다. DOCX와 배포 PDF SHA-256은 각각 `d0af00795ca94c886a19dc432c1f6964d4e40dd1c98bfcae0ab5e45ffb098066`, `d67d279f2becfe0c762b288f03ec0e3fa278461f83cf25174af8a31801685e5d`다.
-- 최종 렌더 검토: DOCX와 PDF의 1·8·15쪽, 비교 PDF의 1·2쪽, 컬러 인쇄 락업 PDF, 공식 SVG/1024px PNG 대표본을 원본 해상도로 확인했다. 페이지 잘림·겹침·표 경계 침범·한글 glyph 누락·머리말/바닥글 드리프트나 브랜드 형상 드리프트를 발견하지 못했다.
+- 가이드 DOCX/PDF: 문서 PDF는 15쪽 A4, `LibreOffice 26.2.5.2 (AARCH64)` 산출본이며 Poppler stderr 0 bytes다. `pdffonts`는 NotoSansKR-Bold subset 1행, NotoSansKR-Medium subset 2행과 의도된 Helvetica subset 1행만 보이고 모든 행이 `emb/sub/uni=yes`다. DOCX의 A4 토큰·실제 번호 매기기·정확한 표 geometry·공식 inline 이미지와 alt text·고정 Noto 글꼴 내장·스타일 상속 계약을 재실행해 통과했다. ZIP 엔트리 이름은 정렬되고 모든 엔트리 시각은 `1980-01-01 00:00:00`으로 정규화되며 2.1초 간격의 두 빌드가 바이트 단위로 동일했다.
+- 접근성 영수증: `/Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/documents/scripts/a11y_audit.py`를 번들 `26.826.11250`, 도구 SHA-256 `f79d0c4a9c95bee33c40a9cffffc2132ee8f040060c762e8d77b93b887307c5d`로 실행했다. 결과 high/medium/low=`0/0/0`과 현재 DOCX SHA-256은 `IROA_BI_GUIDE_KO.a11y.json`에 기계 판독 가능하게 고정되며 회귀 테스트가 도구·DOCX·결과를 다시 결합한다.
+- 배포 바인딩: 고정 LibreOffice 변환본과 커밋 PDF는 15/15쪽 정규화 텍스트·페이지 geometry·144dpi 래스터가 페이지별 완전히 일치해야 하는 권위 계약을 통과했다. 독립 패키지 렌더러는 호환성 진단으로 A4/geometry를 유지하고 `NMAE ≤ 0.003`, material pixel fraction `≤ 0.015` 계약을 통과했다. DOCX와 배포 PDF SHA-256은 각각 `25714a94eddd7b9da190143e2ee2820d1c1c8859c5f4e118fa91150f268ecebf`, `fabbefb3d69b9f80bd6e85cdafaaa37be53f6da5f5378a0c14be72ddb0cbdcbd`다.
+- 최종 렌더 검토: DOCX 15쪽 전부와 바닥글 원본 크기 크롭, 비교 PDF의 1·2쪽, 컬러 인쇄 락업 PDF, 공식 SVG/1024px PNG 대표본을 확인했다. 페이지 잘림·겹침·표 경계 침범·한글 glyph 누락·머리말/바닥글 드리프트나 브랜드 형상 드리프트를 발견하지 못했다. Apple·app·maskable 180/192/512를 정사각형·원형·스쿼클 로컬 마스크로 미리보기해 식별성과 안전영역을 확인했지만, 이는 실제 OS·기기 소비자 검증이 아니다.
 
 ## 대비값과 문서 텍스트 계약
 
@@ -160,7 +162,7 @@ rg -n "버전: 1.0|iroa.ai 도메인은 확보 완료|상표권 확보와는 별
 
 ## 작업트리 보존과 보류 항목
 
-`git status --short`로 이 작업트리가 검증 시작 시 깨끗했음을 확인했다. 주 저장소 `/Users/hyunsuklee/Developer/web3/iroa`에서는 기존 미추적 협약서 DOCX 2개가 계속 미추적 상태임을 이름만 확인했고, 내용을 읽거나 수정·추가하지 않았다. `git diff --name-only b1d7754..HEAD`에서도 해당 파일이 이 BI 브랜치 커밋 범위에 포함되지 않음을 확인했다.
+최종 수정 wave 시작 기준 `9a3204b`에서 BI 작업트리가 깨끗했음을 확인했다. 주 저장소 `/Users/hyunsuklee/Developer/web3/iroa`에서는 기존 미추적 협약서 DOCX 2개가 계속 미추적 상태임을 이름만 확인했고, 내용을 읽거나 수정·추가하지 않았다. 해당 파일은 이 BI 작업트리와 커밋 범위에 포함하지 않는다.
 
 다음 보류 minor는 이 영수증의 공식 소스·산출물 판정을 바꾸지 않아 수정하지 않고 최종 검토로 이관한다.
 

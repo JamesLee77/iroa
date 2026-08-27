@@ -196,9 +196,9 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 |---|---|---|
 | 파비콘 SVG | `exports/icons/favicon.svg` | 벡터 파비콘을 지원하는 브라우저의 우선값 |
 | 파비콘 PNG | `exports/icons/favicon-16.png`, `exports/icons/favicon-32.png`, `exports/icons/favicon-48.png` | 표시 슬롯과 같은 크기의 파일을 선택, 확대 금지 |
-| Apple 터치 | `exports/icons/apple-touch-icon-180.png` | iOS 홈 화면 메타데이터에 180px 원본 연결 |
-| 앱 아이콘 | `exports/icons/app-icon-192.png`, `exports/icons/app-icon-512.png` | 시스템 마스크에 맡기며 임의 둥근 모서리·광택 금지 |
-| 마스크 가능 아이콘 | `exports/icons/maskable-icon-192.png`, `exports/icons/maskable-icon-512.png` | 제공 파일의 사방 10% 안전 영역 유지, 추가 크롭 금지 |
+| Apple 터치 | `exports/icons/apple-touch-icon-180.png` | 공식 Navy 풀블리드 배경의 완전 불투명 180px 전용 파일 연결 |
+| 앱 아이콘 | `exports/icons/app-icon-192.png`, `exports/icons/app-icon-512.png` | 공식 Navy 풀블리드 배경 유지, 시스템 마스크에 맡기며 임의 둥근 모서리·광택 금지 |
+| 마스크 가능 아이콘 | `exports/icons/maskable-icon-192.png`, `exports/icons/maskable-icon-512.png` | 완전 불투명 풀블리드 배경 유지, 핵심 심볼은 중앙 반지름 40% 원형 안전영역 안에 있으므로 추가 크롭 금지 |
 | 워치 | `exports/icons/symbol-watch-48.png` | 48px 원본 사용, 알림 상태 문구와 분리 |
 | 키오스크 | `exports/icons/symbol-kiosk-1024.png` | 고밀도 시작 화면 원본, 비율 유지 축소만 허용 |
 
@@ -305,11 +305,11 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 | `exports/icons/favicon-16.png` | 16px 파비콘 |
 | `exports/icons/favicon-32.png` | 32px 파비콘 |
 | `exports/icons/favicon-48.png` | 48px 파비콘 |
-| `exports/icons/apple-touch-icon-180.png` | Apple 터치 아이콘 |
-| `exports/icons/app-icon-192.png` | 192px 앱 아이콘 |
-| `exports/icons/app-icon-512.png` | 512px 앱 아이콘 |
-| `exports/icons/maskable-icon-192.png` | 192px 마스크 가능 아이콘, 사방 10% 안전 영역 |
-| `exports/icons/maskable-icon-512.png` | 512px 마스크 가능 아이콘, 사방 10% 안전 영역 |
+| `exports/icons/apple-touch-icon-180.png` | 180px Apple 터치 아이콘, Navy 풀블리드·완전 불투명 |
+| `exports/icons/app-icon-192.png` | 192px 앱 아이콘, Navy 풀블리드·완전 불투명 |
+| `exports/icons/app-icon-512.png` | 512px 앱 아이콘, Navy 풀블리드·완전 불투명 |
+| `exports/icons/maskable-icon-192.png` | 192px 마스크 가능 아이콘, Navy 풀블리드·완전 불투명·중앙 반지름 40% 원형 안전영역 |
+| `exports/icons/maskable-icon-512.png` | 512px 마스크 가능 아이콘, Navy 풀블리드·완전 불투명·중앙 반지름 40% 원형 안전영역 |
 | `exports/icons/symbol-watch-48.png` | 48px 워치 심볼 |
 | `exports/icons/symbol-kiosk-1024.png` | 1024px 키오스크 심볼 |
 

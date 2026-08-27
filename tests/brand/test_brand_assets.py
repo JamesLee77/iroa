@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 from tempfile import TemporaryDirectory
+import time
 import unittest
 from urllib.parse import unquote, urlsplit
 import zipfile
@@ -246,6 +247,12 @@ _PACKAGED_DOCX_RENDERER = Path(
     "/Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/"
     "documents/render_docx.py"
 )
+_A11Y_AUDIT = Path(
+    "/Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/"
+    "documents/scripts/a11y_audit.py"
+)
+_A11Y_TOOL_SHA256 = "f79d0c4a9c95bee33c40a9cffffc2132ee8f040060c762e8d77b93b887307c5d"
+_PLATFORM_ICON_BACKGROUND = (22, 38, 61)
 
 
 def _docx_xml(path: Path, member: str) -> ET.Element:
@@ -502,7 +509,7 @@ reader = PdfReader(source)
 overlay_buffer = BytesIO()
 overlay = canvas.Canvas(overlay_buffer, pagesize=(595.304, 841.89), pageCompression=0)
 overlay.setFillColorRGB(1, 1, 1)
-overlay.rect(250, 340, 100, 90, stroke=0, fill=1)
+overlay.rect(275, 367, 45, 35, stroke=0, fill=1)
 overlay.save()
 overlay_buffer.seek(0)
 reader.pages[7].merge_page(PdfReader(overlay_buffer).pages[0], over=True)
@@ -670,6 +677,7 @@ class BrandContractTest(unittest.TestCase):
             Path("IROA_BI_GUIDE_KO.md"),
             Path("IROA_BI_GUIDE_KO.docx"),
             Path("IROA_BI_GUIDE_KO.pdf"),
+            Path("IROA_BI_GUIDE_KO.a11y.json"),
         }
         for document in (
             Path("docs/brand/IROA_BI_GUIDE_KO.md"),
@@ -751,6 +759,51 @@ class BrandContractTest(unittest.TestCase):
         ):
             self.assertTrue(path.is_file(), path)
             self.assertGreater(path.stat().st_size, 100_000, path)
+
+    def test_guide_docx_rebuild_is_byte_deterministic_across_wall_clock_seconds(self):
+        with TemporaryDirectory() as directory:
+            first = Path(directory) / "first.docx"
+            second = Path(directory) / "second.docx"
+            command = [
+                str(_WORKSPACE_PYTHON),
+                "tools/brand/build_guide.py",
+                "--source",
+                "docs/brand/IROA_BI_GUIDE_KO.md",
+            ]
+            subprocess.run(command + ["--output", str(first)], check=True, capture_output=True, text=True)
+            time.sleep(2.1)
+            subprocess.run(command + ["--output", str(second)], check=True, capture_output=True, text=True)
+            self.assertEqual(first.read_bytes(), second.read_bytes())
+            with zipfile.ZipFile(first) as archive:
+                self.assertEqual(archive.namelist(), sorted(archive.namelist()))
+                self.assertEqual(
+                    {member.date_time for member in archive.infolist()},
+                    {(1980, 1, 1, 0, 0, 0)},
+                )
+
+    def test_guide_a11y_receipt_is_reproducible_and_bound_to_current_docx(self):
+        receipt_path = Path("docs/brand/IROA_BI_GUIDE_KO.a11y.json")
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        guide = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
+        self.assertEqual(receipt["schema"], "iroa-docx-a11y-receipt-v1")
+        self.assertEqual(receipt["bundle_version"], "26.826.11250")
+        self.assertEqual(receipt["tool_sha256"], _A11Y_TOOL_SHA256)
+        self.assertEqual(_digest(_A11Y_AUDIT), _A11Y_TOOL_SHA256)
+        self.assertEqual(receipt["source"], guide.as_posix())
+        self.assertEqual(receipt["source_sha256"], _digest(guide))
+        self.assertEqual(receipt["counts"], {"high": 0, "medium": 0, "low": 0})
+        self.assertEqual(receipt["findings"], [])
+        with TemporaryDirectory() as directory:
+            fresh = Path(directory) / "a11y.json"
+            subprocess.run(
+                [str(_WORKSPACE_PYTHON), str(_A11Y_AUDIT), str(guide), "--out_json", str(fresh)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            report = json.loads(fresh.read_text(encoding="utf-8"))
+        self.assertEqual(report["counts"], receipt["counts"])
+        self.assertEqual(report["findings"], receipt["findings"])
 
     def test_guide_docx_metadata_identifies_the_v1_distribution_source(self):
         path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
@@ -1061,7 +1114,7 @@ class BrandContractTest(unittest.TestCase):
                 metric["material_pixel_fraction"],
                 _PDF_COMPAT_MAX_MATERIAL_PIXEL_FRACTION,
             )
-            app_icon_region = (500, 824, 700, 1004)
+            app_icon_region = (550, 880, 640, 950)
             with Image.open(committed_pages[7]).convert("RGB") as original_page:
                 self.assertLess(min(value[0] for value in original_page.crop(app_icon_region).getextrema()), 100)
             with Image.open(altered_pages[7]).convert("RGB") as altered_page:
@@ -1566,6 +1619,12 @@ class BrandContractTest(unittest.TestCase):
             Image.new("RGBA", (32, 32), "#16263D").save(path)
             with self.assertRaisesRegex(ValueError, "transparent pixel"):
                 audit_png(path, 32, 32)
+            audit_png(path, 32, 32, alpha_policy="opaque")
+
+            transparent = Path(directory) / "transparent.png"
+            Image.new("RGBA", (32, 32), (22, 38, 61, 0)).save(transparent)
+            with self.assertRaisesRegex(ValueError, "fully opaque"):
+                audit_png(transparent, 32, 32, alpha_policy="opaque")
 
     def test_render_svg_png_creates_auditable_rgba_png(self):
         source = Path("tests/brand/fixtures/accessible-symbol.svg")
@@ -1724,20 +1783,63 @@ class BrandContractTest(unittest.TestCase):
             audit_png(wordmark, round(size * 600 / 180), size)
         for size in (16, 32, 48):
             audit_png(icons / f"favicon-{size}.png", size, size)
-        for size, name in ((180, "apple-touch-icon-180.png"), (192, "app-icon-192.png"), (512, "app-icon-512.png"), (192, "maskable-icon-192.png"), (512, "maskable-icon-512.png"), (48, "symbol-watch-48.png"), (1024, "symbol-kiosk-1024.png")):
+        for size, name in (
+            (180, "apple-touch-icon-180.png"),
+            (192, "app-icon-192.png"),
+            (512, "app-icon-512.png"),
+            (192, "maskable-icon-192.png"),
+            (512, "maskable-icon-512.png"),
+        ):
+            audit_png(icons / name, size, size, alpha_policy="opaque")
+        for size, name in ((48, "symbol-watch-48.png"), (1024, "symbol-kiosk-1024.png")):
             audit_png(icons / name, size, size)
+        audit_svg(icons / "favicon.svg")
+
+    def test_platform_icons_have_opaque_brand_backgrounds_and_maskable_safe_zone(self):
+        digital = Path("docs/brand/exports/digital")
+        icons = Path("docs/brand/exports/icons")
+        platform_files = (
+            (180, "apple-touch-icon-180.png"),
+            (192, "app-icon-192.png"),
+            (512, "app-icon-512.png"),
+            (192, "maskable-icon-192.png"),
+            (512, "maskable-icon-512.png"),
+        )
+        for size, name in platform_files:
+            path = icons / name
+            with Image.open(path).convert("RGBA") as image:
+                self.assertEqual(image.getchannel("A").getextrema(), (255, 255), path)
+                self.assertEqual(image.getpixel((0, 0))[:3], _PLATFORM_ICON_BACKGROUND, path)
+            generic = digital / f"iroa-symbol-{size}.png"
+            self.assertNotEqual(path.read_bytes(), generic.read_bytes(), path)
 
         for size in (192, 512):
-            with Image.open(icons / f"maskable-icon-{size}.png").convert("RGBA") as image:
-                alpha = image.getchannel("A")
-                bounds = alpha.getbbox()
-                self.assertIsNotNone(bounds)
-                margin = size * 0.10
-                self.assertGreaterEqual(bounds[0], margin)
-                self.assertGreaterEqual(bounds[1], margin)
-                self.assertLessEqual(bounds[2], size - margin)
-                self.assertLessEqual(bounds[3], size - margin)
-        audit_svg(icons / "favicon.svg")
+            app = icons / f"app-icon-{size}.png"
+            maskable = icons / f"maskable-icon-{size}.png"
+            self.assertNotEqual(app.read_bytes(), maskable.read_bytes())
+            with Image.open(maskable).convert("RGBA") as image:
+                center = (size - 1) / 2
+                radius = size * 0.40 + 1
+                foreground = [
+                    (x, y)
+                    for y in range(size)
+                    for x in range(size)
+                    if image.getpixel((x, y))[:3] != _PLATFORM_ICON_BACKGROUND
+                ]
+                self.assertTrue(foreground, maskable)
+                self.assertTrue(
+                    all((x - center) ** 2 + (y - center) ** 2 <= radius**2 for x, y in foreground),
+                    maskable,
+                )
+
+        for path in (
+            digital / "iroa-symbol-192.png",
+            icons / "favicon-32.png",
+            icons / "symbol-watch-48.png",
+            icons / "symbol-kiosk-1024.png",
+        ):
+            with Image.open(path).convert("RGBA") as image:
+                self.assertLess(image.getchannel("A").getextrema()[0], 255, path)
 
     def test_promotion_is_deterministic_and_compatibility_pngs_are_regenerated(self):
         command = [sys.executable, "tools/brand/promote_candidate.py", "--winner", "track-a"]

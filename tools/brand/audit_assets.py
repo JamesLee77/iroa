@@ -95,7 +95,9 @@ def audit_svg(path: Path, *, path_only: bool = False) -> None:
             raise ValueError(f"{path} must not embed raster images")
 
 
-def audit_png(path: Path, width: int, height: int) -> None:
+def audit_png(path: Path, width: int, height: int, *, alpha_policy: str = "transparent") -> None:
+    if alpha_policy not in {"transparent", "opaque"}:
+        raise ValueError(f"unknown PNG alpha policy: {alpha_policy}")
     with Image.open(path) as image:
         if image.size != (width, height):
             raise ValueError(
@@ -103,8 +105,11 @@ def audit_png(path: Path, width: int, height: int) -> None:
             )
         if image.mode != "RGBA":
             raise ValueError(f"{path} must use RGBA mode; found {image.mode}")
-        if image.getchannel("A").getextrema()[0] == 255:
+        alpha_extrema = image.getchannel("A").getextrema()
+        if alpha_policy == "transparent" and alpha_extrema[0] == 255:
             raise ValueError(f"{path} must include at least one transparent pixel")
+        if alpha_policy == "opaque" and alpha_extrema != (255, 255):
+            raise ValueError(f"{path} must be fully opaque")
 
 
 def _pdf_content_streams(path: Path) -> list[bytes]:
@@ -191,14 +196,30 @@ def audit_official_assets(root: Path) -> None:
         audit_png(digital / f"iroa-wordmark-{size}.png", round(size * 600 / 180), size)
     for size in (16, 32, 48):
         audit_png(icons / f"favicon-{size}.png", size, size)
-    for size, name in ((180, "apple-touch-icon-180.png"), (192, "app-icon-192.png"), (512, "app-icon-512.png"), (192, "maskable-icon-192.png"), (512, "maskable-icon-512.png"), (48, "symbol-watch-48.png"), (1024, "symbol-kiosk-1024.png")):
+    for size, name in (
+        (180, "apple-touch-icon-180.png"),
+        (192, "app-icon-192.png"),
+        (512, "app-icon-512.png"),
+        (192, "maskable-icon-192.png"),
+        (512, "maskable-icon-512.png"),
+    ):
+        audit_png(icons / name, size, size, alpha_policy="opaque")
+    for size, name in ((48, "symbol-watch-48.png"), (1024, "symbol-kiosk-1024.png")):
         audit_png(icons / name, size, size)
     audit_svg(icons / "favicon.svg")
     for size in (192, 512):
         with Image.open(icons / f"maskable-icon-{size}.png").convert("RGBA") as image:
-            bounds = image.getchannel("A").getbbox()
-            if bounds is None or bounds[0] < size * .10 or bounds[1] < size * .10 or bounds[2] > size * .90 or bounds[3] > size * .90:
-                raise ValueError(f"maskable icon {size} violates its 10% safe zone")
+            background = image.getpixel((0, 0))[:3]
+            center = (size - 1) / 2
+            radius = size * .40 + 1
+            foreground = (
+                (x, y)
+                for y in range(size)
+                for x in range(size)
+                if image.getpixel((x, y))[:3] != background
+            )
+            if any((x - center) ** 2 + (y - center) ** 2 > radius**2 for x, y in foreground):
+                raise ValueError(f"maskable icon {size} violates its circular 40% safe zone")
     print_root = brand / "exports/print"
     expected = {
         f"iroa-{role}-{variant}.pdf"
