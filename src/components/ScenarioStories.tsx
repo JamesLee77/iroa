@@ -15,7 +15,7 @@ export function ScenarioStories({ stories }: { stories: ScenarioStory[] }) {
           {stories.map((story, index) => (
             <article className="scenario-card" key={story.title} data-featured={index === 0 || undefined}>
               <div className="scenario-card__image">
-                <img src={story.imageUrl} alt={story.imageAlt} width="1880" height="1253" loading={index === 0 ? 'eager' : 'lazy'} />
+                <img src={story.imageUrl} alt={story.imageAlt} width="1880" height="1253" loading="lazy" />
               </div>
               <div className="scenario-card__body">
                 <span className="status-badge">{story.status}</span>

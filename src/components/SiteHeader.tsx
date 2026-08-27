@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import type { NavigationItem } from '../types/home';
 import { CloseIcon, MenuIcon } from './icons';
 
@@ -10,6 +11,7 @@ interface SiteHeaderProps {
 export function SiteHeader({ navigation, wordmarkUrl }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -24,6 +26,19 @@ export function SiteHeader({ navigation, wordmarkUrl }: SiteHeaderProps) {
   }, [isMenuOpen]);
 
   const closeMenu = () => setIsMenuOpen(false);
+
+  const navigateFromMobileMenu = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    event.preventDefault();
+    closeMenu();
+
+    requestAnimationFrame(() => {
+      const animations = mobileNavRef.current?.getAnimations?.() ?? [];
+      void Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
+        window.history.pushState(null, '', href);
+        document.querySelector(href)?.scrollIntoView();
+      });
+    });
+  };
 
   return (
     <header className="site-header">
@@ -60,15 +75,18 @@ export function SiteHeader({ navigation, wordmarkUrl }: SiteHeaderProps) {
       </div>
 
       <nav
+        ref={mobileNavRef}
         id="mobile-menu"
         className="site-header__mobile-nav"
         aria-label="모바일 메뉴"
+        aria-hidden={!isMenuOpen}
         data-open={isMenuOpen}
+        inert={!isMenuOpen}
       >
         <ul>
           {navigation.map((item) => (
             <li key={item.href}>
-              <a href={item.href} onClick={closeMenu}>
+              <a href={item.href} onClick={(event) => navigateFromMobileMenu(event, item.href)}>
                 {item.label}
               </a>
             </li>

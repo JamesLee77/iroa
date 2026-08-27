@@ -59,12 +59,14 @@ describe('header and hero navigation', () => {
 
     const menuButton = screen.getByRole('button', { name: '메뉴 열기' });
     expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('navigation', { name: '모바일 메뉴' })).not.toBeInTheDocument();
 
     fireEvent.click(menuButton);
     expect(screen.getByRole('button', { name: '메뉴 닫기' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
+    expect(screen.getByRole('navigation', { name: '모바일 메뉴' })).toBeInTheDocument();
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.getByRole('button', { name: '메뉴 열기' })).toHaveAttribute(
@@ -103,6 +105,15 @@ describe('scenario stories and institution models', () => {
     expect(within(region).getAllByRole('article')).toHaveLength(3);
     expect(within(region).getAllByText('목표 경험')).toHaveLength(3);
     expect(within(region).queryByText('운영 중')).not.toBeInTheDocument();
+  });
+
+  it('defers every below-the-fold scenario photograph', () => {
+    render(<App />);
+
+    const region = screen.getByRole('region', { name: '실제 활용 시나리오' });
+    within(region)
+      .getAllByRole('img')
+      .forEach((image) => expect(image).toHaveAttribute('loading', 'lazy'));
   });
 
   it('names the three approved institutional adoption models', () => {
