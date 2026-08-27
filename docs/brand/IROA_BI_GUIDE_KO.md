@@ -68,7 +68,7 @@ IROA는 유아적 캐릭터, 과장된 미래주의, 암호화폐 시각 언어,
 - 워드마크의 `o`는 심볼 구조를 `translate(166 29.5) scale(.8)`로 공유한다. 코랄 행동점은 하나뿐이며 점, `i`의 점 또는 마침표를 행동점으로 다시 칠하지 않는다.
 - 락업은 `760 × 180` 좌표계다. 선택된 심볼과 워드마크의 형상을 바꾸지 않고 배치하며, 가시 형상 사이 간격은 `57.5` 단위 이상이다.
 
-이 값은 새 로고를 다시 그리기 위한 도면이 아니라 마스터 보존 기준이다. 16·24·32px의 작은 크기 보정은 공식 마스터와 내보내기에 이미 반영되어 있으므로, 소비자는 행동점 크기·열림각·자간·기준선을 다시 조정하지 않는다. 상세 기준은 [Track A 원형 구성 기록](candidates/track-a/CONSTRUCTION.md)과 [공식 락업 구성 기록](masters/lockup/CONSTRUCTION.md)에 있다.
+이 값은 새 로고를 다시 그리기 위한 도면이 아니라 마스터 보존 기준이다. 크기별로 다른 형상을 쓰는 별도 16·24·32px 변형은 없다. 하나의 승인된 Track A 마스터가 16·24·32px에서도 성립하도록 설계됐으며, 각 PNG 내보내기는 같은 기하를 크기만 바꾸어 래스터화한다. 내보내기 과정에서 행동점 크기, 열림각, 획 또는 자간을 바꾸지 않는다. 상세 기준은 [Track A 원형 구성 기록](candidates/track-a/CONSTRUCTION.md)과 [공식 락업 구성 기록](masters/lockup/CONSTRUCTION.md)에 있다.
 
 ### 2.3 보호 공간
 
@@ -108,21 +108,31 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 | Ink | `#19222E` | `25, 34, 46` | `46, 26, 0, 82` | 긴 본문, 표 글자 |
 | White | `#FFFFFF` | `255, 255, 255` | `0, 0, 0, 0` | 역상 글자, 정보 면 |
 
-### 3.2 허용 조합과 측정값
+### 3.2 적용 기준
+
+| 대상 | 최소 대비 | 정의 |
+|---|---:|---|
+| 일반 텍스트 | `4.5:1` | 18pt 미만 일반 또는 14pt 미만 굵게 |
+| 큰 텍스트 | `3:1` | 18pt 이상 일반 또는 14pt 이상 굵게 |
+| 비텍스트 UI·그래픽 | `3:1` | 입력 테두리, 상태 아이콘, 데이터 표시처럼 식별에 필요한 구성요소와 인접 색상 사이 |
+
+비텍스트 UI 기준은 글자의 굵기를 뜻하지 않는다. 장식 요소는 의미 전달에 필요하지 않을 때만 이 판정에서 제외한다. 실제 제품은 확대, 고대비 모드, 포커스와 비활성 상태까지 별도로 확인한다.
+
+### 3.3 허용 조합과 측정값
 
 아래 값은 sRGB 색상에 대해 계산한 WCAG 2.x 상대 휘도 대비값이다. 이는 해당 조합의 수치 근거이며 제품 전체의 접근성 인증이나 적합성 인증을 뜻하지 않는다.
 
 | 전경 / 배경 | 대비 | 운영 판정 |
 |---|---:|---|
-| Ink / Ivory | `14.48:1` | 일반·큰 텍스트 허용 |
-| Navy / Ivory | `13.75:1` | 일반·큰 텍스트 허용 |
-| Navy / White | `15.23:1` | 일반·큰 텍스트 허용 |
-| White / Navy | `15.23:1` | 일반·큰 텍스트 허용 |
-| Light Teal / Navy | `8.34:1` | 일반·큰 텍스트 허용 |
-| Coral / Navy | `5.12:1` | 일반 텍스트 수치는 충족하나 작은 본문보다 강조에 사용 |
-| Teal / White | `4.02:1` | 일반 크기 본문 금지, 큰 글자·굵은 UI 또는 장식만 사용 |
-| Teal / Ivory | `3.63:1` | 일반 크기 본문 금지, 큰 글자·굵은 UI 또는 장식만 사용 |
-| Coral / White | `2.98:1` | 텍스트와 핵심 UI 금지, 큰 비문자 강조만 사용 |
+| Ink / IROA Ivory | `14.48:1` | 일반·큰 텍스트 허용 |
+| IROA Navy / IROA Ivory | `13.75:1` | 일반·큰 텍스트 허용 |
+| IROA Navy / White | `15.23:1` | 일반·큰 텍스트 허용 |
+| White / IROA Navy | `15.23:1` | 일반·큰 텍스트 허용 |
+| IROA Light Teal / IROA Navy | `8.34:1` | 일반·큰 텍스트 허용 |
+| IROA Coral / IROA Navy | `5.12:1` | 일반 텍스트 수치는 충족하나 작은 본문보다 강조에 사용 |
+| IROA Teal / White | `4.02:1` | 일반 텍스트 금지; 큰 텍스트와 비텍스트 UI·그래픽에는 허용 |
+| IROA Teal / IROA Ivory | `3.63:1` | 일반 텍스트 금지; 큰 텍스트와 비텍스트 UI·그래픽에는 허용 |
+| IROA Coral / White | `2.98:1` | 텍스트와 식별 필수 UI·그래픽 금지; 의미 없는 장식에만 사용 |
 
 색상만으로 상태를 구분하지 않는다. 색상과 함께 명시적 문구, 아이콘 형상, 패턴 또는 위치를 제공한다. 실제 화면에서는 투명도, 사진, 그라데이션, 비활성 상태까지 포함한 최종 픽셀을 다시 측정한다.
 
@@ -185,12 +195,12 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 | 환경 | 공식 파일 | 규칙 |
 |---|---|---|
 | 파비콘 SVG | `exports/icons/favicon.svg` | 벡터 파비콘을 지원하는 브라우저의 우선값 |
-| 파비콘 PNG | `favicon-16.png`, `favicon-32.png`, `favicon-48.png` | 표시 슬롯과 같은 크기의 파일을 선택, 확대 금지 |
-| Apple 터치 | `apple-touch-icon-180.png` | iOS 홈 화면 메타데이터에 180px 원본 연결 |
-| 앱 아이콘 | `app-icon-192.png`, `app-icon-512.png` | 시스템 마스크에 맡기며 임의 둥근 모서리·광택 금지 |
-| 마스크 가능 아이콘 | `maskable-icon-192.png`, `maskable-icon-512.png` | 제공 파일의 사방 10% 안전 영역 유지, 추가 크롭 금지 |
-| 워치 | `symbol-watch-48.png` | 48px 원본 사용, 알림 상태 문구와 분리 |
-| 키오스크 | `symbol-kiosk-1024.png` | 고밀도 시작 화면 원본, 비율 유지 축소만 허용 |
+| 파비콘 PNG | `exports/icons/favicon-16.png`, `exports/icons/favicon-32.png`, `exports/icons/favicon-48.png` | 표시 슬롯과 같은 크기의 파일을 선택, 확대 금지 |
+| Apple 터치 | `exports/icons/apple-touch-icon-180.png` | iOS 홈 화면 메타데이터에 180px 원본 연결 |
+| 앱 아이콘 | `exports/icons/app-icon-192.png`, `exports/icons/app-icon-512.png` | 시스템 마스크에 맡기며 임의 둥근 모서리·광택 금지 |
+| 마스크 가능 아이콘 | `exports/icons/maskable-icon-192.png`, `exports/icons/maskable-icon-512.png` | 제공 파일의 사방 10% 안전 영역 유지, 추가 크롭 금지 |
+| 워치 | `exports/icons/symbol-watch-48.png` | 48px 원본 사용, 알림 상태 문구와 분리 |
+| 키오스크 | `exports/icons/symbol-kiosk-1024.png` | 고밀도 시작 화면 원본, 비율 유지 축소만 허용 |
 
 아이콘 안에 제품명, 파트너명, 숫자 배지 또는 인증 문구를 합성하지 않는다. 운영 상태는 심볼 바깥의 플랫폼 배지와 텍스트로 제공한다.
 
@@ -230,12 +240,12 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 
 | 매체 | 권장 자산 | 적용 규칙 |
 |---|---|---|
-| 웹 | `iroa-wordmark-color.svg`, `favicon.svg` | 흰색·Ivory 헤더에서 워드마크 가로 120px 이상, 텍스트 대비 별도 측정 |
-| 앱 | `app-icon-192.png`, `app-icon-512.png`, 마스크 가능 아이콘 | 플랫폼별 선언 크기와 동일 파일 사용, 아이콘에 제품명 합성 금지 |
-| 워치 | `symbol-watch-48.png` | 48px 원본 사용, 요청·확인 문구는 심볼 밖에 배치 |
-| 키오스크 | `symbol-kiosk-1024.png` 또는 공식 락업 | 먼 거리에서는 심볼과 큰 문구를 분리, 터치 상태를 색만으로 표시하지 않음 |
-| 문서 | `iroa-lockup-color.svg`, 단색 PDF | A4 화면·디지털은 SVG, 인쇄 교환은 `exports/print` PDF 사용 |
-| 단색 영수증·각인 | `iroa-symbol-mono.svg`, `iroa-wordmark-mono.svg` | 단색 마스터만 사용, 망점·회색 효과를 임의 추가하지 않음 |
+| 웹 | `masters/wordmark/iroa-wordmark-color.svg`, `exports/icons/favicon.svg` | 흰색·Ivory 헤더에서 워드마크 가로 120px 이상, 텍스트 대비 별도 측정 |
+| 앱 | `exports/icons/app-icon-192.png`, `exports/icons/app-icon-512.png`, 마스크 가능 아이콘 | 플랫폼별 선언 크기와 동일 파일 사용, 아이콘에 제품명 합성 금지 |
+| 워치 | `exports/icons/symbol-watch-48.png` | 48px 원본 사용, 요청·확인 문구는 심볼 밖에 배치 |
+| 키오스크 | `exports/icons/symbol-kiosk-1024.png` 또는 공식 락업 | 먼 거리에서는 심볼과 큰 문구를 분리, 터치 상태를 색만으로 표시하지 않음 |
+| 문서 | `masters/lockup/iroa-lockup-color.svg`, 단색 PDF | A4 화면·디지털은 SVG, 인쇄 교환은 `exports/print` PDF 사용 |
+| 단색 영수증·각인 | `masters/symbol/iroa-symbol-mono.svg`, `masters/wordmark/iroa-wordmark-mono.svg` | 단색 마스터만 사용, 망점·회색 효과를 임의 추가하지 않음 |
 
 예시 보드는 웹·앱·워치·키오스크·문서 문맥을 하나의 운영 화면으로 보여 주지만, 그 보드 자체는 로고 마스터가 아니다.
 
@@ -257,21 +267,21 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 
 ## 11. 자산 디렉터리와 파일별 용도
 
-### 11.1 공식 마스터
+### 11.1 공식 관리 마스터 출력
 
-`masters`는 모든 소비자가 참조하는 공식 원본이지만 저장소에서는 승격 도구가 관리한다. 현재 도구는 선택된 `candidates/track-a/*.svg`에서 마스터를 재생성하므로 `masters`만 손으로 수정하지 않는다. 승인된 형상 변경은 Track A 선택 원형과 구성 기록에서 시작해 전체 공식 자산을 다시 승격한다.
+`masters`는 모든 소비자가 참조하는 공식 자산이지만 저장소에서는 승격 도구가 관리하는 출력이다. 승인된 편집 입력은 `candidates/track-a`의 Track A 구성 파일이다. 변경은 Track A 구성 입력에서 시작하고 승격 도구를 실행한 뒤 `masters`와 `exports`를 함께 검증한다. `masters`나 `exports`를 직접 편집하지 않는다.
 
 | 파일 | 역할 |
 |---|---|
-| `masters/symbol/iroa-symbol-color.svg` | 밝은 배경용 공식 심볼 원본 |
-| `masters/symbol/iroa-symbol-mono.svg` | 단색 심볼 원본 |
-| `masters/symbol/iroa-symbol-reverse.svg` | 네이비 맥락을 포함한 역상 심볼 원본 |
-| `masters/wordmark/iroa-wordmark-color.svg` | 밝은 배경용 공식 워드마크 원본 |
-| `masters/wordmark/iroa-wordmark-mono.svg` | 단색 워드마크 원본 |
-| `masters/wordmark/iroa-wordmark-reverse.svg` | 네이비 맥락을 포함한 역상 워드마크 원본 |
-| `masters/lockup/iroa-lockup-color.svg` | 밝은 배경용 심볼+워드마크 락업 원본 |
-| `masters/lockup/iroa-lockup-mono.svg` | 단색 락업 원본 |
-| `masters/lockup/iroa-lockup-reverse.svg` | 네이비 맥락을 포함한 역상 락업 원본 |
+| `masters/symbol/iroa-symbol-color.svg` | 밝은 배경용 공식 심볼 관리 출력 |
+| `masters/symbol/iroa-symbol-mono.svg` | 단색 심볼 관리 출력 |
+| `masters/symbol/iroa-symbol-reverse.svg` | 네이비 맥락을 포함한 역상 심볼 관리 출력 |
+| `masters/wordmark/iroa-wordmark-color.svg` | 밝은 배경용 공식 워드마크 관리 출력 |
+| `masters/wordmark/iroa-wordmark-mono.svg` | 단색 워드마크 관리 출력 |
+| `masters/wordmark/iroa-wordmark-reverse.svg` | 네이비 맥락을 포함한 역상 워드마크 관리 출력 |
+| `masters/lockup/iroa-lockup-color.svg` | 밝은 배경용 심볼+워드마크 락업 관리 출력 |
+| `masters/lockup/iroa-lockup-mono.svg` | 단색 락업 관리 출력 |
+| `masters/lockup/iroa-lockup-reverse.svg` | 네이비 맥락을 포함한 역상 락업 관리 출력 |
 | `masters/lockup/CONSTRUCTION.md` | 공식 락업 배치와 간격 근거 |
 
 ### 11.2 디지털 PNG
@@ -280,8 +290,8 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 
 | 계열 | 완전한 파일 목록 | 용도 |
 |---|---|---|
-| 심볼 | `iroa-symbol-16.png`, `iroa-symbol-24.png`, `iroa-symbol-32.png`, `iroa-symbol-48.png`, `iroa-symbol-64.png`, `iroa-symbol-128.png`, `iroa-symbol-180.png`, `iroa-symbol-192.png`, `iroa-symbol-256.png`, `iroa-symbol-512.png`, `iroa-symbol-1024.png` | 표시 슬롯과 같은 크기의 래스터 심볼 |
-| 워드마크 | `iroa-wordmark-16.png`, `iroa-wordmark-24.png`, `iroa-wordmark-32.png`, `iroa-wordmark-48.png`, `iroa-wordmark-64.png`, `iroa-wordmark-128.png`, `iroa-wordmark-180.png`, `iroa-wordmark-192.png`, `iroa-wordmark-256.png`, `iroa-wordmark-512.png`, `iroa-wordmark-1024.png` | 높이 기준 래스터 워드마크; 운영 최소 폭 규칙은 별도 적용 |
+| 심볼 | `exports/digital/iroa-symbol-16.png`, `exports/digital/iroa-symbol-24.png`, `exports/digital/iroa-symbol-32.png`, `exports/digital/iroa-symbol-48.png`, `exports/digital/iroa-symbol-64.png`, `exports/digital/iroa-symbol-128.png`, `exports/digital/iroa-symbol-180.png`, `exports/digital/iroa-symbol-192.png`, `exports/digital/iroa-symbol-256.png`, `exports/digital/iroa-symbol-512.png`, `exports/digital/iroa-symbol-1024.png` | 표시 슬롯과 같은 크기의 래스터 심볼 |
+| 워드마크 | `exports/digital/iroa-wordmark-16.png`, `exports/digital/iroa-wordmark-24.png`, `exports/digital/iroa-wordmark-32.png`, `exports/digital/iroa-wordmark-48.png`, `exports/digital/iroa-wordmark-64.png`, `exports/digital/iroa-wordmark-128.png`, `exports/digital/iroa-wordmark-180.png`, `exports/digital/iroa-wordmark-192.png`, `exports/digital/iroa-wordmark-256.png`, `exports/digital/iroa-wordmark-512.png`, `exports/digital/iroa-wordmark-1024.png` | 높이 기준 래스터 워드마크; 운영 최소 폭 규칙은 별도 적용 |
 
 ### 11.3 아이콘 내보내기
 
@@ -310,7 +320,7 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 | `exports/print/iroa-lockup-color.pdf` | 컬러 락업 인쇄 교환본 |
 | `exports/print/iroa-lockup-mono.pdf` | 단색 락업 인쇄 교환본 |
 
-이 PDF들은 글꼴과 래스터 이미지를 포함하지 않는 1페이지 A4 벡터 호환본이다. 편집 원본이나 BI 가이드 PDF가 아니며, 로고 수정은 SVG 마스터에서 시작한다.
+이 PDF들은 글꼴과 래스터 이미지를 포함하지 않는 1페이지 A4 벡터 호환본이다. 편집 입력이나 BI 가이드 PDF가 아니며, 변경은 승인된 Track A 구성 입력에서 시작해 승격 도구로 다시 생성한다.
 
 ### 11.5 호환·기록·예시
 
@@ -320,6 +330,7 @@ CMYK는 일반 프로세스 인쇄의 시작값이며 출력 장비와 용지에
 | `iroa-symbol.png`, `iroa-wordmark.png` | 기존 소비자 경로용 512×512, 1200×360 호환 PNG |
 | `candidates/` | Track A 제작 원형과 Track B 비공식 탐색 기록; 배포 자산 아님 |
 | `examples/usage-overview.png` | 공식 자산만 사용한 결정적 적용 예시; 마스터 아님 |
+| `examples/usage-overview-manifest.json` | 예시 보드의 공식 의존 자산, 장면 영역과 텍스트 대비 증거 |
 | `assets/photos/` | 사진과 출처·대체 텍스트 기록; 로고 원본 아님 |
 | `IROA_BI_GUIDE_KO.md` | BI v1.0 단일 콘텐츠 원본 |
 | `IROA_BI_GUIDE_KO.docx`, `IROA_BI_GUIDE_KO.pdf` | 문서 배포 호환본; 외부 배포 전 Markdown 버전과 일치 여부 확인 |

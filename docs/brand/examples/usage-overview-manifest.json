@@ -1,0 +1,560 @@
+{
+  "assets": [
+    "exports/digital/iroa-symbol-128.png",
+    "exports/digital/iroa-wordmark-64.png",
+    "exports/digital/iroa-wordmark-128.png",
+    "exports/icons/app-icon-192.png",
+    "exports/icons/symbol-kiosk-1024.png",
+    "exports/icons/symbol-watch-48.png",
+    "masters/lockup/iroa-lockup-color.svg"
+  ],
+  "canvas": [
+    2560,
+    1600
+  ],
+  "mode": "RGB",
+  "scenes": {
+    "app": {
+      "assets": [
+        "exports/icons/app-icon-192.png"
+      ],
+      "bounds": [
+        1300,
+        292,
+        1808,
+        808
+      ],
+      "phone_bounds": [
+        1436,
+        322,
+        1672,
+        778
+      ]
+    },
+    "document": {
+      "assets": [
+        "masters/lockup/iroa-lockup-color.svg"
+      ],
+      "bounds": [
+        1156,
+        854,
+        1828,
+        1504
+      ]
+    },
+    "kiosk": {
+      "assets": [
+        "exports/icons/symbol-kiosk-1024.png"
+      ],
+      "bounds": [
+        96,
+        854,
+        1112,
+        1504
+      ]
+    },
+    "watch": {
+      "assets": [
+        "exports/icons/symbol-watch-48.png"
+      ],
+      "bounds": [
+        1852,
+        292,
+        2464,
+        808
+      ]
+    },
+    "web": {
+      "assets": [
+        "exports/digital/iroa-wordmark-64.png",
+        "exports/digital/iroa-symbol-128.png"
+      ],
+      "bounds": [
+        96,
+        292,
+        1256,
+        808
+      ]
+    }
+  },
+  "sha256": "9b932e82808ebe069c3dd20476921d8638f1a3e69d585ef7d14c6c6d930bb2ab",
+  "text_runs": [
+    {
+      "background": "#F7F3EA",
+      "bounds": [
+        2118,
+        107,
+        2460,
+        129
+      ],
+      "context": "header.version",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 13.75,
+      "text": "BRAND IDENTITY · V1.0"
+    },
+    {
+      "background": "#F7F3EA",
+      "bounds": [
+        2143,
+        159,
+        2460,
+        203
+      ],
+      "context": "header.title",
+      "foreground": "#19222E",
+      "minimum": 4.5,
+      "ratio": 14.48,
+      "text": "공식 적용 시스템"
+    },
+    {
+      "background": "#F1F0EB",
+      "bounds": [
+        224,
+        317,
+        268,
+        332
+      ],
+      "context": "web.label",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 13.35,
+      "text": "WEB"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        991,
+        414,
+        1178,
+        436
+      ],
+      "context": "web.navigation",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "도움 요청   이용 안내"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        192,
+        569,
+        532,
+        623
+      ],
+      "context": "web.headline",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "일상을 이롭게."
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        192,
+        638,
+        630,
+        668
+      ],
+      "context": "web.copy",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "선택은 사용자에게, 필요한 일은 끝까지."
+    },
+    {
+      "background": "#F06D5E",
+      "bounds": [
+        225,
+        703,
+        405,
+        723
+      ],
+      "context": "web.action",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 5.12,
+      "text": "무엇을 도와드릴까요?"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1347,
+        347,
+        1388,
+        362
+      ],
+      "context": "app.label",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "APP"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        1485,
+        592,
+        1623,
+        617
+      ],
+      "context": "app.product",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "IROA Agent"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        1464,
+        632,
+        1643,
+        650
+      ],
+      "context": "app.copy",
+      "foreground": "#19222E",
+      "minimum": 4.5,
+      "ratio": 16.04,
+      "text": "예약 내용을 확인했어요."
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1521,
+        698,
+        1587,
+        716
+      ],
+      "context": "app.action",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "확인하기"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1505,
+        749,
+        1603,
+        762
+      ],
+      "context": "app.status",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "선택 · 확인 · 완료"
+    },
+    {
+      "background": "#EDE7DD",
+      "bounds": [
+        1900,
+        347,
+        1970,
+        362
+      ],
+      "context": "watch.label",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 12.38,
+      "text": "WATCH"
+    },
+    {
+      "background": "#19222E",
+      "bounds": [
+        2086,
+        594,
+        2230,
+        613
+      ],
+      "context": "watch.copy",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 16.04,
+      "text": "요청이 도착했어요"
+    },
+    {
+      "background": "#19222E",
+      "bounds": [
+        2117,
+        631,
+        2199,
+        647
+      ],
+      "context": "watch.actions",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.78,
+      "text": "확인  ·  취소"
+    },
+    {
+      "background": "#EDE7DD",
+      "bounds": [
+        1900,
+        763,
+        2015,
+        783
+      ],
+      "context": "watch.caption",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 12.38,
+      "text": "48px 공식 심볼"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        144,
+        909,
+        206,
+        924
+      ],
+      "context": "kiosk.label",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "KIOSK"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        566,
+        1058,
+        682,
+        1099
+      ],
+      "context": "kiosk.headline1",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "무엇을"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        566,
+        1115,
+        819,
+        1155
+      ],
+      "context": "kiosk.headline2",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "도와드릴까요?"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        566,
+        1185,
+        748,
+        1209
+      ],
+      "context": "kiosk.options",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "주문 · 예약 · 결제"
+    },
+    {
+      "background": "#F06D5E",
+      "bounds": [
+        671,
+        1267,
+        830,
+        1290
+      ],
+      "context": "kiosk.action",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 5.12,
+      "text": "화면을 눌러 시작"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        144,
+        1452,
+        442,
+        1472
+      ],
+      "context": "kiosk.caption",
+      "foreground": "#19222E",
+      "minimum": 4.5,
+      "ratio": 16.04,
+      "text": "먼 거리 식별 · 큰 문구 · 명시적 상태"
+    },
+    {
+      "background": "#E9E5DC",
+      "bounds": [
+        1204,
+        909,
+        1318,
+        924
+      ],
+      "context": "document.label",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 12.12,
+      "text": "DOCUMENT"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        1340,
+        1142,
+        1557,
+        1169
+      ],
+      "context": "document.title",
+      "foreground": "#16263D",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "생활 지원 운영 안내"
+    },
+    {
+      "background": "#FFFFFF",
+      "bounds": [
+        1340,
+        1187,
+        1560,
+        1204
+      ],
+      "context": "document.copy",
+      "foreground": "#19222E",
+      "minimum": 4.5,
+      "ratio": 16.04,
+      "text": "필요한 일을 끝까지 연결합니다."
+    },
+    {
+      "background": "#E9E5DC",
+      "bounds": [
+        1204,
+        1465,
+        1434,
+        1483
+      ],
+      "context": "document.caption",
+      "foreground": "#19222E",
+      "minimum": 4.5,
+      "ratio": 12.76,
+      "text": "SVG 마스터 · 벡터 인쇄 호환본"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1920,
+        909,
+        2139,
+        924
+      ],
+      "context": "system.label",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "ONE OFFICIAL SYSTEM"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1920,
+        977,
+        2136,
+        1023
+      ],
+      "context": "system.headline1",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "하나의 형상,"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1920,
+        1031,
+        2185,
+        1072
+      ],
+      "context": "system.headline2",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "다섯 개의 문맥."
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1920,
+        1099,
+        2072,
+        1122
+      ],
+      "context": "system.platforms1",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "웹  ·  앱  ·  워치"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1920,
+        1141,
+        2081,
+        1164
+      ],
+      "context": "system.platforms2",
+      "foreground": "#83CDC4",
+      "minimum": 4.5,
+      "ratio": 8.34,
+      "text": "키오스크  ·  문서"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        2148,
+        1236,
+        2288,
+        1257
+      ],
+      "context": "system.principle1",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "행동은 명확하게"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        2148,
+        1306,
+        2288,
+        1327
+      ],
+      "context": "system.principle2",
+      "foreground": "#FFFFFF",
+      "minimum": 4.5,
+      "ratio": 15.23,
+      "text": "기술은 따뜻하게"
+    },
+    {
+      "background": "#16263D",
+      "bounds": [
+        1920,
+        1439,
+        2159,
+        1453
+      ],
+      "context": "system.footer",
+      "foreground": "#C8D2DB",
+      "minimum": 4.5,
+      "ratio": 9.93,
+      "text": "IROA.AI BI v1.0 · 2026-08-27"
+    }
+  ],
+  "version": 1
+}

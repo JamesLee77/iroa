@@ -1,4 +1,5 @@
 import hashlib
+import json
 from pathlib import Path
 import re
 import shutil
@@ -12,7 +13,14 @@ from xml.etree import ElementTree as ET
 from PIL import Image, ImageChops
 
 from tools.brand.audit_assets import _audit_pdf, audit_official_assets, audit_png, contrast_ratio, audit_svg
-from tools.brand.brand_contract import CandidatePaths, OFFICIAL_PNG_SIZES
+from tools.brand.brand_contract import (
+    CandidatePaths,
+    OFFICIAL_DIGITAL_FILES,
+    OFFICIAL_ICON_FILES,
+    OFFICIAL_MASTER_FILES,
+    OFFICIAL_PNG_SIZES,
+    OFFICIAL_PRINT_FILES,
+)
 from tools.brand.promote_candidate import _remove_unexpected_files
 from tools.brand.render_assets import render_svg_png
 
@@ -137,6 +145,35 @@ def _relative_markdown_links(path: Path) -> tuple[Path, ...]:
     return tuple(destinations)
 
 
+def _inline_asset_paths(path: Path) -> tuple[Path, ...]:
+    destinations = []
+    for value in re.findall(r"`([^`\n]+)`", path.read_text(encoding="utf-8")):
+        if re.search(r"\.(?:svg|png|pdf|md|docx|json)$", value, re.I):
+            destinations.append(Path(value))
+    return tuple(destinations)
+
+
+def _markdown_table(path: Path, heading: str) -> tuple[dict[str, str], ...]:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if heading not in lines:
+        return ()
+    start = lines.index(heading)
+    table = []
+    for line in lines[start + 1:]:
+        if not line.startswith("|"):
+            if table:
+                break
+            continue
+        cells = [cell.strip().strip("`") for cell in line.strip("|").split("|")]
+        if all(re.fullmatch(r":?-+:?", cell) for cell in cells):
+            continue
+        table.append(cells)
+    if len(table) < 2:
+        return ()
+    headers = table[0]
+    return tuple(dict(zip(headers, row)) for row in table[1:])
+
+
 class BrandContractTest(unittest.TestCase):
     def test_bi_guide_has_v1_contract(self):
         guide = Path("docs/brand/IROA_BI_GUIDE_KO.md").read_text(encoding="utf-8")
@@ -162,6 +199,176 @@ class BrandContractTest(unittest.TestCase):
             self.assertTrue(links, f"{document} must link to its referenced assets")
             for target in links:
                 self.assertTrue(target.exists(), f"{document}: broken link to {target}")
+
+    def test_documented_asset_paths_exist_and_match_the_managed_inventory(self):
+        allowed = {
+            *(Path("masters") / path for path in OFFICIAL_MASTER_FILES),
+            *(Path("exports/digital") / path for path in OFFICIAL_DIGITAL_FILES),
+            *(Path("exports/icons") / path for path in OFFICIAL_ICON_FILES),
+            *(Path("exports/print") / path for path in OFFICIAL_PRINT_FILES),
+            Path("iroa-symbol.svg"),
+            Path("iroa-wordmark.svg"),
+            Path("iroa-wordmark-mono.svg"),
+            Path("iroa-wordmark-reverse.svg"),
+            Path("iroa-symbol.png"),
+            Path("iroa-wordmark.png"),
+            Path("examples/usage-overview.png"),
+            Path("examples/usage-overview-manifest.json"),
+            Path("assets/photos/PHOTO-MANIFEST.md"),
+            Path("IROA_BI_GUIDE_KO.md"),
+            Path("IROA_BI_GUIDE_KO.docx"),
+            Path("IROA_BI_GUIDE_KO.pdf"),
+        }
+        for document in (
+            Path("docs/brand/IROA_BI_GUIDE_KO.md"),
+            Path("docs/brand/README.md"),
+        ):
+            for relative in _inline_asset_paths(document):
+                self.assertNotRegex(str(relative), r"[*{}]", relative)
+                self.assertIn(relative, allowed, (document, relative))
+                self.assertTrue((Path("docs/brand") / relative).is_file(), relative)
+
+    def test_readme_defines_one_editable_input_and_managed_outputs(self):
+        rows = {
+            row["경로"]: row
+            for row in _markdown_table(
+                Path("docs/brand/README.md"),
+                "## 저장소 역할 계약",
+            )
+        }
+        self.assertEqual(set(rows), {"candidates/track-a", "masters", "exports"})
+        self.assertEqual(rows["candidates/track-a"]["역할"], "approved-editable-input")
+        self.assertEqual(rows["candidates/track-a"]["직접 편집"], "예")
+        for path in ("masters", "exports"):
+            self.assertEqual(rows[path]["역할"], "managed-output")
+            self.assertEqual(rows[path]["직접 편집"], "아니오")
+        self.assertEqual(
+            rows["candidates/track-a"]["다음 단계"],
+            "promotion → masters/exports → verify",
+        )
+
+    def test_published_contrast_values_are_recomputed_from_the_palette(self):
+        guide = Path("docs/brand/IROA_BI_GUIDE_KO.md")
+        colors = {
+            row["이름"]: row["HEX"]
+            for row in _markdown_table(guide, "### 3.1 컬러 값")
+        }
+        rows = _markdown_table(guide, "### 3.3 허용 조합과 측정값")
+        self.assertGreaterEqual(len(rows), 9)
+        for row in rows:
+            foreground, background = row["전경 / 배경"].split(" / ")
+            published = float(row["대비"].removesuffix(":1"))
+            recomputed = contrast_ratio(colors[foreground], colors[background])
+            self.assertAlmostEqual(published, recomputed, places=2, msg=row)
+
+    def test_guide_defines_precise_wcag_thresholds(self):
+        rows = {
+            row["대상"]: row
+            for row in _markdown_table(
+                Path("docs/brand/IROA_BI_GUIDE_KO.md"),
+                "### 3.2 적용 기준",
+            )
+        }
+        self.assertEqual(set(rows), {"일반 텍스트", "큰 텍스트", "비텍스트 UI·그래픽"})
+        self.assertEqual(rows["일반 텍스트"]["최소 대비"], "4.5:1")
+        self.assertEqual(rows["큰 텍스트"]["최소 대비"], "3:1")
+        self.assertEqual(rows["큰 텍스트"]["정의"], "18pt 이상 일반 또는 14pt 이상 굵게")
+        self.assertEqual(rows["비텍스트 UI·그래픽"]["최소 대비"], "3:1")
+
+    def test_usage_overview_builder_is_deterministic_and_rgb(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            outputs = (root / "first.png", root / "second.png")
+            manifests = (root / "first.json", root / "second.json")
+            for output, manifest in zip(outputs, manifests):
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "tools/brand/build_usage_overview.py",
+                        "--output",
+                        str(output),
+                        "--manifest",
+                        str(manifest),
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(outputs[0].read_bytes(), outputs[1].read_bytes())
+            self.assertEqual(manifests[0].read_bytes(), manifests[1].read_bytes())
+            with Image.open(outputs[0]) as image:
+                self.assertEqual(image.size, (2560, 1600))
+                self.assertEqual(image.mode, "RGB")
+
+    def test_usage_overview_builder_uses_official_assets_in_each_scene(self):
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "overview.png"
+            manifest_path = Path(directory) / "overview.json"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/brand/build_usage_overview.py",
+                    "--output",
+                    str(output),
+                    "--manifest",
+                    str(manifest_path),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            expected_scenes = {
+                "web": ([96, 292, 1256, 808], [
+                    "exports/digital/iroa-wordmark-64.png",
+                    "exports/digital/iroa-symbol-128.png",
+                ]),
+                "app": ([1300, 292, 1808, 808], ["exports/icons/app-icon-192.png"]),
+                "watch": ([1852, 292, 2464, 808], ["exports/icons/symbol-watch-48.png"]),
+                "kiosk": ([96, 854, 1112, 1504], ["exports/icons/symbol-kiosk-1024.png"]),
+                "document": ([1156, 854, 1828, 1504], ["masters/lockup/iroa-lockup-color.svg"]),
+            }
+            self.assertEqual(set(manifest["scenes"]), set(expected_scenes))
+            for name, (bounds, assets) in expected_scenes.items():
+                self.assertEqual(manifest["scenes"][name]["bounds"], bounds)
+                self.assertEqual(manifest["scenes"][name]["assets"], assets)
+            for dependency in manifest["assets"]:
+                self.assertTrue(dependency.startswith(("masters/", "exports/")), dependency)
+                self.assertNotIn("track-b", dependency.lower())
+                self.assertTrue((Path("docs/brand") / dependency).is_file(), dependency)
+            with Image.open(output).convert("RGB") as image:
+                for scene in manifest["scenes"].values():
+                    self.assertTrue(scene["assets"], scene)
+                    self.assertIsNotNone(image.crop(scene["bounds"]).getbbox(), scene)
+
+    def test_usage_overview_text_contrast_and_app_status_bounds(self):
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "overview.png"
+            manifest_path = Path(directory) / "overview.json"
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/brand/build_usage_overview.py",
+                    "--output",
+                    str(output),
+                    "--manifest",
+                    str(manifest_path),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            phone = manifest["scenes"]["app"]["phone_bounds"]
+            status = next(run for run in manifest["text_runs"] if run["context"] == "app.status")
+            self.assertGreaterEqual(status["bounds"][0], phone[0])
+            self.assertGreaterEqual(status["bounds"][1], phone[1])
+            self.assertLessEqual(status["bounds"][2], phone[2])
+            self.assertLessEqual(status["bounds"][3], phone[3])
+            for run in manifest["text_runs"]:
+                recomputed = contrast_ratio(run["foreground"], run["background"])
+                self.assertAlmostEqual(run["ratio"], recomputed, places=2, msg=run)
+                self.assertGreaterEqual(recomputed, run["minimum"], run)
 
     def test_required_png_sizes_are_exact(self):
         self.assertEqual(
