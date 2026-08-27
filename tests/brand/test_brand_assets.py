@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -174,6 +175,21 @@ def _markdown_table(path: Path, heading: str) -> tuple[dict[str, str], ...]:
     return tuple(dict(zip(headers, row)) for row in table[1:])
 
 
+def _section_inline_asset_paths(
+    path: Path,
+    heading: str,
+    next_heading: str,
+) -> tuple[Path, ...]:
+    source = path.read_text(encoding="utf-8")
+    start = source.index(f"{heading}\n") + len(heading) + 1
+    end = source.index(f"{next_heading}\n", start)
+    destinations = []
+    for value in re.findall(r"`([^`\n]+)`", source[start:end]):
+        if re.search(r"\.(?:svg|png|pdf|md)$", value, re.I):
+            destinations.append(Path(value))
+    return tuple(destinations)
+
+
 class BrandContractTest(unittest.TestCase):
     def test_bi_guide_has_v1_contract(self):
         guide = Path("docs/brand/IROA_BI_GUIDE_KO.md").read_text(encoding="utf-8")
@@ -214,6 +230,7 @@ class BrandContractTest(unittest.TestCase):
             Path("iroa-wordmark.png"),
             Path("examples/usage-overview.png"),
             Path("examples/usage-overview-manifest.json"),
+            Path("assets/fonts/SOURCE.md"),
             Path("assets/photos/PHOTO-MANIFEST.md"),
             Path("IROA_BI_GUIDE_KO.md"),
             Path("IROA_BI_GUIDE_KO.docx"),
@@ -227,6 +244,23 @@ class BrandContractTest(unittest.TestCase):
                 self.assertNotRegex(str(relative), r"[*{}]", relative)
                 self.assertIn(relative, allowed, (document, relative))
                 self.assertTrue((Path("docs/brand") / relative).is_file(), relative)
+
+    def test_guide_official_inventory_is_exactly_the_49_managed_files(self):
+        expected = {
+            *(Path("masters") / path for path in OFFICIAL_MASTER_FILES),
+            *(Path("exports/digital") / path for path in OFFICIAL_DIGITAL_FILES),
+            *(Path("exports/icons") / path for path in OFFICIAL_ICON_FILES),
+            *(Path("exports/print") / path for path in OFFICIAL_PRINT_FILES),
+        }
+        documented = _section_inline_asset_paths(
+            Path("docs/brand/IROA_BI_GUIDE_KO.md"),
+            "## 11. 공식 관리 출력 인벤토리 (49개)",
+            "## 12. 호환·기록·예시",
+        )
+        self.assertEqual(len(documented), 49)
+        self.assertEqual(set(documented), expected)
+        for relative in documented:
+            self.assertTrue((Path("docs/brand") / relative).is_file(), relative)
 
     def test_readme_defines_one_editable_input_and_managed_outputs(self):
         rows = {
@@ -278,6 +312,10 @@ class BrandContractTest(unittest.TestCase):
     def test_usage_overview_builder_is_deterministic_and_rgb(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
+            isolated_home = root / "empty-home"
+            isolated_home.mkdir()
+            environment = os.environ.copy()
+            environment["HOME"] = str(isolated_home)
             outputs = (root / "first.png", root / "second.png")
             manifests = (root / "first.json", root / "second.json")
             for output, manifest in zip(outputs, manifests):
@@ -292,13 +330,99 @@ class BrandContractTest(unittest.TestCase):
                     ],
                     capture_output=True,
                     text=True,
+                    env=environment,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(outputs[0].read_bytes(), outputs[1].read_bytes())
             self.assertEqual(manifests[0].read_bytes(), manifests[1].read_bytes())
+            self.assertEqual(
+                outputs[0].read_bytes(),
+                Path("docs/brand/examples/usage-overview.png").read_bytes(),
+            )
+            self.assertEqual(
+                manifests[0].read_bytes(),
+                Path("docs/brand/examples/usage-overview-manifest.json").read_bytes(),
+            )
             with Image.open(outputs[0]) as image:
                 self.assertEqual(image.size, (2560, 1600))
                 self.assertEqual(image.mode, "RGB")
+
+    def test_usage_overview_builder_fails_closed_for_pinned_font_drift(self):
+        source_fonts = Path("docs/brand/assets/fonts")
+        self.assertTrue(source_fonts.is_dir())
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            missing_fonts = root / "missing"
+            missing_fonts.mkdir()
+            missing = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/brand/build_usage_overview.py",
+                    "--output",
+                    str(root / "missing.png"),
+                    "--manifest",
+                    str(root / "missing.json"),
+                    "--font-root",
+                    str(missing_fonts),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(missing.returncode, 0)
+            self.assertIn("pinned font missing", missing.stderr)
+
+            tampered_fonts = root / "tampered"
+            shutil.copytree(source_fonts, tampered_fonts)
+            medium = tampered_fonts / "NotoSansKR-Medium.otf"
+            medium.write_bytes(medium.read_bytes() + b"tampered")
+            tampered = subprocess.run(
+                [
+                    sys.executable,
+                    "tools/brand/build_usage_overview.py",
+                    "--output",
+                    str(root / "tampered.png"),
+                    "--manifest",
+                    str(root / "tampered.json"),
+                    "--font-root",
+                    str(tampered_fonts),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(tampered.returncode, 0)
+            self.assertIn("pinned font hash mismatch", tampered.stderr)
+
+    def test_usage_overview_manifest_pins_fonts_and_distribution_evidence(self):
+        manifest = json.loads(
+            Path("docs/brand/examples/usage-overview-manifest.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        expected_paths = {
+            "assets/fonts/NotoSansKR-Medium.otf",
+            "assets/fonts/NotoSansKR-Bold.otf",
+        }
+        self.assertEqual({entry["path"] for entry in manifest["fonts"]}, expected_paths)
+        for entry in manifest["fonts"]:
+            path = Path("docs/brand") / entry["path"]
+            self.assertTrue(path.is_file(), path)
+            self.assertEqual(entry["sha256"], _digest(path))
+
+        font_root = Path("docs/brand/assets/fonts")
+        license_path = font_root / "LICENSE.txt"
+        source_path = font_root / "SOURCE.md"
+        self.assertTrue(license_path.is_file())
+        self.assertTrue(source_path.is_file())
+        self.assertIn(
+            "SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007",
+            license_path.read_text(encoding="utf-8"),
+        )
+        source = source_path.read_text(encoding="utf-8")
+        self.assertIn("https://github.com/notofonts/noto-cjk", source)
+        self.assertRegex(source, r"\b[0-9a-f]{40}\b")
+        for entry in manifest["fonts"]:
+            self.assertIn(Path(entry["path"]).name, source)
+            self.assertIn(entry["sha256"], source)
 
     def test_usage_overview_builder_uses_official_assets_in_each_scene(self):
         with TemporaryDirectory() as directory:

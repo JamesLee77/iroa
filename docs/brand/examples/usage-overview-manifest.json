@@ -12,6 +12,16 @@
     2560,
     1600
   ],
+  "fonts": [
+    {
+      "path": "assets/fonts/NotoSansKR-Medium.otf",
+      "sha256": "b46988ef13e8bac08f3933af686eaf770972994f9b6d335be0184d60169b5431"
+    },
+    {
+      "path": "assets/fonts/NotoSansKR-Bold.otf",
+      "sha256": "5a6ceb287ed2fc6cfc6213144ebea68cbd94b20fc9eb873d8486493bf02d9bda"
+    }
+  ],
   "mode": "RGB",
   "scenes": {
     "app": {
@@ -77,7 +87,7 @@
       ]
     }
   },
-  "sha256": "9b932e82808ebe069c3dd20476921d8638f1a3e69d585ef7d14c6c6d930bb2ab",
+  "sha256": "c0045411d38fa7c397a8b72433ddfb8f8cc14f31045dd030320ebec1ec0fde54",
   "text_runs": [
     {
       "background": "#F7F3EA",
@@ -99,7 +109,7 @@
         2143,
         159,
         2460,
-        203
+        204
       ],
       "context": "header.title",
       "foreground": "#19222E",
@@ -125,9 +135,9 @@
       "background": "#FFFFFF",
       "bounds": [
         991,
-        414,
+        415,
         1178,
-        436
+        437
       ],
       "context": "web.navigation",
       "foreground": "#16263D",
@@ -239,7 +249,7 @@
         1505,
         749,
         1603,
-        762
+        763
       ],
       "context": "app.status",
       "foreground": "#83CDC4",
@@ -265,9 +275,9 @@
       "background": "#19222E",
       "bounds": [
         2086,
-        594,
+        595,
         2230,
-        613
+        614
       ],
       "context": "watch.copy",
       "foreground": "#FFFFFF",
@@ -337,7 +347,7 @@
         566,
         1115,
         819,
-        1155
+        1156
       ],
       "context": "kiosk.headline2",
       "foreground": "#FFFFFF",
@@ -448,7 +458,7 @@
       "bounds": [
         1920,
         909,
-        2139,
+        2138,
         924
       ],
       "context": "system.label",
@@ -463,7 +473,7 @@
         1920,
         977,
         2136,
-        1023
+        1022
       ],
       "context": "system.headline1",
       "foreground": "#FFFFFF",

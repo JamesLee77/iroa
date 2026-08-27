@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_BRAND_ROOT = ROOT / "docs/brand"
 DEFAULT_OUTPUT = DEFAULT_BRAND_ROOT / "examples/usage-overview.png"
 DEFAULT_MANIFEST = DEFAULT_BRAND_ROOT / "examples/usage-overview-manifest.json"
+DEFAULT_FONT_ROOT = DEFAULT_BRAND_ROOT / "assets/fonts"
 
 WIDTH = 2560
 HEIGHT = 1600
@@ -32,6 +33,19 @@ INK = "#19222E"
 WHITE = "#FFFFFF"
 MIST = "#E8E7E1"
 TEXT_GRAY = "#C8D2DB"
+
+FONT_SPECS = {
+    False: {
+        "name": "NotoSansKR-Medium.otf",
+        "path": "assets/fonts/NotoSansKR-Medium.otf",
+        "sha256": "b46988ef13e8bac08f3933af686eaf770972994f9b6d335be0184d60169b5431",
+    },
+    True: {
+        "name": "NotoSansKR-Bold.otf",
+        "path": "assets/fonts/NotoSansKR-Bold.otf",
+        "sha256": "5a6ceb287ed2fc6cfc6213144ebea68cbd94b20fc9eb873d8486493bf02d9bda",
+    },
+}
 
 ASSET_DEPENDENCIES = (
     "exports/digital/iroa-symbol-128.png",
@@ -71,21 +85,28 @@ SCENES = {
 }
 
 
-def _font_path(bold: bool) -> Path:
-    name = "NotoSansKR-Bold.otf" if bold else "NotoSansKR-Medium.otf"
-    candidates = (
-        Path.home() / "Library/Fonts" / name,
-        Path("/Library/Fonts") / name,
-        Path("/System/Library/Fonts/AppleSDGothicNeo.ttc"),
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    raise FileNotFoundError(f"Noto Sans KR or Apple SD Gothic Neo is required: {name}")
+def _verified_font_paths(font_root: Path) -> dict[bool, Path]:
+    verified = {}
+    for bold, specification in FONT_SPECS.items():
+        path = font_root / specification["name"]
+        if not path.is_file():
+            raise FileNotFoundError(f"pinned font missing: {path}")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != specification["sha256"]:
+            raise ValueError(
+                f"pinned font hash mismatch: {path}: "
+                f"expected {specification['sha256']}, got {actual}"
+            )
+        verified[bold] = path
+    return verified
 
 
-def _font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(str(_font_path(bold)), size)
+def _font(
+    font_paths: dict[bool, Path],
+    size: int,
+    bold: bool = False,
+) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(str(font_paths[bold]), size)
 
 
 def _rounded(
@@ -127,7 +148,9 @@ def build_usage_overview(
     output: Path,
     manifest_path: Path | None = None,
     brand_root: Path = DEFAULT_BRAND_ROOT,
+    font_root: Path = DEFAULT_FONT_ROOT,
 ) -> dict[str, object]:
+    font_paths = _verified_font_paths(font_root)
     canvas = Image.new("RGBA", (WIDTH, HEIGHT), IVORY)
     draw = ImageDraw.Draw(canvas)
     text_runs: list[dict[str, object]] = []
@@ -149,7 +172,7 @@ def build_usage_overview(
             raise ValueError(
                 f"{context} text contrast {ratio:.2f}:1 is below {minimum:.1f}:1"
             )
-        face = _font(size, bold)
+        face = _font(font_paths, size, bold)
         bounds = tuple(round(value) for value in draw.textbbox(xy, value, font=face, anchor=anchor))
         draw.text(xy, value, font=face, fill=foreground, anchor=anchor)
         text_runs.append(
@@ -282,6 +305,13 @@ def build_usage_overview(
         "canvas": [WIDTH, HEIGHT],
         "mode": "RGB",
         "assets": list(ASSET_DEPENDENCIES),
+        "fonts": [
+            {
+                "path": FONT_SPECS[bold]["path"],
+                "sha256": FONT_SPECS[bold]["sha256"],
+            }
+            for bold in (False, True)
+        ],
         "scenes": SCENES,
         "text_runs": text_runs,
         "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
@@ -300,11 +330,13 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--brand-root", type=Path, default=DEFAULT_BRAND_ROOT)
+    parser.add_argument("--font-root", type=Path, default=DEFAULT_FONT_ROOT)
     arguments = parser.parse_args()
     manifest = build_usage_overview(
         arguments.output,
         arguments.manifest,
         arguments.brand_root,
+        arguments.font_root,
     )
     print(
         f"built {arguments.output} "

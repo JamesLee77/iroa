@@ -86,6 +86,7 @@ Track B 또는 비교 보드의 일부를 공식 Track A 자산과 시각적으�
 - `examples/usage-overview.png`: 공식 자산만 사용한 웹·앱·워치·키오스크·문서 적용 예시. 마스터나 화면 구현 사양은 아니다.
 - `examples/usage-overview-manifest.json`: 예시 보드가 소비한 공식 자산, 장면 영역과 모든 텍스트 대비 검증값.
 - `tools/brand/build_usage_overview.py`: 위 PNG와 manifest를 같은 입력에서 결정적으로 생성하는 빌더.
+- `assets/fonts/`: 예시 보드 전용 고정 Noto Sans KR 바이너리와 라이선스. 출처·SHA-256·재배포 근거는 [`assets/fonts/SOURCE.md`](assets/fonts/SOURCE.md)에 있으며, 빌더는 이 파일들만 사용하고 해시가 다르면 중단한다.
 - `assets/photos/`: 사진과 [출처·대체 텍스트 목록](assets/photos/PHOTO-MANIFEST.md). 로고 자산이 아니다.
 
 ## 플랫폼별 빠른 선택
@@ -111,4 +112,4 @@ Track B 또는 비교 보드의 일부를 공식 Track A 자산과 시각적으�
 5. 전체 브랜드 테스트와 Markdown 상대 링크 검사를 실행한다.
 6. `python3 tools/brand/build_usage_overview.py`로 사용 예시 PNG와 manifest를 다시 만들고 원본 크기로 확인한다.
 
-도메인 보유, 상표권, 파트너십, 인증과 접근성 인증은 자산 파일의 존재로 자동 확정되지 않는다. 법적·운영 상태는 [BI 가이드의 도메인과 상표권 상태](IROA_BI_GUIDE_KO.md#12-도메인과-상표권-상태)를 따른다.
+도메인 보유, 상표권, 파트너십, 인증과 접근성 인증은 자산 파일의 존재로 자동 확정되지 않는다. 법적·운영 상태는 [BI 가이드의 도메인과 상표권 상태](IROA_BI_GUIDE_KO.md#13-도메인과-상표권-상태)를 따른다.
