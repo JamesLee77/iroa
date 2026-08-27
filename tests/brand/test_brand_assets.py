@@ -235,8 +235,17 @@ _EXPECTED_PDF_FONTS = {
 _PDF_RENDER_DPI = 144
 # Calibrated with the independent packaged DOCX renderer (observed maxima:
 # NMAE 0.002273 and 1.243% of pixels above a 16/255 channel delta).
-_PDF_MAX_NORMALIZED_MAE = 0.003
-_PDF_MAX_MATERIAL_PIXEL_FRACTION = 0.015
+_PDF_COMPAT_MAX_NORMALIZED_MAE = 0.003
+_PDF_COMPAT_MAX_MATERIAL_PIXEL_FRACTION = 0.015
+_WORKSPACE_PYTHON = Path(
+    "/Users/hyunsuklee/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3"
+)
+_AUTHORITATIVE_SOFFICE = Path("/opt/homebrew/bin/soffice")
+_AUTHORITATIVE_PDF_PRODUCER = "LibreOffice 26.2.5.2 (AARCH64)"
+_PACKAGED_DOCX_RENDERER = Path(
+    "/Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/"
+    "documents/render_docx.py"
+)
 
 
 def _docx_xml(path: Path, member: str) -> ET.Element:
@@ -438,10 +447,93 @@ def _render_pdf_pages(path: Path, destination: Path) -> tuple[Path, ...]:
     return tuple(sorted(destination.glob("page-*.png")))
 
 
-def _pdf_raster_parity(left: Path, right: Path) -> dict[str, float | tuple[int, int]]:
+def _authoritative_docx_pdf_conversion(source: Path, root: Path) -> Path:
+    home = root / "authoritative-home"
+    temporary = root / "authoritative-tmp"
+    profile = root / "authoritative-profile"
+    output = root / "authoritative-output"
+    for directory in (home, temporary, profile, output):
+        directory.mkdir()
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "HOME": str(home.resolve()),
+            "TMPDIR": str(temporary.resolve()),
+            "SAL_FONTPATH": str(Path("docs/brand/assets/fonts").resolve()),
+            "LANG": "C.UTF-8",
+            "LC_ALL": "C.UTF-8",
+            "TZ": "Asia/Seoul",
+        }
+    )
+    result = subprocess.run(
+        [
+            str(_AUTHORITATIVE_SOFFICE),
+            "--headless",
+            f"-env:UserInstallation={profile.resolve().as_uri()}",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            str(output),
+            str(source),
+        ],
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    if result.returncode:
+        raise RuntimeError(result.stderr or result.stdout)
+    converted = output / f"{source.stem}.pdf"
+    if not converted.is_file():
+        raise RuntimeError(result.stderr or result.stdout or f"missing {converted}")
+    return converted
+
+
+def _create_graphics_only_pdf_mutation(source: Path, output: Path) -> None:
+    script = """
+from io import BytesIO
+from pathlib import Path
+import sys
+from pypdf import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
+
+source = Path(sys.argv[1])
+output = Path(sys.argv[2])
+reader = PdfReader(source)
+overlay_buffer = BytesIO()
+overlay = canvas.Canvas(overlay_buffer, pagesize=(595.304, 841.89), pageCompression=0)
+overlay.setFillColorRGB(1, 1, 1)
+overlay.rect(250, 340, 100, 90, stroke=0, fill=1)
+overlay.save()
+overlay_buffer.seek(0)
+reader.pages[7].merge_page(PdfReader(overlay_buffer).pages[0], over=True)
+writer = PdfWriter()
+for page in reader.pages:
+    writer.add_page(page)
+with output.open("wb") as handle:
+    writer.write(handle)
+"""
+    result = subprocess.run(
+        [str(_WORKSPACE_PYTHON), "-c", script, str(source), str(output)],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode:
+        raise RuntimeError(result.stderr or result.stdout)
+
+
+def _pdf_raster_parity(
+    left: Path,
+    right: Path,
+) -> dict[str, float | int | tuple[int, int] | tuple[int, int, int, int] | None]:
     with Image.open(left).convert("RGB") as left_image, Image.open(right).convert("RGB") as right_image:
         if left_image.size != right_image.size:
-            return {"size": left_image.size, "normalized_mae": 1.0, "material_pixel_fraction": 1.0}
+            return {
+                "size": left_image.size,
+                "normalized_mae": 1.0,
+                "material_pixel_fraction": 1.0,
+                "difference_bbox": (0, 0, left_image.width, left_image.height),
+                "nonzero_pixel_count": left_image.width * left_image.height,
+            }
         difference = ImageChops.difference(left_image, right_image)
         pixels = left_image.width * left_image.height
         histogram = difference.histogram()
@@ -455,35 +547,79 @@ def _pdf_raster_parity(left: Path, right: Path) -> dict[str, float | tuple[int, 
             "size": left_image.size,
             "normalized_mae": normalized_mae,
             "material_pixel_fraction": material_pixel_fraction,
+            "difference_bbox": difference.getbbox(),
+            "nonzero_pixel_count": pixels - maximum_channel.histogram()[0],
         }
 
 
-def _assert_pdf_page_parity(
+def _assert_pdf_text_and_geometry_parity(
     testcase: unittest.TestCase,
-    committed: Path,
-    converted: Path,
-    render_root: Path,
-) -> tuple[dict[str, float | tuple[int, int]], ...]:
-    testcase.assertEqual(_pdf_info(committed)["Pages"], _pdf_info(converted)["Pages"])
-    testcase.assertEqual(_pdf_page_texts(committed), _pdf_page_texts(converted))
-    committed_geometry = _pdf_page_geometries(committed)
-    converted_geometry = _pdf_page_geometries(converted)
-    testcase.assertEqual(committed_geometry, converted_geometry)
-    for geometry in committed_geometry:
+    left: Path,
+    right: Path,
+    *,
+    require_text: bool,
+) -> None:
+    testcase.assertEqual(_pdf_info(left)["Pages"], _pdf_info(right)["Pages"])
+    if require_text:
+        testcase.assertEqual(_pdf_page_texts(left), _pdf_page_texts(right))
+    left_geometry = _pdf_page_geometries(left)
+    testcase.assertEqual(left_geometry, _pdf_page_geometries(right))
+    for geometry in left_geometry:
         testcase.assertEqual(geometry["size"], "595.304 x 841.89 pts (A4)")
         testcase.assertEqual(geometry["rot"], "0")
         for key in ("MediaBox", "CropBox", "BleedBox", "TrimBox", "ArtBox"):
             testcase.assertEqual(geometry[key], "0.00 0.00 595.30 841.89")
-    committed_pages = _render_pdf_pages(committed, render_root / "committed")
-    converted_pages = _render_pdf_pages(converted, render_root / "converted")
-    testcase.assertEqual(len(committed_pages), len(converted_pages))
-    metrics = tuple(_pdf_raster_parity(left, right) for left, right in zip(committed_pages, converted_pages))
+
+
+def _render_pdf_parity_metrics(
+    testcase: unittest.TestCase,
+    left: Path,
+    right: Path,
+    render_root: Path,
+) -> tuple[dict[str, float | int | tuple[int, int] | tuple[int, int, int, int] | None], ...]:
+    left_pages = _render_pdf_pages(left, render_root / "left")
+    right_pages = _render_pdf_pages(right, render_root / "right")
+    testcase.assertEqual(len(left_pages), len(right_pages))
+    return tuple(_pdf_raster_parity(left_page, right_page) for left_page, right_page in zip(left_pages, right_pages))
+
+
+def _assert_authoritative_distribution_pdf_binding(
+    testcase: unittest.TestCase,
+    committed: Path,
+    converted: Path,
+    render_root: Path,
+) -> tuple[dict[str, float | int | tuple[int, int] | tuple[int, int, int, int] | None], ...]:
+    """Distribution gate: fixed conversion must be pixel-exact, not merely similar."""
+    _assert_pdf_text_and_geometry_parity(testcase, committed, converted, require_text=True)
+    metrics = _render_pdf_parity_metrics(testcase, committed, converted, render_root)
     for page_number, metric in enumerate(metrics, 1):
         testcase.assertEqual(metric["size"], (1191, 1684), page_number)
-        testcase.assertLessEqual(metric["normalized_mae"], _PDF_MAX_NORMALIZED_MAE, (page_number, metric))
+        testcase.assertIsNone(metric["difference_bbox"], (page_number, metric))
+        testcase.assertEqual(metric["nonzero_pixel_count"], 0, (page_number, metric))
+        testcase.assertEqual(metric["normalized_mae"], 0.0, (page_number, metric))
+        testcase.assertEqual(metric["material_pixel_fraction"], 0.0, (page_number, metric))
+    return metrics
+
+
+def _assert_packaged_renderer_pdf_compatibility(
+    testcase: unittest.TestCase,
+    committed: Path,
+    rendered: Path,
+    render_root: Path,
+) -> tuple[dict[str, float | int | tuple[int, int] | tuple[int, int, int, int] | None], ...]:
+    """Compatibility diagnostic: independent renderer profiles may vary slightly."""
+    _assert_pdf_text_and_geometry_parity(testcase, committed, rendered, require_text=False)
+    metrics = _render_pdf_parity_metrics(testcase, committed, rendered, render_root)
+    for page_number, metric in enumerate(metrics, 1):
+        testcase.assertEqual(metric["size"], (1191, 1684), page_number)
+        testcase.assertLessEqual(
+            metric["normalized_mae"],
+            _PDF_COMPAT_MAX_NORMALIZED_MAE,
+            (page_number, metric),
+        )
         testcase.assertLessEqual(
             metric["material_pixel_fraction"],
-            _PDF_MAX_MATERIAL_PIXEL_FRACTION,
+            _PDF_COMPAT_MAX_MATERIAL_PIXEL_FRACTION,
             (page_number, metric),
         )
     return metrics
@@ -890,57 +1026,95 @@ class BrandContractTest(unittest.TestCase):
                 with Image.open(page) as image:
                     self.assertIn(image.size, {(596, 842), (595, 842)}, page)
 
-    def test_guide_pdf_pages_match_a_fresh_docx_conversion(self):
+    def test_guide_distribution_pdf_exactly_matches_authoritative_docx_conversion(self):
         committed = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            profile = root / "lo-profile"
-            profile.mkdir()
+            self.assertTrue(_AUTHORITATIVE_SOFFICE.is_file())
+            converted = _authoritative_docx_pdf_conversion(
+                Path("docs/brand/IROA_BI_GUIDE_KO.docx").resolve(),
+                root,
+            )
+            self.assertEqual(_pdf_info(converted)["Producer"], _AUTHORITATIVE_PDF_PRODUCER)
+            _assert_guide_pdf_font_contract(self, _pdf_font_rows(converted))
+            metrics = _assert_authoritative_distribution_pdf_binding(
+                self,
+                committed,
+                converted,
+                root / "authoritative-parity",
+            )
+            self.assertEqual(len(metrics), 15)
+            self.assertTrue(all(metric["difference_bbox"] is None for metric in metrics))
+            self.assertTrue(all(metric["nonzero_pixel_count"] == 0 for metric in metrics))
+
+            altered = root / "graphics-only-page-8-app-icon-removed.pdf"
+            _create_graphics_only_pdf_mutation(committed, altered)
+            self.assertEqual(_pdf_info(altered)["Pages"], "15")
+            self.assertEqual(_pdf_page_texts(altered), _pdf_page_texts(committed))
+            self.assertEqual(_pdf_page_geometries(altered), _pdf_page_geometries(committed))
+
+            committed_pages = _render_pdf_pages(committed, root / "mutation-proof-committed")
+            altered_pages = _render_pdf_pages(altered, root / "mutation-proof-altered")
+            metric = _pdf_raster_parity(committed_pages[7], altered_pages[7])
+            self.assertLessEqual(metric["normalized_mae"], _PDF_COMPAT_MAX_NORMALIZED_MAE)
+            self.assertLessEqual(
+                metric["material_pixel_fraction"],
+                _PDF_COMPAT_MAX_MATERIAL_PIXEL_FRACTION,
+            )
+            app_icon_region = (500, 824, 700, 1004)
+            with Image.open(committed_pages[7]).convert("RGB") as original_page:
+                self.assertLess(min(value[0] for value in original_page.crop(app_icon_region).getextrema()), 100)
+            with Image.open(altered_pages[7]).convert("RGB") as altered_page:
+                self.assertEqual(altered_page.crop(app_icon_region).getextrema(), ((255, 255),) * 3)
+
+            compatibility_metrics = _assert_packaged_renderer_pdf_compatibility(
+                self,
+                committed,
+                altered,
+                root / "mutation-compatibility-gate",
+            )
+            self.assertIsNotNone(compatibility_metrics[7]["difference_bbox"])
+            with self.assertRaises(AssertionError):
+                _assert_authoritative_distribution_pdf_binding(
+                    self,
+                    altered,
+                    converted,
+                    root / "mutation-authoritative-gate",
+                )
+
+    def test_guide_packaged_renderer_stays_within_compatibility_tolerances(self):
+        committed = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            render_output = root / "packaged-renderer"
             environment = os.environ.copy()
+            environment["TMPDIR"] = "/private/tmp"
             environment["SAL_FONTPATH"] = str(Path("docs/brand/assets/fonts").resolve())
             result = subprocess.run(
                 [
-                    "soffice",
-                    "--headless",
-                    f"-env:UserInstallation={profile.resolve().as_uri()}",
-                    "--convert-to",
-                    "pdf",
-                    "--outdir",
-                    str(root),
+                    str(_WORKSPACE_PYTHON),
+                    str(_PACKAGED_DOCX_RENDERER),
                     "docs/brand/IROA_BI_GUIDE_KO.docx",
+                    "--output_dir",
+                    str(render_output),
+                    "--dpi",
+                    str(_PDF_RENDER_DPI),
+                    "--emit_pdf",
                 ],
                 capture_output=True,
                 text=True,
                 env=environment,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            converted = root / "IROA_BI_GUIDE_KO.pdf"
-            self.assertTrue(converted.is_file(), result.stdout)
-            metrics = _assert_pdf_page_parity(self, committed, converted, root / "parity")
+            rendered = render_output / "IROA_BI_GUIDE_KO.pdf"
+            self.assertTrue(rendered.is_file(), result.stdout)
+            metrics = _assert_packaged_renderer_pdf_compatibility(
+                self,
+                committed,
+                rendered,
+                root / "packaged-compatibility-parity",
+            )
             self.assertEqual(len(metrics), 15)
-
-            split_root = root / "split"
-            split_root.mkdir()
-            split = subprocess.run(
-                ["pdfseparate", str(committed), str(split_root / "page-%d.pdf")],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(split.returncode, 0, split.stderr)
-            altered = root / "altered-15-page-a4.pdf"
-            altered_pages = [split_root / "page-2.pdf", split_root / "page-2.pdf"] + [
-                split_root / f"page-{page_number}.pdf" for page_number in range(3, 16)
-            ]
-            unite = subprocess.run(
-                ["pdfunite", *(str(page) for page in altered_pages), str(altered)],
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(unite.returncode, 0, unite.stderr)
-            self.assertEqual(_pdf_info(altered)["Pages"], "15")
-            self.assertTrue(all(item["size"].endswith("(A4)") for item in _pdf_page_geometries(altered)))
-            with self.assertRaises(AssertionError):
-                _assert_pdf_page_parity(self, altered, converted, root / "altered-parity")
 
     def test_guide_pdf_has_no_blank_or_nearly_empty_interior_page(self):
         path = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
