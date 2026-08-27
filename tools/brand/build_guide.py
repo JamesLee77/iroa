@@ -99,6 +99,8 @@ def _set_style(
     style.font.bold = bold
     properties = style.element.get_or_add_rPr()
     fonts = properties.get_or_add_rFonts()
+    for role in ("asciiTheme", "hAnsiTheme", "eastAsiaTheme", "cstheme"):
+        fonts.attrib.pop(qn(f"w:{role}"), None)
     for role in ("ascii", "hAnsi", "eastAsia", "cs"):
         fonts.set(qn(f"w:{role}"), FONT_NAME)
     paragraph = style.paragraph_format
@@ -256,8 +258,7 @@ def _add_inline(paragraph, source: str) -> None:
     cursor = 0
     for match in INLINE_PATTERN.finditer(source):
         if match.start() > cursor:
-            run = paragraph.add_run(source[cursor : match.start()])
-            _set_font(run)
+            paragraph.add_run(source[cursor : match.start()])
         token = match.group(0)
         if token.startswith("**"):
             run = paragraph.add_run(token[2:-2])
@@ -270,8 +271,7 @@ def _add_inline(paragraph, source: str) -> None:
             _add_hyperlink(paragraph, label, target)
         cursor = match.end()
     if cursor < len(source):
-        run = paragraph.add_run(source[cursor:])
-        _set_font(run)
+        paragraph.add_run(source[cursor:])
 
 
 def _add_paragraph(document: Document, text: str, style: str = "Normal"):

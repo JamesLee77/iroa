@@ -194,7 +194,49 @@ def _section_inline_asset_paths(
 _WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 _CORE_NS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
 _DC_NS = "http://purl.org/dc/elements/1.1/"
+_PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+_OFFICE_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 _W = f"{{{_WORD_NS}}}"
+
+_EXPECTED_GUIDE_IMAGES = (
+    (
+        "exports/digital/iroa-wordmark-512.png · Track A 공식 컬러 워드마크",
+        "media/image1.png",
+        Path("docs/brand/exports/digital/iroa-wordmark-512.png"),
+    ),
+    (
+        "examples/usage-overview.png · Track A 공식 자산 적용 예시 보드",
+        "media/image2.png",
+        Path("docs/brand/examples/usage-overview.png"),
+    ),
+    (
+        "exports/digital/iroa-symbol-512.png · Track A 공식 컬러 심볼",
+        "media/image3.png",
+        Path("docs/brand/exports/digital/iroa-symbol-512.png"),
+    ),
+    (
+        "exports/icons/app-icon-192.png · IROA 앱 아이콘",
+        "media/image4.png",
+        Path("docs/brand/exports/icons/app-icon-192.png"),
+    ),
+    (
+        "exports/icons/symbol-kiosk-1024.png · IROA 키오스크 심볼",
+        "media/image5.png",
+        Path("docs/brand/exports/icons/symbol-kiosk-1024.png"),
+    ),
+)
+
+_EXPECTED_PDF_FONTS = {
+    "NotoSansKR-Bold": ("Type 1", "Builtin"),
+    "NotoSansKR-Medium": ("Type 1", "Builtin"),
+    "Helvetica": ("TrueType", "WinAnsi"),
+}
+
+_PDF_RENDER_DPI = 144
+# Calibrated with the independent packaged DOCX renderer (observed maxima:
+# NMAE 0.002273 and 1.243% of pixels above a 16/255 channel delta).
+_PDF_MAX_NORMALIZED_MAE = 0.003
+_PDF_MAX_MATERIAL_PIXEL_FRACTION = 0.015
 
 
 def _docx_xml(path: Path, member: str) -> ET.Element:
@@ -252,6 +294,199 @@ def _pdf_info(path: Path) -> dict[str, str]:
         if ":" in line
         for key, value in [line.split(":", 1)]
     }
+
+
+def _guide_docx_media_bindings(
+    path: Path,
+) -> tuple[tuple[dict[str, str], ...], tuple[str, ...], dict[str, str]]:
+    with zipfile.ZipFile(path) as archive:
+        members = tuple(sorted(name for name in archive.namelist() if name.startswith("word/media/")))
+        relationships = ET.fromstring(archive.read("word/_rels/document.xml.rels"))
+        image_relationships = {
+            node.get("Id"): node.get("Target")
+            for node in relationships.findall(f"{{{_PACKAGE_REL_NS}}}Relationship")
+            if (node.get("Type") or "").endswith("/image")
+        }
+        document = ET.fromstring(archive.read("word/document.xml"))
+        bindings = []
+        for inline in (node for node in document.iter() if node.tag.endswith("}inline")):
+            drawing = next((node for node in inline.iter() if node.tag.endswith("}docPr")), None)
+            blip = next((node for node in inline.iter() if node.tag.endswith("}blip")), None)
+            if drawing is None or blip is None:
+                continue
+            relationship_id = blip.get(f"{{{_OFFICE_REL_NS}}}embed")
+            target = image_relationships.get(relationship_id)
+            member = f"word/{target}" if target else ""
+            bindings.append(
+                {
+                    "alt": (drawing.get("descr") or "").strip(),
+                    "relationship_id": relationship_id or "",
+                    "target": target or "",
+                    "member": member,
+                    "sha256": hashlib.sha256(archive.read(member)).hexdigest() if member in members else "",
+                }
+            )
+        return tuple(bindings), members, image_relationships
+
+
+def _assert_guide_docx_media_contract(testcase: unittest.TestCase, path: Path) -> None:
+    bindings, members, image_relationships = _guide_docx_media_bindings(path)
+    testcase.assertEqual(len(bindings), len(_EXPECTED_GUIDE_IMAGES))
+    testcase.assertEqual(tuple(item["alt"] for item in bindings), tuple(item[0] for item in _EXPECTED_GUIDE_IMAGES))
+    testcase.assertEqual(tuple(item["target"] for item in bindings), tuple(item[1] for item in _EXPECTED_GUIDE_IMAGES))
+    testcase.assertEqual(len({item["relationship_id"] for item in bindings}), len(_EXPECTED_GUIDE_IMAGES))
+    testcase.assertEqual(
+        image_relationships,
+        {item["relationship_id"]: item["target"] for item in bindings},
+    )
+    testcase.assertEqual(members, tuple(f"word/{item[1]}" for item in _EXPECTED_GUIDE_IMAGES))
+    with zipfile.ZipFile(path) as archive:
+        for binding, (_, target, source) in zip(bindings, _EXPECTED_GUIDE_IMAGES):
+            embedded = archive.read(f"word/{target}")
+            source_bytes = source.read_bytes()
+            testcase.assertEqual(binding["sha256"], _digest(source), source)
+            testcase.assertTrue(embedded == source_bytes, source)
+
+
+def _parse_pdffonts_output(stdout: str) -> tuple[dict[str, str], ...]:
+    lines = stdout.splitlines()
+    if len(lines) < 3:
+        raise ValueError("pdffonts output has no font rows")
+    spans = tuple((match.start(), match.end()) for match in re.finditer(r"-+", lines[1]))
+    columns = ("name", "type", "encoding", "emb", "sub", "uni", "object_id")
+    if len(spans) != len(columns):
+        raise ValueError(f"unexpected pdffonts columns: {lines[:2]}")
+    rows = []
+    for line in lines[2:]:
+        if not line.strip():
+            continue
+        values = [
+            line[start : (end if index < len(spans) - 1 else None)].strip()
+            for index, (start, end) in enumerate(spans)
+        ]
+        rows.append(dict(zip(columns, values)))
+    if not rows:
+        raise ValueError("pdffonts output has no font rows")
+    return tuple(rows)
+
+
+def _pdf_font_rows(path: Path) -> tuple[dict[str, str], ...]:
+    result = subprocess.run(["pdffonts", str(path)], check=True, capture_output=True, text=True)
+    return _parse_pdffonts_output(result.stdout)
+
+
+def _assert_guide_pdf_font_contract(testcase: unittest.TestCase, rows: tuple[dict[str, str], ...]) -> None:
+    families = []
+    for row in rows:
+        testcase.assertEqual(row["emb"], "yes", row)
+        testcase.assertEqual(row["sub"], "yes", row)
+        testcase.assertEqual(row["uni"], "yes", row)
+        testcase.assertNotEqual(row["type"], "Type 3", row)
+        match = re.fullmatch(r"[A-Z]{6}\+(.+)", row["name"])
+        testcase.assertIsNotNone(match, row)
+        family = match.group(1)
+        families.append(family)
+        testcase.assertIn(family, _EXPECTED_PDF_FONTS, row)
+        testcase.assertEqual((row["type"], row["encoding"]), _EXPECTED_PDF_FONTS[family], row)
+    testcase.assertEqual(set(families), set(_EXPECTED_PDF_FONTS))
+
+
+def _pdf_page_texts(path: Path) -> tuple[str, ...]:
+    page_count = int(_pdf_info(path)["Pages"])
+    pages = []
+    for page_number in range(1, page_count + 1):
+        result = subprocess.run(
+            ["pdftotext", "-layout", "-f", str(page_number), "-l", str(page_number), str(path), "-"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        pages.append(_normalized_visible_text(result.stdout))
+    return tuple(pages)
+
+
+def _pdf_page_geometries(path: Path) -> tuple[dict[str, str], ...]:
+    page_count = int(_pdf_info(path)["Pages"])
+    result = subprocess.run(
+        ["pdfinfo", "-box", "-f", "1", "-l", str(page_count), str(path)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    geometries = [dict() for _ in range(page_count)]
+    pattern = re.compile(r"^Page\s+(\d+)\s+(size|rot|MediaBox|CropBox|BleedBox|TrimBox|ArtBox):\s+(.+)$")
+    for line in result.stdout.splitlines():
+        match = pattern.match(line)
+        if match:
+            page_number, key, value = match.groups()
+            geometries[int(page_number) - 1][key] = _normalized_visible_text(value)
+    expected_keys = {"size", "rot", "MediaBox", "CropBox", "BleedBox", "TrimBox", "ArtBox"}
+    if any(set(geometry) != expected_keys for geometry in geometries):
+        raise ValueError(f"incomplete pdfinfo geometry: {geometries}")
+    return tuple(geometries)
+
+
+def _render_pdf_pages(path: Path, destination: Path) -> tuple[Path, ...]:
+    destination.mkdir(parents=True)
+    result = subprocess.run(
+        ["pdftoppm", "-r", str(_PDF_RENDER_DPI), "-png", str(path), str(destination / "page")],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode or result.stderr:
+        raise RuntimeError(result.stderr or f"pdftoppm exited {result.returncode}")
+    return tuple(sorted(destination.glob("page-*.png")))
+
+
+def _pdf_raster_parity(left: Path, right: Path) -> dict[str, float | tuple[int, int]]:
+    with Image.open(left).convert("RGB") as left_image, Image.open(right).convert("RGB") as right_image:
+        if left_image.size != right_image.size:
+            return {"size": left_image.size, "normalized_mae": 1.0, "material_pixel_fraction": 1.0}
+        difference = ImageChops.difference(left_image, right_image)
+        pixels = left_image.width * left_image.height
+        histogram = difference.histogram()
+        absolute_channel_error = sum((index % 256) * count for index, count in enumerate(histogram))
+        normalized_mae = absolute_channel_error / (pixels * 3 * 255)
+        red, green, blue = difference.split()
+        maximum_channel = ImageChops.lighter(ImageChops.lighter(red, green), blue)
+        material_histogram = maximum_channel.histogram()
+        material_pixel_fraction = sum(material_histogram[17:]) / pixels
+        return {
+            "size": left_image.size,
+            "normalized_mae": normalized_mae,
+            "material_pixel_fraction": material_pixel_fraction,
+        }
+
+
+def _assert_pdf_page_parity(
+    testcase: unittest.TestCase,
+    committed: Path,
+    converted: Path,
+    render_root: Path,
+) -> tuple[dict[str, float | tuple[int, int]], ...]:
+    testcase.assertEqual(_pdf_info(committed)["Pages"], _pdf_info(converted)["Pages"])
+    testcase.assertEqual(_pdf_page_texts(committed), _pdf_page_texts(converted))
+    committed_geometry = _pdf_page_geometries(committed)
+    converted_geometry = _pdf_page_geometries(converted)
+    testcase.assertEqual(committed_geometry, converted_geometry)
+    for geometry in committed_geometry:
+        testcase.assertEqual(geometry["size"], "595.304 x 841.89 pts (A4)")
+        testcase.assertEqual(geometry["rot"], "0")
+        for key in ("MediaBox", "CropBox", "BleedBox", "TrimBox", "ArtBox"):
+            testcase.assertEqual(geometry[key], "0.00 0.00 595.30 841.89")
+    committed_pages = _render_pdf_pages(committed, render_root / "committed")
+    converted_pages = _render_pdf_pages(converted, render_root / "converted")
+    testcase.assertEqual(len(committed_pages), len(converted_pages))
+    metrics = tuple(_pdf_raster_parity(left, right) for left, right in zip(committed_pages, converted_pages))
+    for page_number, metric in enumerate(metrics, 1):
+        testcase.assertEqual(metric["size"], (1191, 1684), page_number)
+        testcase.assertLessEqual(metric["normalized_mae"], _PDF_MAX_NORMALIZED_MAE, (page_number, metric))
+        testcase.assertLessEqual(
+            metric["material_pixel_fraction"],
+            _PDF_MAX_MATERIAL_PIXEL_FRACTION,
+            (page_number, metric),
+        )
+    return metrics
 
 
 class BrandContractTest(unittest.TestCase):
@@ -522,19 +757,30 @@ class BrandContractTest(unittest.TestCase):
 
     def test_guide_docx_images_are_official_and_have_alt_text(self):
         path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
-        document = _docx_xml(path, "word/document.xml")
-        drawing_properties = [
-            node
-            for node in document.iter()
-            if node.tag.endswith("}docPr")
-        ]
-        self.assertGreaterEqual(len(drawing_properties), 4)
-        descriptions = [node.get("descr", "").strip() for node in drawing_properties]
-        self.assertTrue(all(descriptions), descriptions)
-        self.assertTrue(any("usage-overview.png" in value for value in descriptions))
-        self.assertTrue(any("iroa-wordmark" in value for value in descriptions))
-        self.assertTrue(any("iroa-symbol" in value for value in descriptions))
-        self.assertTrue(all("track-b" not in value.lower() for value in descriptions))
+        _assert_guide_docx_media_contract(self, path)
+
+        with TemporaryDirectory() as directory:
+            altered = Path(directory) / "copied-alt-unofficial-image.docx"
+            with zipfile.ZipFile(path) as source, zipfile.ZipFile(altered, "w") as destination:
+                for member in source.infolist():
+                    payload = source.read(member.filename)
+                    if member.filename == "word/media/image1.png":
+                        payload = Path("docs/brand/exports/icons/app-icon-192.png").read_bytes()
+                    destination.writestr(member, payload)
+            with self.assertRaises(AssertionError):
+                _assert_guide_docx_media_contract(self, altered)
+
+    def test_guide_docx_plain_runs_inherit_their_paragraph_styles(self):
+        document = _docx_xml(Path("docs/brand/IROA_BI_GUIDE_KO.docx"), "word/document.xml")
+        font_only_runs = []
+        for run in document.iter(f"{_W}r"):
+            properties = run.find(f"{_W}rPr")
+            if properties is None:
+                continue
+            children = tuple(properties)
+            if len(children) == 1 and children[0].tag == f"{_W}rFonts":
+                font_only_runs.append(_word_text(run))
+        self.assertEqual(font_only_runs, [])
 
     def test_guide_docx_embeds_the_two_pinned_noto_fonts(self):
         path = Path("docs/brand/IROA_BI_GUIDE_KO.docx")
@@ -605,18 +851,17 @@ class BrandContractTest(unittest.TestCase):
         self.assertGreaterEqual(int(info["Pages"]), 10)
         self.assertGreater(path.stat().st_size, 100_000)
 
-        fonts = subprocess.run(
-            ["pdffonts", str(path)],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        self.assertNotIn("Type 3", fonts.stdout)
-        font_rows = fonts.stdout.splitlines()[2:]
-        self.assertTrue(font_rows)
-        for row in font_rows:
-            columns = row.split()
-            self.assertIn("yes", columns[3:6], row)
+        font_rows = _pdf_font_rows(path)
+        _assert_guide_pdf_font_contract(self, font_rows)
+
+        fallback_rows = tuple(dict(row) for row in font_rows)
+        fallback_rows[0]["name"] = "BAAAAA+LiberationSans-Bold"
+        with self.assertRaises(AssertionError):
+            _assert_guide_pdf_font_contract(self, fallback_rows)
+        unembedded_rows = tuple(dict(row) for row in font_rows)
+        unembedded_rows[0]["emb"] = "no"
+        with self.assertRaises(AssertionError):
+            _assert_guide_pdf_font_contract(self, unembedded_rows)
 
         text_result = subprocess.run(
             ["pdftotext", "-layout", str(path), "-"],
@@ -671,10 +916,31 @@ class BrandContractTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             converted = root / "IROA_BI_GUIDE_KO.pdf"
             self.assertTrue(converted.is_file(), result.stdout)
-            committed_info = _pdf_info(committed)
-            converted_info = _pdf_info(converted)
-            self.assertEqual(converted_info["Pages"], committed_info["Pages"])
-            self.assertEqual(converted_info["Page size"], committed_info["Page size"])
+            metrics = _assert_pdf_page_parity(self, committed, converted, root / "parity")
+            self.assertEqual(len(metrics), 15)
+
+            split_root = root / "split"
+            split_root.mkdir()
+            split = subprocess.run(
+                ["pdfseparate", str(committed), str(split_root / "page-%d.pdf")],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(split.returncode, 0, split.stderr)
+            altered = root / "altered-15-page-a4.pdf"
+            altered_pages = [split_root / "page-2.pdf", split_root / "page-2.pdf"] + [
+                split_root / f"page-{page_number}.pdf" for page_number in range(3, 16)
+            ]
+            unite = subprocess.run(
+                ["pdfunite", *(str(page) for page in altered_pages), str(altered)],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(unite.returncode, 0, unite.stderr)
+            self.assertEqual(_pdf_info(altered)["Pages"], "15")
+            self.assertTrue(all(item["size"].endswith("(A4)") for item in _pdf_page_geometries(altered)))
+            with self.assertRaises(AssertionError):
+                _assert_pdf_page_parity(self, altered, converted, root / "altered-parity")
 
     def test_guide_pdf_has_no_blank_or_nearly_empty_interior_page(self):
         path = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")
