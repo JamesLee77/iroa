@@ -110,17 +110,22 @@ test('uses the semantic settlement color for the Base terminal', async ({ page }
   expect(colors.marker).toBe(colors.token);
 });
 
-test('keeps planned Base and Native USDC status in the mobile first viewport', async ({ page }) => {
+test('keeps planned settlement qualifiers and the atlas in the mobile first viewport', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 1000 });
   await page.goto('/');
 
-  for (const fact of ['Base Primary Network', 'Native USDC Settlement']) {
-    await expect(
-      page.locator('#top .home-hero__facts li').filter({ hasText: fact }).getByText('계획', {
-        exact: true,
-      }),
-    ).toBeInViewport();
+  const settlementPlan = page.getByRole('list', { name: '모바일 결제 계획' });
+  const settlementItems = settlementPlan.getByRole('listitem');
+  for (const [index, fact] of ['Base', 'Native USDC'].entries()) {
+    await expect(settlementItems.nth(index).getByText(fact, { exact: true })).toBeInViewport();
+    await expect(settlementItems.nth(index).getByText('계획', { exact: true })).toBeInViewport();
   }
+
+  const atlas = page.getByRole('region', { name: 'Network Atlas 실행 경로' });
+  await expect(atlas).toBeInViewport({ ratio: 0.1 });
+  expect(await atlas.evaluate((element) => element.getBoundingClientRect().top)).toBeLessThan(1000);
 });
 
 test('keeps institutional contact honest until an approved channel exists', async ({ page }) => {

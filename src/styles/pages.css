@@ -65,7 +65,9 @@
 }
 
 .home-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.home-hero__settlement-plan { display: none; }
 .home-hero__trust,
+.home-hero__settlement-plan,
 .home-hero__facts,
 .network-atlas__path,
 .network-atlas__planes { padding: 0; margin: 0; list-style: none; }
@@ -368,6 +370,17 @@
   .home-hero { gap: var(--space-10); padding-block: var(--space-10) var(--space-6); }
   .home-hero h1 { font-size: clamp(2.75rem, 12.4vw, 3.1rem); }
   .home-hero__actions > * { flex: 1 1 100%; }
+  .home-hero__settlement-plan {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-block-start: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .home-hero__settlement-plan li { display: flex; gap: var(--space-1); align-items: center; }
+  .home-hero__settlement-plan strong { color: var(--color-text); }
   .network-atlas { min-block-size: 37rem; padding: var(--space-5); border-radius: var(--radius-md); }
   .network-atlas__path { min-block-size: 29rem; padding-inline-end: 0; }
   .network-atlas__path li:nth-child(n) { margin-inline-start: 0; }

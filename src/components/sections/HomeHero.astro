@@ -12,6 +12,12 @@ interface Props {
 
 const { content } = Astro.props;
 const planeLabels = ['Interaction', 'Control', 'Execution', 'Settlement'] as const;
+const mobileSettlementFacts = content.facts
+  .filter((fact) => fact.status === 'planned')
+  .map((fact) => ({
+    label: fact.label.replace(' Primary Network', '').replace(' Settlement', ''),
+    status: getStatusLabel(fact.status),
+  }));
 ---
 
 <section id="top" class="home-hero container" aria-labelledby="home-hero-title">
@@ -26,14 +32,13 @@ const planeLabels = ['Interaction', 'Control', 'Execution', 'Settlement'] as con
       <ButtonLink href={content.primaryCta.href}>{content.primaryCta.label}<ArrowDown aria-hidden="true" size={18} /></ButtonLink>
       <ButtonLink href={content.secondaryCta.href} variant="secondary">{content.secondaryCta.label}<BookOpen aria-hidden="true" size={18} /></ButtonLink>
     </div>
+    <ul class="home-hero__settlement-plan" aria-label="모바일 결제 계획">
+      {mobileSettlementFacts.map((fact) => <li><span class="latin">{fact.label}</span><span aria-hidden="true">·</span><strong>{fact.status}</strong></li>)}
+    </ul>
     <ul class="home-hero__trust" aria-label="IROA 신뢰 원칙">
       {content.trust.map((item) => <li><ShieldCheck aria-hidden="true" size={18} />{item}</li>)}
     </ul>
   </div>
-
-  <ul class="home-hero__facts" aria-label="핵심 공개 상태">
-    {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} />{fact.status === 'planned' && <span class="home-hero__fact-status">{getStatusLabel(fact.status)}</span>}</li>)}
-  </ul>
 
   <section class="network-atlas" aria-label="Network Atlas 실행 경로">
     <p class="network-atlas__label latin">VERIFIABLE EXECUTION PATH</p>
@@ -55,4 +60,8 @@ const planeLabels = ['Interaction', 'Control', 'Execution', 'Settlement'] as con
       {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
     </ol>
   </section>
+
+  <ul class="home-hero__facts" aria-label="핵심 공개 상태">
+    {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} />{fact.status === 'planned' && <span class="home-hero__fact-status">{getStatusLabel(fact.status)}</span>}</li>)}
+  </ul>
 </section>

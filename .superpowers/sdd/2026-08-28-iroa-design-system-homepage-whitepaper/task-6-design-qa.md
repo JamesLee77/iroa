@@ -9,6 +9,10 @@ Implementation evidence:
 - `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/hero-1440.png`
 - `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/comparison-desktop.png`
 - `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/comparison-mobile.png`
+- `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/fix-round-2-home-1440.png`
+- `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/fix-round-2-home-375.png`
+- `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/fix-round-2-comparison-1440.png`
+- `.superpowers/sdd/2026-08-28-iroa-design-system-homepage-whitepaper/task-6-artifacts/fix-round-2-comparison-375.png`
 
 Viewport and normalization:
 
@@ -17,6 +21,9 @@ Viewport and normalization:
 - Mobile implementation: 375 × 14276 px full page, CSS viewport 375 × 1000, `deviceScaleFactor: 1`.
 - Desktop comparison: the source remained 864 × 1821; the first 3035 px of the 1440 implementation was normalized to 864 × 1821 and placed beside it. This compares the same top-of-page state while acknowledging that the delivered page includes required sections absent from the concept board.
 - Mobile comparison: the source was proportionally normalized to 375 × 790 and padded to the 375 × 1000 implementation viewport. The source did not prescribe a mobile frame, so the responsive comparison assesses preserved hierarchy, not pixel parity.
+- Fix Round 2 desktop implementation: 1440 × 8797 px full page, CSS viewport 1440 × 1000, `deviceScaleFactor: 1`.
+- Fix Round 2 mobile implementation: 375 × 14360 px full page, CSS viewport 375 × 1000, `deviceScaleFactor: 1`.
+- Fix Round 2 combined inputs use the source hero crop and the current 1440 × 1000 or 375 × 1000 first viewport in one image. The source has no mobile state, so the 375 comparison evaluates retained hierarchy and truthful content rather than pixel parity.
 
 State: homepage `/`, light theme, initial load, no menu open, no hover or focus state.
 
@@ -24,7 +31,7 @@ State: homepage `/`, light theme, initial load, no menu open, no hover or focus 
 
 The combined desktop input shows the same left-led hero hierarchy, Ivory/mineral background, Navy display type, Coral execution path, four plane labels, compact proof strip, and bordered embedded document composition as the selected image. The delivered page adds the approved protocol, privacy, settlement, economy, roadmap, and participation sections below the concept-board scope. No photography, gradient, wallet balance, transaction identifier, unsupported metric, or speculative token imagery is present.
 
-The combined mobile input shows that the hero retains message-first hierarchy, both actions, trust principles, and the complete execution path without horizontal overflow. The long mobile page is an intentional consequence of keeping all eight required sections and their truthful evidence visible rather than hiding content.
+The combined mobile input shows that the hero retains message-first hierarchy, both actions, compact Base and Native USDC planned qualifiers, trust principles, and the beginning of the principal execution path without horizontal overflow. At 375 × 1000 the atlas begins at 822 px and 27.5% of its 37rem surface intersects the first viewport. The complete atlas follows before the full fact strip. The long mobile page is an intentional consequence of keeping all eight required sections and their truthful evidence visible rather than hiding content.
 
 ## Focused region evidence
 
@@ -49,6 +56,9 @@ The combined mobile input shows that the hero retains message-first hierarchy, b
 4. Fix Round 1 review found that custom hero fact labels hid the `planned` status, the atlas `role="img"` hid its ordered descendants, and Base blue lacked semantic token ownership.
 5. Fixes: exposed visible `계획` for Base and Native USDC in the desktop and mobile first viewport, added `계획` to the OG terminal, exposed named ordered stage and plane lists, and introduced `--color-settlement` with computed-style regression coverage.
 6. Post-fix evidence: `fix-round-1-home-1440.png`, `fix-round-1-home-375.png`, their viewport captures, and the regenerated `public/og/iroa-network-atlas.png` show the qualified status without breaking layout hierarchy.
+7. Fix Round 2 review found a P2 mobile hierarchy regression: placing the complete four-row fact strip before the atlas kept planned labels above the fold but moved the principal Network Atlas entirely below the 375 × 1000 viewport.
+8. Fix: restored the full fact strip after the atlas in source order and added a compact mobile-only settlement qualifier beside the primary actions, derived from the same planned facts. Both Base and Native USDC remain visibly and accessibly qualified as `계획`; the atlas lists and OG qualifiers are unchanged.
+9. Post-fix evidence: `fix-round-2-home-1440-viewport.png` confirms unchanged desktop hierarchy. `fix-round-2-home-375-viewport.png` shows both compact qualifiers and the atlas beginning at 822 px. The combined `fix-round-2-comparison-1440.png` and `fix-round-2-comparison-375.png` inputs confirm the selected message-plus-atlas hierarchy is restored with no new P0/P1/P2 drift.
 
 ## Findings
 
