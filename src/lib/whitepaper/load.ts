@@ -11,6 +11,7 @@ import {
   type LocalAsset,
   type WhitepaperInventory,
   type WhitepaperInventoryEntry,
+  type WhitepaperHeadingEntry,
 } from './assets';
 import {
   LOCKED_WHITEPAPER_SLUGS,
@@ -30,7 +31,6 @@ import {
 const SOURCE_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.md';
 const METADATA_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.meta.json';
 const CHAPTER_PATTERN = /^## (\d+)\.\s+(.+)$/m;
-const LOWER_HEADING_PATTERN = /^(#{3,6})\s+(.+)$/gm;
 const EXPLICIT_ANCHOR_PATTERN = /\s+\{#([A-Za-z][\w:.-]*)\}\s*$/;
 
 interface ParsedChapter {
@@ -113,10 +113,10 @@ function assertChapterOrder(chapters: ParsedChapter[]) {
   }
 }
 
-function collectHeadings(markdown: string, chapterNumber: number, slugger: GithubSlugger, publicationIds: Set<string>) {
+function collectHeadings(entries: WhitepaperHeadingEntry[], chapterNumber: number, slugger: GithubSlugger, publicationIds: Set<string>) {
   const headings: WhitepaperHeading[] = [];
-  for (const match of markdown.matchAll(LOWER_HEADING_PATTERN)) {
-    const rawTitle = match[2].trim();
+  for (const entry of entries) {
+    const rawTitle = entry.text.trim();
     const explicitAnchor = rawTitle.match(EXPLICIT_ANCHOR_PATTERN)?.[1];
     const title = textWithoutExplicitAnchor(rawTitle);
     const candidateId = explicitAnchor ?? slugger.slug(title);
@@ -124,7 +124,7 @@ function collectHeadings(markdown: string, chapterNumber: number, slugger: Githu
       throw new Error(`chapter ${chapterNumber} has duplicate heading ID "${candidateId}"`);
     }
     publicationIds.add(candidateId);
-    headings.push({ level: match[1].length, id: candidateId, title });
+    headings.push({ level: entry.depth, id: candidateId, title });
   }
   return headings;
 }
@@ -237,7 +237,7 @@ function renderMarkdown(markdown: string, headings: WhitepaperHeading[], lazyIma
   let headingIndex = 0;
   const renderer = new Renderer();
   renderer.heading = ({ depth, tokens }: Tokens.Heading) => {
-    const content = renderer.parser.parseInline(tokens);
+    const content = textWithoutExplicitAnchor(renderer.parser.parseInline(tokens));
     if (depth < 3) return `<h${depth}>${content}</h${depth}>\n`;
     const heading = headings[headingIndex++];
     if (!heading || heading.level !== depth) {
@@ -270,33 +270,33 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
   assertChapterOrder(parsedChapters);
   validateTokenAllocation(parsedChapters);
 
-  const slugger = new GithubSlugger();
-  const publicationIds = new Set<string>();
-  const preambleHeadings = collectHeadings(preamble, 0, slugger, publicationIds);
-  const chapterHeadings = parsedChapters.map((chapter) => collectHeadings(chapter.markdown, chapter.number, slugger, publicationIds));
-  const headingIdsByScope = new Map<string, Set<string>>([
-    ['preamble', new Set(preambleHeadings.map(({ id }) => id))],
-    ...chapterHeadings.map((headings, index) => [metadata.slugs[index], new Set(headings.map(({ id }) => id))] as const),
-  ]);
   const inventories = [
     parseWhitepaperInventory(preamble, { scope: 'preamble' }),
     ...parsedChapters.map((chapter, index) => parseWhitepaperInventory(chapter.markdown, {
       scope: 'chapter', chapterNumber: chapter.number, chapterSlug: metadata.slugs[index],
     })),
   ] as WhitepaperInventory[];
+  const slugger = new GithubSlugger();
+  const publicationIds = new Set<string>();
+  const preambleHeadings = collectHeadings(inventories[0].headings, 0, slugger, publicationIds);
+  const chapterHeadings = parsedChapters.map((chapter, index) => collectHeadings(inventories[index + 1].headings, chapter.number, slugger, publicationIds));
+  const headingIdsByScope = new Map<string, Set<string>>([
+    ['preamble', new Set(preambleHeadings.map(({ id }) => id))],
+    ...chapterHeadings.map((headings, index) => [metadata.slugs[index], new Set(headings.map(({ id }) => id))] as const),
+  ]);
   const inventory: WhitepaperInventory = {
     images: inventories.flatMap(({ images }) => images),
     links: inventories.flatMap(({ links }) => links),
+    headings: inventories.flatMap(({ headings }) => headings),
   };
   validateLinkInventory(inventory, metadata, headingIdsByScope);
   const assets = resolveInventoryImages(inventory);
   const chapters = parsedChapters.map((chapter, index): WhitepaperChapter => {
-    const markdownWithoutExplicitAnchors = chapter.markdown.replace(LOWER_HEADING_PATTERN, (_line, hashes: string, rawTitle: string) => `${hashes} ${textWithoutExplicitAnchor(rawTitle)}`);
     return {
       number: chapter.number,
       slug: metadata.slugs[index],
       title: chapter.title,
-      html: renderMarkdown(markdownWithoutExplicitAnchors, chapterHeadings[index], true, assets),
+      html: renderMarkdown(chapter.markdown, chapterHeadings[index], true, assets),
       headings: chapterHeadings[index],
       previous: undefined,
       next: undefined,
@@ -313,8 +313,7 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
     }
   }
   validateNavigation(chapters);
-  const preambleWithoutExplicitAnchors = preamble.replace(LOWER_HEADING_PATTERN, (_line, hashes: string, rawTitle: string) => `${hashes} ${textWithoutExplicitAnchor(rawTitle)}`);
-  return { metadata, preambleHtml: renderMarkdown(preambleWithoutExplicitAnchors, preambleHeadings, false, assets), chapters };
+  return { metadata, preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets), chapters };
 }
 
 export async function loadWhitepaper(): Promise<WhitepaperPublication> {

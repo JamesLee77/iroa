@@ -111,6 +111,8 @@ function walkTokens(tokens, inventory, context) {
       inventory.images.push({ kind: 'image', raw: token.href, source: 'markdown', alt: token.text ?? '', sourceContext: { ...context } });
     } else if (token.type === 'link') {
       inventory.links.push({ kind: 'link', raw: token.href, source: 'markdown', sourceContext: { ...context } });
+    } else if (token.type === 'heading' && token.depth >= 3) {
+      inventory.headings.push({ depth: token.depth, text: token.text ?? '', sourceContext: { ...context } });
     } else if (token.type === 'html') {
       for (const destination of rawHtmlDestinations(token.text ?? token.raw ?? '', context)) {
         if (destination.kind === 'image') inventory.images.push(destination);
@@ -134,11 +136,12 @@ function walkTokens(tokens, inventory, context) {
 }
 
 export function parseWhitepaperInventory(markdown, sourceContext = {}) {
-  const inventory = { images: [], links: [] };
+  const inventory = { images: [], links: [], headings: [] };
   walkTokens(marked.lexer(markdown, { gfm: true }), inventory, sourceContext);
   const key = (entry) => `${entry.source}:${entry.sourceContext.scope ?? ''}:${entry.sourceContext.chapterSlug ?? ''}:${entry.raw}`;
   return {
     images: [...new Map(inventory.images.map((entry) => [key(entry), entry])).values()],
     links: [...new Map(inventory.links.map((entry) => [key(entry), entry])).values()],
+    headings: inventory.headings,
   };
 }

@@ -31,6 +31,13 @@ export interface WhitepaperInventoryEntry {
 export interface WhitepaperInventory {
   images: WhitepaperInventoryEntry[];
   links: WhitepaperInventoryEntry[];
+  headings: WhitepaperHeadingEntry[];
+}
+
+export interface WhitepaperHeadingEntry {
+  depth: number;
+  text: string;
+  sourceContext: WhitepaperInventoryEntry['sourceContext'];
 }
 
 function inside(boundary: string, candidate: string) {

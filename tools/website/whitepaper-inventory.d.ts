@@ -24,6 +24,13 @@ export interface ParsedDestination {
 export interface WhitepaperInventory {
   images: WhitepaperInventoryEntry[];
   links: WhitepaperInventoryEntry[];
+  headings: WhitepaperHeadingEntry[];
+}
+
+export interface WhitepaperHeadingEntry {
+  depth: number;
+  text: string;
+  sourceContext: WhitepaperSourceContext;
 }
 
 export interface HtmlStartTag {
