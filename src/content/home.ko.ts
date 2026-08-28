@@ -1,8 +1,8 @@
-import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg';
-import cafePaymentUrl from '../../docs/brand/assets/photos/cafe-payment-4064023.jpg';
-import communityConversationUrl from '../../docs/brand/assets/photos/community-conversation-6647066.jpg';
-import coverConversationUrl from '../../docs/brand/assets/photos/cover-conversation-6248760.jpg';
-import telehealthCallUrl from '../../docs/brand/assets/photos/telehealth-call-8376171.jpg';
+import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
+import cafePaymentUrl from '../../docs/brand/assets/photos/cafe-payment-4064023.jpg?url';
+import communityConversationUrl from '../../docs/brand/assets/photos/community-conversation-6647066.jpg?url';
+import coverConversationUrl from '../../docs/brand/assets/photos/cover-conversation-6248760.jpg?url';
+import telehealthCallUrl from '../../docs/brand/assets/photos/telehealth-call-8376171.jpg?url';
 import photoManifestUrl from '../../docs/brand/assets/photos/PHOTO-MANIFEST.md?url';
 import whitepaperUrl from '../../docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf';
 import type { HomepageContent } from '../types/home';

@@ -3,14 +3,5 @@
   "compilerOptions": {
     "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "astro.config.mjs", "playwright.config.ts", "e2e"],
-  "exclude": [
-    "src/App.test.tsx",
-    "src/App.tsx",
-    "src/components",
-    "src/content",
-    "src/main.tsx",
-    "src/test",
-    "src/types"
-  ]
+  "include": ["src", "astro.config.mjs", "playwright.config.ts", "e2e"]
 }
