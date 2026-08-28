@@ -236,14 +236,23 @@ function inlineImageHtml(rawPath: string, alt: string, title: string | null, laz
   const asset = assets.get(rawPath);
   if (!asset) throw new Error(`image URL is absent from parsed whitepaper inventory "${rawPath}"`);
   const image = imageAsset(asset, lazyImages);
-  return `<img src="${image.publicUrl}" alt="${alt}" width="${image.width}" height="${image.height}"${image.lazy ? ' loading="lazy"' : ''}>`;
+  return `<img src="${image.publicUrl}" alt="${alt}"${title ? ` title="${title}"` : ''} width="${image.width}" height="${image.height}"${image.lazy ? ' loading="lazy"' : ''}>`;
 }
 
-function imageHtml(rawPath: string, alt: string, lazyImages: boolean, assets: Map<string, LocalAsset>) {
-  return `<figure>${inlineImageHtml(rawPath, alt, null, lazyImages, assets)}<figcaption>${alt}</figcaption></figure>`;
+function imageHtml(rawPath: string, alt: string, title: string | null, lazyImages: boolean, assets: Map<string, LocalAsset>) {
+  return `<figure>${inlineImageHtml(rawPath, alt, title, lazyImages, assets)}<figcaption>${alt}</figcaption></figure>`;
 }
 
-function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, lazyImages: boolean, block: boolean) {
+function standaloneRawHtmlImage(html: string) {
+  const tags = scanHtmlStartTags(html);
+  if (tags.length !== 1 || tags[0].name !== 'img' || html.trim() !== tags[0].raw) return undefined;
+  const source = htmlAttribute(tags[0], 'src');
+  if (!source || parseDestination(source).isExternal) return undefined;
+  return { source, alt: htmlAttribute(tags[0], 'alt'), title: htmlAttribute(tags[0], 'title') || null };
+}
+
+function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, lazyImages: boolean, standalone: boolean) {
+  const standaloneImage = standalone ? standaloneRawHtmlImage(html) : undefined;
   let cursor = 0;
   let rewritten = '';
   for (const tag of scanHtmlStartTags(html)) {
@@ -252,9 +261,10 @@ function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, laz
     if (!source || parseDestination(source).isExternal) continue;
     rewritten += html.slice(cursor, tag.start);
     const alt = htmlAttribute(tag, 'alt');
-    rewritten += block
-      ? imageHtml(source, alt, lazyImages, assets)
-      : inlineImageHtml(source, alt, null, lazyImages, assets);
+    const title = htmlAttribute(tag, 'title') || null;
+    rewritten += standaloneImage?.source === source
+      ? imageHtml(source, alt, title, lazyImages, assets)
+      : inlineImageHtml(source, alt, title, lazyImages, assets);
     cursor = tag.end;
   }
   return cursor === 0 ? html : `${rewritten}${html.slice(cursor)}`;
@@ -285,6 +295,8 @@ function renderMarkdown(
   let currentSectionTitle = fallbackTableSubject;
   const tableOrdinals = new Map<string, number>();
   const renderer = new Renderer();
+  let rawImageContainerDepth = 0;
+  const renderBlockquote = renderer.blockquote.bind(renderer);
   const renderParagraph = renderer.paragraph.bind(renderer);
   const renderTable = renderer.table.bind(renderer);
   renderer.heading = ({ depth, tokens }: Tokens.Heading) => {
@@ -303,18 +315,32 @@ function renderMarkdown(
     const subject = ordinal === 1 ? currentSectionTitle : `${currentSectionTitle} ${ordinal}번`;
     const tableName = escapeAttribute(`${subject} 표`);
     const regionName = escapeAttribute(`${subject} 표 스크롤 영역`);
-    const table = renderTable(token).replace('<table>', `<table aria-label="${tableName}">`);
+    rawImageContainerDepth += 1;
+    let table: string;
+    try {
+      table = renderTable(token).replace('<table>', `<table aria-label="${tableName}">`);
+    } finally {
+      rawImageContainerDepth -= 1;
+    }
     return `<div class="whitepaper-table-scroll" role="region" aria-label="${regionName}" tabindex="0">${table}</div>\n`;
+  };
+  renderer.blockquote = (token: Tokens.Blockquote) => {
+    rawImageContainerDepth += 1;
+    try {
+      return renderBlockquote(token);
+    } finally {
+      rawImageContainerDepth -= 1;
+    }
   };
   renderer.paragraph = (token: Tokens.Paragraph) => {
     const image = standaloneMarkdownImage(token);
-    if (image) return `${imageHtml(image.href, image.text, lazyImages, assets)}\n`;
+    if (image) return `${imageHtml(image.href, image.text, null, lazyImages, assets)}\n`;
     return renderParagraph(token);
   };
   renderer.image = ({ href, title, text }: Tokens.Image) => {
     return inlineImageHtml(href, text, title, lazyImages, assets);
   };
-  renderer.html = ({ text, block }: Tokens.HTML) => rewriteRawHtmlImages(text, assets, lazyImages, block);
+  renderer.html = ({ text }: Tokens.HTML) => rewriteRawHtmlImages(text, assets, lazyImages, rawImageContainerDepth === 0);
   const rendered = marked.parse(markdown, { gfm: true, renderer }) as string;
   if (headingIndex !== headings.length) {
     throw new Error(`whitepaper heading renderer did not emit ${headings.length - headingIndex} collected lower heading IDs`);

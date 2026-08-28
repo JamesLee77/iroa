@@ -87,6 +87,49 @@ describe('canonical whitepaper loader', () => {
     expect(mixed).not.toContain('<figure>');
   });
 
+  it('renders only a standalone raw HTML image as a captioned figure', () => {
+    const html = parseWhitepaper(minimalWhitepaper('<img src="../brand/iroa-symbol.svg" alt="Raw symbol" title="Raw title">'), metadata).chapters[0].html;
+
+    expect(html).toContain('<figure><img ');
+    expect(html).toContain('alt="Raw symbol"');
+    expect(html).toContain('title="Raw title"');
+    expect(html).toMatch(/width="\d+" height="\d+"/);
+    expect(html).toContain('<figcaption>Raw symbol</figcaption>');
+    expect(html).not.toContain('<p></p>');
+  });
+
+  it('keeps a raw HTML image inline inside a paragraph', () => {
+    const html = parseWhitepaper(minimalWhitepaper('<p>Before <img src="../brand/iroa-symbol.svg" alt="Paragraph symbol" title="Paragraph title"> after</p>'), metadata).chapters[0].html;
+
+    expect(html).toContain('<p>Before <img ');
+    expect(html).toContain('alt="Paragraph symbol"');
+    expect(html).toContain('title="Paragraph title"');
+    expect(html).toContain(' after</p>');
+    expect(html).not.toContain('<figure>');
+    expect(html).not.toContain('<p></p>');
+  });
+
+  it('keeps a raw HTML image inline inside a blockquote', () => {
+    const html = parseWhitepaper(minimalWhitepaper('> <img src="../brand/iroa-symbol.svg" alt="Quoted symbol" title="Quoted title">'), metadata).chapters[0].html;
+
+    expect(html).toMatch(/<blockquote>\s*<img /);
+    expect(html).toContain('alt="Quoted symbol"');
+    expect(html).toContain('title="Quoted title"');
+    expect(html).toContain('</blockquote>');
+    expect(html).not.toContain('<figure>');
+    expect(html).not.toContain('<p></p>');
+  });
+
+  it('keeps a raw HTML image inline inside a table cell', () => {
+    const html = parseWhitepaper(minimalWhitepaper('<table><tbody><tr><td><img src="../brand/iroa-symbol.svg" alt="Table symbol" title="Table title"></td></tr></tbody></table>'), metadata).chapters[0].html;
+
+    expect(html).toContain('<table><tbody><tr><td><img ');
+    expect(html).toContain('alt="Table symbol"');
+    expect(html).toContain('title="Table title"');
+    expect(html).toContain('</td></tr></tbody></table>');
+    expect(html).not.toContain('<figure>');
+  });
+
   it('rejects duplicate chapter numbers with the chapter number in the error', async () => {
     const markdown = (await canonicalMarkdown()).replace('## 2. 사용자의 하루로 보는 IROA', '## 1. 사용자의 하루로 보는 IROA');
 
