@@ -1,0 +1,101 @@
+---
+import ChapterIndex from '../components/whitepaper/ChapterIndex.astro';
+import ChapterPager from '../components/whitepaper/ChapterPager.astro';
+import DocumentControl from '../components/whitepaper/DocumentControl.astro';
+import OnThisPage from '../components/whitepaper/OnThisPage.astro';
+import type { WhitepaperChapter, WhitepaperPublication } from '../lib/whitepaper/types';
+import SiteLayout from './SiteLayout.astro';
+
+interface Props {
+  publication: WhitepaperPublication;
+  current?: WhitepaperChapter;
+}
+
+const { publication, current } = Astro.props;
+const canonicalPath = current ? `/whitepaper/${current.slug}` : '/whitepaper';
+const title = current
+  ? `${current.number}. ${current.title} | ${publication.metadata.title}`
+  : `${publication.metadata.title} | 웹 백서`;
+const description = current
+  ? `${publication.metadata.title} ${current.number}장 ${current.title}. 정규화된 한국어 원문을 읽습니다.`
+  : 'IROA.AI의 사용자 권한, 실행 구조, 개인정보 보호, NODE, 보상 경제와 검증 계획을 22개 장으로 읽습니다.';
+
+function escapeAttribute(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function prepareChapterHtml(chapter: WhitepaperChapter) {
+  let html = chapter.html;
+  for (const heading of chapter.headings) {
+    const id = escapeAttribute(heading.id);
+    const opening = `<h${heading.level} id="${id}">`;
+    const openingAt = html.indexOf(opening);
+    if (openingAt === -1) throw new Error(`missing rendered heading ${heading.id}`);
+    const closing = `</h${heading.level}>`;
+    const closingAt = html.indexOf(closing, openingAt + opening.length);
+    if (closingAt === -1) throw new Error(`missing closing tag for heading ${heading.id}`);
+    const insertionAt = closingAt + closing.length;
+    const label = escapeAttribute(`${heading.title} 제목 링크`);
+    const permalink = `<a class="heading-permalink" href="#${id}" aria-label="${label}"><span aria-hidden="true">링크</span></a>`;
+    html = `${html.slice(0, insertionAt)}${permalink}${html.slice(insertionAt)}`;
+  }
+  return html
+    .replaceAll('<table>', '<div class="whitepaper-table-scroll" role="region" aria-label="백서 데이터 표" tabindex="0"><table aria-label="백서 데이터 표">')
+    .replaceAll('</table>', '</table></div>');
+}
+
+const chapterHtml = current ? prepareChapterHtml(current) : undefined;
+---
+
+<SiteLayout title={title} description={description} canonicalPath={canonicalPath}>
+  <div class="page--whitepaper whitepaper-shell">
+    <header class="whitepaper-masthead container">
+      <div>
+        <p class="section-kicker latin">IROA.AI · WEB WHITEPAPER</p>
+        <h1>{publication.metadata.title}</h1>
+        <p>현실의 요청을 안전한 실행과 검증 가능한 결과로 연결하는 Human Utility Protocol 문서입니다.</p>
+      </div>
+      <DocumentControl publication={publication} />
+    </header>
+
+    <details class="whitepaper-mobile-index">
+      <summary>
+        <span>전체 목차</span>
+        {current && <strong class="tabular">{String(current.number).padStart(2, '0')} / 22</strong>}
+      </summary>
+      <ChapterIndex
+        chapters={publication.chapters}
+        currentSlug={current?.slug}
+        label="모바일 백서 전체 목차"
+      />
+    </details>
+
+    <div class="whitepaper-reader container">
+      <aside class="whitepaper-reader__index">
+        <p class="latin">DOCUMENT INDEX</p>
+        <ChapterIndex chapters={publication.chapters} currentSlug={current?.slug} />
+      </aside>
+
+      <div class="whitepaper-reader__document">
+        {current ? (
+          <>
+            <p class="whitepaper-reader__breadcrumb latin">
+              WHITEPAPER / {String(current.number).padStart(2, '0')} / 22
+            </p>
+            <article class="whitepaper-chapter" aria-label={current.title}>
+              <h2 id="whitepaper-chapter-title">{current.number}. {current.title}</h2>
+              <OnThisPage headings={current.headings} />
+              <div class="whitepaper-prose" set:html={chapterHtml} />
+            </article>
+            <ChapterPager chapter={current} />
+          </>
+        ) : <slot />}
+      </div>
+    </div>
+  </div>
+</SiteLayout>

@@ -1,0 +1,27 @@
+---
+import pdfUrl from '../../../docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf?url';
+import WhitepaperLayout from '../../layouts/WhitepaperLayout.astro';
+import { loadWhitepaper } from '../../lib/whitepaper/load';
+
+const publication = await loadWhitepaper();
+const preambleHtml = publication.preambleHtml.replace(/^<h1>[\s\S]*?<\/h1>\s*/, '');
+---
+
+<WhitepaperLayout publication={publication}>
+  <article class="whitepaper-overview" aria-label="백서 개요">
+    <div class="whitepaper-prose" set:html={preambleHtml} />
+
+    <section class="whitepaper-disclosure" aria-labelledby="whitepaper-publication-boundary">
+      <p class="section-kicker latin">PUBLICATION BOUNDARY</p>
+      <h3 id="whitepaper-publication-boundary">문서 상태와 운영 상태를 구분합니다.</h3>
+      <p><strong>발행 상태는 이 문서 판본에만 적용됩니다.</strong> 본문에 언급된 토큰, 보상, NODE, Base 정산과 기관 연계는 각 장에 표시된 검증·법률·배포 조건을 충족하기 전까지 운영 중인 기능을 의미하지 않습니다.</p>
+      <p>개인정보와 민감정보 원문은 오프체인에 머물며, 공개 기록은 필요한 최소 증빙과 상태만 다룹니다.</p>
+    </section>
+
+    <a
+      class="whitepaper-secondary-download"
+      href={pdfUrl}
+      download="IROA_WHITEPAPER_KO.pdf"
+    >PDF 원문 다시 다운로드</a>
+  </article>
+</WhitepaperLayout>

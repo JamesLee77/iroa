@@ -1,0 +1,22 @@
+---
+import type { WhitepaperHeading } from '../../lib/whitepaper/types';
+
+interface Props {
+  headings: WhitepaperHeading[];
+}
+
+const { headings } = Astro.props;
+---
+
+{headings.length > 0 && (
+  <nav class="whitepaper-on-this-page" aria-label="이 장의 목차">
+    <p>이 장의 목차</p>
+    <ol>
+      {headings.map((heading) => (
+        <li class:list={[`whitepaper-on-this-page__level-${heading.level}`]}>
+          <a href={`#${heading.id}`}>{heading.title}</a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}

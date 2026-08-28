@@ -1,0 +1,22 @@
+---
+import WhitepaperLayout from '../../layouts/WhitepaperLayout.astro';
+import { loadWhitepaper } from '../../lib/whitepaper/load';
+import type { WhitepaperChapter, WhitepaperPublication } from '../../lib/whitepaper/types';
+
+export async function getStaticPaths() {
+  const publication = await loadWhitepaper();
+  return publication.chapters.map((chapter) => ({
+    params: { chapter: chapter.slug },
+    props: { publication, chapter },
+  }));
+}
+
+interface Props {
+  publication: WhitepaperPublication;
+  chapter: WhitepaperChapter;
+}
+
+const { publication, chapter } = Astro.props;
+---
+
+<WhitepaperLayout publication={publication} current={chapter} />

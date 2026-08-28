@@ -1,0 +1,33 @@
+---
+import { ArrowLeft, ArrowRight } from 'lucide-astro';
+import type { WhitepaperChapter } from '../../lib/whitepaper/types';
+
+interface Props {
+  chapter: WhitepaperChapter;
+}
+
+const { chapter } = Astro.props;
+---
+
+<nav class="whitepaper-chapter-pager" aria-label="장 이동">
+  {chapter.previous ? (
+    <a
+      class="whitepaper-chapter-pager__previous"
+      href={`/whitepaper/${chapter.previous.slug}`}
+      aria-label={`이전 장: ${chapter.previous.title}`}
+    >
+      <ArrowLeft aria-hidden="true" size={20} />
+      <span><small>이전 장</small><strong>{chapter.previous.number}. {chapter.previous.title}</strong></span>
+    </a>
+  ) : <span />}
+  {chapter.next && (
+    <a
+      class="whitepaper-chapter-pager__next"
+      href={`/whitepaper/${chapter.next.slug}`}
+      aria-label={`다음 장: ${chapter.next.title}`}
+    >
+      <span><small>다음 장</small><strong>{chapter.next.number}. {chapter.next.title}</strong></span>
+      <ArrowRight aria-hidden="true" size={20} />
+    </a>
+  )}
+</nav>

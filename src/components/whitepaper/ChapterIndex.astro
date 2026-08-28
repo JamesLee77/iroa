@@ -1,0 +1,29 @@
+---
+import type { WhitepaperChapter } from '../../lib/whitepaper/types';
+
+interface Props {
+  chapters: WhitepaperChapter[];
+  currentSlug?: string;
+  label?: string;
+}
+
+const { chapters, currentSlug, label = '백서 전체 목차' } = Astro.props;
+---
+
+<nav class="whitepaper-chapter-index" aria-label={label}>
+  <ol>
+    {chapters.map((chapter) => (
+      <li class:list={{ 'is-current': currentSlug === chapter.slug }}>
+        <a
+          href={`/whitepaper/${chapter.slug}`}
+          aria-current={currentSlug === chapter.slug ? 'page' : undefined}
+        >
+          <span class="whitepaper-chapter-index__number latin tabular">
+            {String(chapter.number).padStart(2, '0')}
+          </span>
+          <span>{chapter.title}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+</nav>
