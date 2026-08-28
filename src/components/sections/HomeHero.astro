@@ -1,0 +1,57 @@
+---
+import { ArrowDown, BookOpen, ShieldCheck } from 'lucide-astro';
+import { PROTOCOL_STAGES } from '../../lib/protocol/flow';
+import type { HeroContent } from '../../types/home';
+import ButtonLink from '../primitives/ButtonLink.astro';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  content: HeroContent;
+}
+
+const { content } = Astro.props;
+const planeLabels = ['Interaction', 'Control', 'Execution', 'Settlement'] as const;
+---
+
+<section id="top" class="home-hero container" aria-labelledby="home-hero-title">
+  <div class="home-hero__copy">
+    <p class="home-hero__eyebrow latin">{content.eyebrow}</p>
+    <div class="home-hero__validation">
+      <StatusBadge status="validation" label="IROA Rewards · Validation Stage" />
+    </div>
+    <h1 id="home-hero-title">{content.title}</h1>
+    <p class="home-hero__description">{content.description}</p>
+    <div class="home-hero__actions">
+      <ButtonLink href={content.primaryCta.href}>{content.primaryCta.label}<ArrowDown aria-hidden="true" size={18} /></ButtonLink>
+      <ButtonLink href={content.secondaryCta.href} variant="secondary">{content.secondaryCta.label}<BookOpen aria-hidden="true" size={18} /></ButtonLink>
+    </div>
+    <ul class="home-hero__trust" aria-label="IROA 신뢰 원칙">
+      {content.trust.map((item) => <li><ShieldCheck aria-hidden="true" size={18} />{item}</li>)}
+    </ul>
+  </div>
+
+  <div class="network-atlas" role="img" aria-label="요청부터 Base 정산까지 이어지는 Network Atlas 실행 경로">
+    <p class="network-atlas__label latin">VERIFIABLE EXECUTION PATH</p>
+    <ol class="network-atlas__path">
+      {
+        PROTOCOL_STAGES.map((stage, index) => (
+          <li data-stage={stage.id}>
+            <span class="network-atlas__index tabular">{String(index + 1).padStart(2, '0')}</span>
+            <span class="network-atlas__node">
+              <strong class="latin">{stage.label}</strong>
+              {stage.id === 'verified-node' && <small class="latin">N2</small>}
+              {stage.id === 'base-settlement' && <small class="latin">Native USDC</small>}
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+    <ol class="network-atlas__planes" aria-label="프로토콜 영역">
+      {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
+    </ol>
+  </div>
+
+  <ul class="home-hero__facts" aria-label="핵심 공개 상태">
+    {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} /></li>)}
+  </ul>
+</section>

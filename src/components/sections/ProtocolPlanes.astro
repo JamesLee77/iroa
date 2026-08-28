@@ -1,0 +1,35 @@
+---
+import { PROTOCOL_STAGES } from '../../lib/protocol/flow';
+import type { ProtocolContent } from '../../types/home';
+import ProtocolPath from '../patterns/ProtocolPath.astro';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  content: ProtocolContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section class="home-section protocol-planes container" aria-labelledby="protocol-planes-title">
+  <div class="protocol-planes__heading">
+    <p class="section-kicker latin">FOUR OPERATING PLANES</p>
+    <h2 id="protocol-planes-title">{content.title}</h2>
+    <p>{content.description}</p>
+  </div>
+  <ol class="protocol-planes__rail">
+    {
+      content.planes.map((plane, index) => (
+        <li>
+          <p class="protocol-planes__number tabular">0{index + 1}</p>
+          <div>
+            <h3 class="latin">{plane.label}</h3>
+            <p>{plane.description}</p>
+            <StatusBadge status={plane.status} />
+          </div>
+        </li>
+      ))
+    }
+  </ol>
+  <ProtocolPath stages={PROTOCOL_STAGES} />
+</section>

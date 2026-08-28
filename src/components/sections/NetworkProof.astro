@@ -1,0 +1,29 @@
+---
+import type { NodeProofContent } from '../../types/home';
+import { PRIVACY_BOUNDARY } from '../../lib/protocol/flow';
+import PrivacyBoundary from '../patterns/PrivacyBoundary.astro';
+import ProofReceipt from '../patterns/ProofReceipt.astro';
+import VerifiedNode from '../patterns/VerifiedNode.astro';
+import SectionIntro from '../primitives/SectionIntro.astro';
+
+interface Props {
+  content: NodeProofContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section id="network" class="home-section network-proof container" aria-labelledby="network-proof-title">
+  <SectionIntro eyebrow="NODE & PROOF" title={content.title} lead={content.description} id="network-proof-title" />
+  <div class="network-proof__ledger">
+    <div>
+      <p class="network-proof__sequence latin tabular">01 / VERIFIED NODE</p>
+      <VerifiedNode {...content.node} />
+    </div>
+    <div>
+      <p class="network-proof__sequence latin tabular">02 / PROOF RECEIPT</p>
+      <ProofReceipt {...content.proof} />
+    </div>
+  </div>
+  <PrivacyBoundary boundary={PRIVACY_BOUNDARY} />
+</section>

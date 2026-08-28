@@ -1,0 +1,36 @@
+---
+import { ArrowRight } from 'lucide-astro';
+import type { SettlementContent } from '../../types/home';
+import SettlementRecord from '../patterns/SettlementRecord.astro';
+import SectionIntro from '../primitives/SectionIntro.astro';
+
+interface Props {
+  content: SettlementContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section class="home-section settlement-overview container" aria-labelledby="settlement-overview-title">
+  <SectionIntro eyebrow="SETTLEMENT BOUNDARY" title={content.title} lead={content.description} id="settlement-overview-title" />
+  <div class="settlement-overview__grid">
+    <div class="settlement-overview__flow">
+      <p class="settlement-overview__consumer">{content.consumerPayment}</p>
+      <ol>
+        {
+          content.steps.map((step, index) => (
+            <li>
+              <span class="tabular">0{index + 1}</span>
+              <div><strong>{step.title}</strong><p>{step.description}</p></div>
+              {index < content.steps.length - 1 && <ArrowRight aria-hidden="true" size={18} />}
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+    <div class="settlement-overview__record">
+      <SettlementRecord network={content.network} asset={content.asset} status={content.status} />
+      <ul>{content.boundaries.map((boundary) => <li>{boundary}</li>)}</ul>
+    </div>
+  </div>
+</section>

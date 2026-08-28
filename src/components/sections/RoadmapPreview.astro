@@ -1,0 +1,18 @@
+---
+import type { RoadmapPhase } from '../../types/home';
+import SectionIntro from '../primitives/SectionIntro.astro';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  content: RoadmapPhase[];
+}
+
+const { content } = Astro.props;
+---
+
+<section id="roadmap" class="home-section roadmap-preview container" aria-labelledby="roadmap-preview-title">
+  <SectionIntro eyebrow="EVIDENCE-GATED ROADMAP" title="날짜보다 진입 기준과 근거를 공개합니다." lead="각 단계는 계획을 운영 사실처럼 보이지 않도록 상태, 진입 기준, 필요한 증거를 함께 표시합니다." id="roadmap-preview-title" />
+  <ol class="roadmap-preview__phases">
+    {content.map((phase, index) => <li><div class="roadmap-preview__head"><span class="tabular">0{index + 1}</span><h3 class="latin">{phase.title}</h3><StatusBadge status={phase.status} /></div><p>{phase.description}</p><dl><div><dt>진입 기준</dt><dd>{phase.entryCriteria}</dd></div><div><dt>근거</dt><dd>{phase.evidence}</dd></div></dl></li>)}
+  </ol>
+</section>

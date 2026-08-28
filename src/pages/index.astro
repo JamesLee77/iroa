@@ -1,8 +1,14 @@
 ---
-import PrivacyBoundary from '../components/patterns/PrivacyBoundary.astro';
-import ProtocolPath from '../components/patterns/ProtocolPath.astro';
+import EconomyStatus from '../components/sections/EconomyStatus.astro';
+import HomeHero from '../components/sections/HomeHero.astro';
+import NetworkProof from '../components/sections/NetworkProof.astro';
+import ParticipationContact from '../components/sections/ParticipationContact.astro';
+import ProtocolPlanes from '../components/sections/ProtocolPlanes.astro';
+import RoadmapPreview from '../components/sections/RoadmapPreview.astro';
+import SettlementOverview from '../components/sections/SettlementOverview.astro';
+import WhitepaperEntry from '../components/sections/WhitepaperEntry.astro';
+import { homeKo } from '../content/home.ko';
 import SiteLayout from '../layouts/SiteLayout.astro';
-import { PRIVACY_BOUNDARY, PROTOCOL_STAGES } from '../lib/protocol/flow';
 ---
 
 <SiteLayout
@@ -10,9 +16,14 @@ import { PRIVACY_BOUNDARY, PROTOCOL_STAGES } from '../lib/protocol/flow';
   description="현실 세계를 위한 검증 가능한 실행 네트워크, IROA.AI"
   canonicalPath="/"
 >
-  <div class="homepage-pattern-sample container">
-    <h1>현실 세계를 위한 검증 가능한 실행 네트워크.</h1>
-    <ProtocolPath stages={PROTOCOL_STAGES} />
-    <PrivacyBoundary boundary={PRIVACY_BOUNDARY} />
+  <div class="page--homepage">
+    <HomeHero content={homeKo.hero} />
+    <ProtocolPlanes content={homeKo.protocol} />
+    <NetworkProof content={homeKo.network} />
+    <SettlementOverview content={homeKo.settlement} />
+    <EconomyStatus content={homeKo.economy} />
+    <WhitepaperEntry content={homeKo.whitepaper} />
+    <RoadmapPreview content={homeKo.roadmap} />
+    <ParticipationContact content={homeKo.contact} />
   </div>
 </SiteLayout>

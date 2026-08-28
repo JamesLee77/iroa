@@ -34,10 +34,9 @@ test('serves the shared IROA site shell', async ({ page }) => {
     );
   }
 
-  await expect(page.getByRole('link', { name: '웹 백서 읽기', exact: true })).toHaveAttribute(
-    'href',
-    '/whitepaper',
-  );
+  await expect(
+    page.getByRole('banner').getByRole('link', { name: '웹 백서 읽기', exact: true }),
+  ).toHaveAttribute('href', '/whitepaper');
   await expect(
     page.getByRole('heading', {
       level: 1,

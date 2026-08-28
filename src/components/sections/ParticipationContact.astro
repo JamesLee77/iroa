@@ -1,0 +1,28 @@
+---
+import { Building2, LockKeyhole } from 'lucide-astro';
+import type { ContactContent } from '../../types/home';
+import ButtonLink from '../primitives/ButtonLink.astro';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  content: ContactContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section id="contact" class="home-section participation-contact container" aria-labelledby="participation-contact-title">
+  <div class="participation-contact__intro">
+    <Building2 aria-hidden="true" size={32} />
+    <p class="section-kicker latin">INSTITUTIONAL READINESS</p>
+    <h2 id="participation-contact-title">{content.title}</h2>
+    <p>{content.description}</p>
+    <StatusBadge status={content.status} label={content.channelLabel} />
+  </div>
+  <div class="participation-contact__details">
+    <p>향후 문의에 포함할 내용</p>
+    <ol>{content.intake.map((item, index) => <li><span class="tabular">0{index + 1}</span>{item}</li>)}</ol>
+    <p class="participation-contact__privacy"><LockKeyhole aria-hidden="true" size={18} />{content.privacyNotice}</p>
+    <ButtonLink href={content.whitepaperHref} variant="secondary">웹 백서 읽기</ButtonLink>
+  </div>
+</section>

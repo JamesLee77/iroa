@@ -1,0 +1,28 @@
+---
+import { CircleSlash2 } from 'lucide-astro';
+import type { EconomyContent } from '../../types/home';
+import SectionIntro from '../primitives/SectionIntro.astro';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  content: EconomyContent;
+}
+
+const { content } = Astro.props;
+---
+
+<section id="economy" class="home-section economy-status" aria-labelledby="economy-status-title">
+  <div class="container economy-status__inner">
+    <SectionIntro eyebrow="ECONOMY STATUS" title={content.title} lead={content.description} id="economy-status-title" />
+    <div class="economy-status__board">
+      <div class="economy-status__reward">
+        <p class="latin">{content.rewards.label}</p>
+        <StatusBadge status={content.rewards.status} />
+        <strong>{content.rewards.description}</strong>
+      </div>
+      <ul>
+        {content.boundaries.map((boundary) => <li><CircleSlash2 aria-hidden="true" size={20} />{boundary}</li>)}
+      </ul>
+    </div>
+  </div>
+</section>
