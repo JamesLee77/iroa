@@ -12,7 +12,8 @@
     "test:run": "vitest run",
     "typecheck": "astro check",
     "render:og": "node tools/website/render-og-image.mjs",
-    "build": "npm run render:og && npm run typecheck && astro build",
+    "sync:whitepaper-assets": "node tools/website/sync-whitepaper-assets.mjs",
+    "build": "npm run sync:whitepaper-assets && npm run render:og && npm run typecheck && astro build",
     "preview": "astro preview",
     "pretest:e2e": "npm run build",
     "test:e2e": "playwright test"

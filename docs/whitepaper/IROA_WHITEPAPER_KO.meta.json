@@ -1,0 +1,33 @@
+{
+  "title": "IROA.AI 백서",
+  "version": "1.0",
+  "date": "2026-08-21",
+  "language": "ko-KR",
+  "controllingLanguage": "Korean",
+  "status": "published",
+  "pdfPath": "docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf",
+  "slugs": [
+    "core-declaration",
+    "daily-journeys",
+    "problem-and-market",
+    "product-system",
+    "safe-execution",
+    "mobile",
+    "watch",
+    "secure-execution-space",
+    "ai-kiosk",
+    "service-architecture",
+    "ai-technology",
+    "privacy-and-safety",
+    "health-and-wearables",
+    "data-contribution",
+    "reward-economy",
+    "token-economy",
+    "business-model",
+    "roadmap",
+    "operations-and-accountability",
+    "risks",
+    "prelaunch-validation",
+    "conclusion"
+  ]
+}
