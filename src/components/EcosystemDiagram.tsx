@@ -1,4 +1,5 @@
 import type { EcosystemLayer } from '../types/home';
+import { getStatusLabel } from '../lib/content/status';
 import { SectionIntro } from './SectionIntro';
 
 export function EcosystemDiagram({ layers }: { layers: EcosystemLayer[] }) {
@@ -26,7 +27,7 @@ export function EcosystemDiagram({ layers }: { layers: EcosystemLayer[] }) {
                   <li key={item}>
                     <span>{item}</span>
                     {layer.status && (item === 'Robot' || item === 'Circle Native USDC') ? (
-                      <small>{layer.status}</small>
+                      <small>{getStatusLabel(layer.status)}</small>
                     ) : null}
                   </li>
                 ))}

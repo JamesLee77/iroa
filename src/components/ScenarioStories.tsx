@@ -1,4 +1,5 @@
 import type { ScenarioStory } from '../types/home';
+import { getStatusLabel } from '../lib/content/status';
 import { SectionIntro } from './SectionIntro';
 
 export function ScenarioStories({ stories }: { stories: ScenarioStory[] }) {
@@ -18,7 +19,7 @@ export function ScenarioStories({ stories }: { stories: ScenarioStory[] }) {
                 <img src={story.imageUrl} alt={story.imageAlt} width="1880" height="1253" loading="lazy" />
               </div>
               <div className="scenario-card__body">
-                <span className="status-badge">{story.status}</span>
+                <span className="status-badge">{getStatusLabel(story.status)}</span>
                 <h3>{story.title}</h3>
                 <blockquote>{story.quote}</blockquote>
                 <p>{story.description}</p>

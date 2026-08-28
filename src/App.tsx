@@ -27,7 +27,7 @@ export default function App() {
         <EcosystemDiagram layers={homeKo.ecosystem} />
         <SettlementNetwork settlement={homeKo.settlement} />
         <Roadmap phases={homeKo.roadmap} />
-        <PilotContact contact={homeKo.contact} whitepaperUrl={homeKo.assets.whitepaperUrl} />
+        <PilotContact contact={homeKo.contact} whitepaperUrl={homeKo.contact.whitepaperHref} />
       </main>
       <SiteFooter
         wordmarkUrl={homeKo.assets.wordmarkUrl}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
-import type { NavigationItem } from '../types/home';
+import type { NavigationHref, NavigationItem } from '../types/home';
 import { CloseIcon, MenuIcon } from './icons';
 
 interface SiteHeaderProps {
@@ -27,7 +27,12 @@ export function SiteHeader({ navigation, wordmarkUrl }: SiteHeaderProps) {
 
   const closeMenu = () => setIsMenuOpen(false);
 
-  const navigateFromMobileMenu = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+  const navigateFromMobileMenu = (event: MouseEvent<HTMLAnchorElement>, href: NavigationHref) => {
+    if (!href.startsWith('#')) {
+      closeMenu();
+      return;
+    }
+
     event.preventDefault();
     closeMenu();
 

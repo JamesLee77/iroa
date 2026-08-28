@@ -1,18 +1,19 @@
-import type { PublicStatus } from '../lib/content/status';
+import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
+import coverConversationUrl from '../../docs/brand/assets/photos/cover-conversation-6248760.jpg?url';
+import telehealthCallUrl from '../../docs/brand/assets/photos/telehealth-call-8376171.jpg?url';
+import photoManifestUrl from '../../docs/brand/assets/photos/PHOTO-MANIFEST.md?url';
+import whitepaperUrl from '../../docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf';
 import { PRIVACY_BOUNDARY } from '../lib/protocol/flow';
 import type { HomepageContent } from '../types/home';
 
-type StatusedContent = { status: PublicStatus };
-type SectionLink = { label: string; href: string };
-
-export const homeKo = {
+export const homeKo: HomepageContent = {
   navigation: [
     { label: '프로토콜', href: '#protocol' },
     { label: '네트워크', href: '#network' },
     { label: '이코노미', href: '#economy' },
     { label: '백서', href: '#whitepaper-entry' },
     { label: '로드맵', href: '#roadmap' },
-  ] as unknown as HomepageContent['navigation'],
+  ],
   hero: {
     eyebrow: 'IROA NETWORK ATLAS',
     title: '현실 세계를 위한 검증 가능한 실행 네트워크.',
@@ -25,12 +26,10 @@ export const homeKo = {
       { label: 'Native USDC Settlement', status: 'planned' },
       { label: 'Personal Data Off-chain', status: 'current' },
       { label: 'IROA Rewards · 검증 중', status: 'validation' },
-    ] satisfies readonly (StatusedContent & { label: string })[],
+    ],
     trust: ['사용자 승인 중심', '개인정보 최소화', '결과 검증'],
-    imageUrl: '/docs/brand/assets/photos/cover-conversation-6248760.jpg',
+    imageUrl: coverConversationUrl,
     imageAlt: 'IROA Network Atlas를 설명하는 추상 네트워크 표면',
-  } as unknown as HomepageContent['hero'] & {
-    facts: readonly (StatusedContent & { label: string })[];
   },
   lifecycle: [
     { title: '요청', description: '말·글·터치로 원하는 결과를 표현합니다.' },
@@ -40,12 +39,12 @@ export const homeKo = {
     { title: '실행', description: '승인된 실행 공간이 제한된 권한 안에서 일을 수행합니다.' },
     { title: '검증', description: '외부 결과를 확인한 뒤에만 완료로 기록합니다.' },
     { title: '복구·사람 인계', description: '불확실하면 취소·재시도하거나 사람에게 연결합니다.' },
-  ] as unknown as HomepageContent['lifecycle'],
+  ],
   protections: [
     { title: '사용자 통제', description: '되돌리기 어려운 실행은 이해 가능한 방식으로 다시 승인합니다.' },
     { title: '최소 권한', description: '요청에 필요한 범위와 시간만 권한을 사용합니다.' },
     { title: '결과 검증', description: '화면 변화가 아니라 외부 결과를 확인합니다.' },
-  ] as unknown as HomepageContent['protections'],
+  ],
   scenarios: [
     {
       title: '예약·이동 지원',
@@ -53,25 +52,25 @@ export const homeKo = {
       description: '제한된 요청 범위와 승인 지점을 검증하는 방향입니다.',
       flow: ['요청 확인', '사용자 승인', '제한된 실행', '외부 결과 확인'],
       status: 'validation',
-      imageUrl: '/docs/brand/assets/photos/telehealth-call-8376171.jpg',
+      imageUrl: telehealthCallUrl,
       imageAlt: '화상으로 대화하는 사용자와 의료진',
     },
-  ] as unknown as HomepageContent['scenarios'],
+  ],
   institutions: [
     {
       title: '기관·현장 검증',
       value: '대상 사용자와 하나의 현실 업무를 정해 검증 범위를 설계합니다.',
       pilot: '요청·승인·결과 확인',
     },
-  ] as unknown as HomepageContent['institutions'],
+  ],
   safety: [
     { title: '개인정보 경계', description: '개인정보 원문은 오프체인에 둡니다.' },
     { title: '사람 인계', description: '불확실성과 실패를 숨기지 않고 사람에게 연결합니다.' },
-  ] as unknown as HomepageContent['safety'],
+  ],
   safetyBoundaries: [
     '개인정보 원문은 오프체인에 머뭅니다.',
     '자동화 신뢰도나 권한이 부족하면 추측하여 실행하지 않습니다.',
-  ] as HomepageContent['safetyBoundaries'],
+  ],
   ecosystem: [
     {
       title: '실행 네트워크',
@@ -79,7 +78,7 @@ export const homeKo = {
       items: ['Interaction', 'Control', 'Execution', 'Settlement'],
       status: 'planned',
     },
-  ] as unknown as HomepageContent['ecosystem'],
+  ],
   protocol: {
     title: '사람의 의사와 현실의 결과를 연결하는 네 개의 영역',
     description:
@@ -109,11 +108,7 @@ export const homeKo = {
         status: 'planned',
         description: '검증된 완료 증빙을 바탕으로 향후 B2B 정산 경계를 검토합니다.',
       },
-    ] satisfies readonly (StatusedContent & {
-      id: 'interaction' | 'control' | 'execution' | 'settlement';
-      label: string;
-      description: string;
-    })[],
+    ],
   },
   network: {
     title: 'Node와 증빙은 역할을 나누어 검증합니다.',
@@ -123,7 +118,7 @@ export const homeKo = {
       level: 'N2',
       status: 'validation',
       description: 'N2는 키오스크·복지관·반려기기 같은 승인 접근 거점의 검증 기준을 설계·검토하는 단계입니다.',
-    } satisfies StatusedContent & { level: 'N0' | 'N1' | 'N2' | 'N3' | 'N4'; description: string },
+    },
     proof: {
       result: '외부 결과 확인 전에는 완료로 표시하지 않습니다.',
       proofId: '증빙 식별자는 배포·운영 근거가 있을 때만 공개합니다.',
@@ -133,7 +128,7 @@ export const homeKo = {
     privacy: {
       status: 'current',
       ...PRIVACY_BOUNDARY,
-    } satisfies StatusedContent & { statement: string; onChain: readonly string[]; offChain: readonly string[] },
+    },
   },
   settlement: {
     title: '사용자 결제와 B2B 정산을 분리합니다.',
@@ -158,15 +153,6 @@ export const homeKo = {
       '가스와 지갑은 소비자 이용 조건이 아닙니다.',
       '개인정보 원문은 온체인에 기록하지 않습니다.',
     ],
-  } satisfies StatusedContent & {
-    title: string;
-    network: 'Base';
-    asset: 'Circle Native USDC';
-    consumerPayment: string;
-    description: string;
-    boundaries: string[];
-    steps: HomepageContent['settlement']['steps'];
-    principles: string[];
   },
   economy: {
     title: '보상 설계는 서비스의 지속 가능성을 먼저 검증합니다.',
@@ -176,7 +162,7 @@ export const homeKo = {
       label: 'IROA Rewards',
       status: 'validation',
       description: 'IROA 보상은 발행, 법률 검토, 배포, 감사 근거가 갖춰질 때까지 검증 중입니다.',
-    } satisfies StatusedContent & { label: string; description: string },
+    },
     boundaries: [
       '가격, 수익률, 유동성, 거래소 상장을 약속하지 않습니다.',
       '검증된 기여와 분쟁·취소·품질 기준을 함께 검토합니다.',
@@ -194,14 +180,7 @@ export const homeKo = {
       { label: '핵심 선언', href: '/whitepaper/core-declaration' },
       { label: '보안 실행 공간', href: '/whitepaper/secure-execution-space' },
       { label: '토큰 이코노미', href: '/whitepaper/token-economy' },
-    ] satisfies readonly SectionLink[],
-  } satisfies StatusedContent & {
-    title: string;
-    version: string;
-    language: string;
-    description: string;
-    primaryCta: SectionLink;
-    chapters: readonly SectionLink[];
+    ],
   },
   roadmap: [
     {
@@ -232,12 +211,7 @@ export const homeKo = {
       entryCriteria: '법률·안전·현장 검증의 근거가 선행합니다.',
       evidence: 'Node 신뢰 수준과 단계별 안전 검토',
     },
-  ] as unknown as HomepageContent['roadmap'] & readonly (StatusedContent & {
-    title: string;
-    description: string;
-    entryCriteria: string;
-    evidence: string;
-  })[],
+  ],
   contact: {
     title: '기관과 현장의 검증 범위를 함께 설계합니다.',
     status: 'planned',
@@ -247,17 +221,10 @@ export const homeKo = {
     privacyNotice: '공식 문의 채널이 마련되기 전에는 개인정보를 수집하지 않습니다.',
     channelLabel: '공식 문의 채널 준비 중',
     whitepaperHref: '/whitepaper',
-  } as unknown as HomepageContent['contact'] & StatusedContent & {
-    title: string;
-    description: string;
-    intake: string[];
-    privacyNotice: string;
-    channelLabel: string;
-    whitepaperHref: string;
   },
   assets: {
-    wordmarkUrl: '/docs/brand/masters/wordmark/iroa-wordmark-color.svg',
-    whitepaperUrl: '/docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf',
-    photoManifestUrl: '/docs/brand/assets/photos/PHOTO-MANIFEST.md',
+    wordmarkUrl,
+    whitepaperUrl,
+    photoManifestUrl,
   },
-} as const;
+};

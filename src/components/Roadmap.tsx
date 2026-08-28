@@ -1,4 +1,5 @@
 import type { RoadmapPhase } from '../types/home';
+import { getStatusLabel } from '../lib/content/status';
 import { SectionIntro } from './SectionIntro';
 
 export function Roadmap({ phases }: { phases: RoadmapPhase[] }) {
@@ -19,7 +20,7 @@ export function Roadmap({ phases }: { phases: RoadmapPhase[] }) {
               </div>
               <article>
                 <span className="status-badge" data-testid="roadmap-status">
-                  {phase.status}
+                  {getStatusLabel(phase.status)}
                 </span>
                 <h3>{phase.title}</h3>
                 <p>{phase.description}</p>
