@@ -4,8 +4,10 @@
 
 - Branch: `codex/iroa-homepage-v1`
 - BASE: `d0509382910b5b778b9ac1804556f7831338d439`
+- Verified code revision: `b42c2e6c440286feb20facfa223abfeff77e9cfd`
+- Evidence record revision: this documentation-only successor of the verified code revision. Its own hash is intentionally not embedded, avoiding a self-referential commit-hash cycle.
 - Initial Task 9 commit: `6036d18b0f5d7e4042efff7237482dd347f37e74` (`test: verify IROA Web3 public site`).
-- Fix Round 1 commit: the commit containing the reviewed contract corrections with subject `fix: harden Task 9 verification contracts`; its immutable hash is recorded in the Task 9 SDD report after commit creation.
+- Fix Round 1 commit: `bb1a92554515e859832c077558bdd27a65e5e4bd` (`fix: harden Task 9 verification contracts`).
 - Runtime: macOS `26.5.1` (`25F80`), Node.js `v25.8.2`, npm `11.11.1`, Python `3.14.7`.
 - Site tooling: Astro `7.2.9`, TypeScript `6.0.3`, Vitest `4.1.11`, Playwright `1.62.1`, `@axe-core/playwright` `4.13.0`.
 
@@ -25,13 +27,14 @@ Discovery output includes `robots.txt`, `sitemap-index.xml`, `sitemap-0.xml`, a 
 
 ## Final verification commands and results
 
-The final acceptance gate runs `npm run test:run`, `npm run typecheck`, `npm run build`, `npm run test:e2e`, `python3 -m unittest tests.brand.test_brand_assets tests.brand.test_comparison_optical_parity`, and `git diff --check` from the repository root. Every command exits `0`.
+The final acceptance gate runs `npm run test:run`, `npm run typecheck`, `npm run build`, `IROA_PREVIEW_PORT=4469 npx playwright test`, `python3 -m unittest tests.brand.test_brand_assets tests.brand.test_comparison_optical_parity`, the static/PDF/asset-inventory check, and `git diff --check` from the repository root at the verified code revision. Every command exits `0`. Playwright consumes the single fresh build instead of invoking a duplicate pretest build.
 
-- Unit: 11 files, 56 tests passed after the superseded six-test React suite was removed and the token-derived contrast contract was added. The pre-cleanup replacement gate passed 11 files and 61 tests.
+- Unit: 11 files, 59 tests passed, including the token-derived contrast contract, whitepaper loader regressions, and focused homepage asset-emission inventory. The pre-cleanup replacement gate passed 11 files and 61 tests; the later count reflects intentional legacy-suite deletion plus current regression coverage, not missing execution.
 - Typecheck: 58 Astro files, 0 errors, 0 warnings, 0 hints.
 - Build: 26 pages, including exactly 22 chapter outputs; sitemap emitted.
 - Browser E2E: 47 tests passed.
 - Brand/optical parity: 69 tests passed.
+- Static/PDF/asset inventory: 26 HTML outputs, 22 chapters, 24 sitemap URLs, 14 distinct local generated references, 11 portable evidence PNGs, and a byte-identical `3,586,280`-byte publication PDF. The three forbidden legacy source assets emitted zero hashed `_astro` files.
 - Diff integrity: clean.
 
 The brand suite discovers the currently installed packaged document runtime deterministically, requires exactly one supported `documents/*/skills/documents` match, and verifies the pinned accessibility-auditor SHA before use. No compatibility path or tool-cache mutation is required.
@@ -46,6 +49,18 @@ The brand suite discovers the currently installed packaged document runtime dete
 - No JavaScript: homepage protocol content, whitepaper index/chapter text, chapter links, and PDF download remain usable.
 - Images: canonical homepage and whitepaper images complete with nonzero natural dimensions. The build contains the approved `1200 × 630` PNG share image.
 - PDF: source and emitted publication remain byte-identical at `3,586,280` bytes with source SHA-256 `2dd9285e2ee0b4a79399a696371d4d28dc6cbe97336740a66ddbadc0631d7ffb`.
+
+## Homepage asset-emission boundary
+
+The final homepage is the light Network Atlas implementation and does not render the superseded photographic hero or scenario data. The former `home.ko.ts` `?url` imports emitted three unreferenced hashed files under `dist/_astro`: two photographs and `PHOTO-MANIFEST.md`. No built HTML, JavaScript, or CSS referenced those hashed URLs.
+
+The unused imports and their dead `hero`, `scenario`, and asset-manifest fields were removed without changing canonical public copy or the Network Atlas component. A focused Vite in-memory bundle test fails if any of the following source basenames are imported into the homepage content module again:
+
+- `cover-conversation-6248760`
+- `telehealth-call-8376171`
+- `PHOTO-MANIFEST`
+
+The production build emits none of those three under `dist/_astro`, avoiding `576,406` duplicate bytes. The two photographs are not deleted: the whitepaper loader still synchronizes byte-identical canonical public copies under `/generated/docs/brand/assets/photos/`, and the whitepaper index and health chapter reference them directly. `PHOTO-MANIFEST.md` is not emitted anywhere in `dist`.
 
 ## Token contrast and favicon authority
 

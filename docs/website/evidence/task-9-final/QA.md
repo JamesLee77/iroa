@@ -58,6 +58,14 @@ Its color evidence now comes directly from the production semantic tokens and on
 - Combined-input review: the exact selected reference and each implementation capture were inspected together.
 - Result: no actionable P0, P1, or P2 visual mismatch, clipping, broken hierarchy, missing asset, or generic-template drift remains.
 
+## Whole-branch final record
+
+- Verified code revision: `b42c2e6c440286feb20facfa223abfeff77e9cfd`.
+- The documentation commit containing this record is the documentation-only successor of that immutable code revision.
+- Fresh final integration used the existing visual evidence plus a unique preview on port `4469`: unit `59/59`, typecheck `0` issues, build `26` pages with `22` chapters, browser E2E `47/47`, and brand/optical parity `69/69`.
+- The approved light Network Atlas implementation and canonical public copy are unchanged. The homepage content bundle now emits zero hashed copies of the unused legacy photographs or photo manifest, avoiding `576,406` duplicate bytes.
+- Byte-identical public copies of the two photographs remain available under `/generated/docs/brand/assets/photos/` because the canonical web whitepaper consumes them. The source photo manifest is not emitted.
+
 P3 follow-up: revisit chapter-language switching only after a canonical English publication exists.
 
 final result: passed
