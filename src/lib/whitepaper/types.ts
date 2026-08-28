@@ -1,5 +1,14 @@
 export const WHITEPAPER_STATUSES = ['draft', 'validation', 'reviewed', 'published'] as const;
 
+export const LOCKED_WHITEPAPER_SLUGS = [
+  'core-declaration', 'daily-journeys', 'problem-and-market', 'product-system',
+  'safe-execution', 'mobile', 'watch', 'secure-execution-space', 'ai-kiosk',
+  'service-architecture', 'ai-technology', 'privacy-and-safety',
+  'health-and-wearables', 'data-contribution', 'reward-economy', 'token-economy',
+  'business-model', 'roadmap', 'operations-and-accountability', 'risks',
+  'prelaunch-validation', 'conclusion',
+] as const;
+
 export type WhitepaperStatus = (typeof WHITEPAPER_STATUSES)[number];
 
 export interface WhitepaperMetadata {

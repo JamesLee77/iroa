@@ -40,7 +40,7 @@ async function canonicalMarkdown() {
 
 function minimalWhitepaper(firstChapterBody = '') {
   return lockedSlugs.map((_, index) => (
-    `## ${index + 1}. Chapter ${index + 1}${index === 0 && firstChapterBody ? `\n\n${firstChapterBody}` : ''}`
+    `## ${index + 1}. Chapter ${index + 1}${index === 0 && firstChapterBody ? `\n\n${firstChapterBody}` : index === 15 ? '\n\n| 배분 | 비율 | 수량 |\n|---|---:|---:|\n| 검증 | 100% | 10,000,000,000 |' : ''}`
   )).join('\n\n');
 }
 
