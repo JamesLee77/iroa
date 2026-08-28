@@ -73,6 +73,20 @@ describe('canonical whitepaper loader', () => {
     expect(laterFigure).toContain('alt="IROA 토큰 배분"');
   });
 
+  it('renders a standalone Markdown image as a figure but keeps mixed text and image inline', () => {
+    const standalone = parseWhitepaper(minimalWhitepaper('![IROA symbol](../brand/iroa-symbol.svg)'), metadata).chapters[0].html;
+    const mixed = parseWhitepaper(minimalWhitepaper('Before ![IROA symbol](../brand/iroa-symbol.svg) after'), metadata).chapters[0].html;
+
+    expect(standalone).toContain('<figure><img ');
+    expect(standalone).toContain('<figcaption>IROA symbol</figcaption>');
+    expect(standalone).not.toContain('<p></p>');
+    expect(standalone).not.toContain('<p><figure>');
+    expect(mixed).toContain('<p>Before <img ');
+    expect(mixed).toContain(' alt="IROA symbol"');
+    expect(mixed).toContain(' after</p>');
+    expect(mixed).not.toContain('<figure>');
+  });
+
   it('rejects duplicate chapter numbers with the chapter number in the error', async () => {
     const markdown = (await canonicalMarkdown()).replace('## 2. 사용자의 하루로 보는 IROA', '## 1. 사용자의 하루로 보는 IROA');
 
@@ -89,6 +103,24 @@ describe('canonical whitepaper loader', () => {
     const markdown = (await canonicalMarkdown()).replace('## 2. 사용자의 하루로 보는 IROA', '## 3. 사용자의 하루로 보는 IROA');
 
     expect(() => parseWhitepaper(markdown, metadata)).toThrow('expected 2, received 3');
+  });
+
+  it('uses only top-level Marked H2 tokens as chapter boundaries', () => {
+    const publication = parseWhitepaper(minimalWhitepaper([
+      '```md',
+      '## 2. Fake fenced chapter',
+      '```',
+      '',
+      '    ## 3. Fake indented chapter',
+      '',
+      '> ## 4. Fake quoted chapter',
+    ].join('\n')), metadata);
+
+    expect(publication.chapters).toHaveLength(22);
+    expect(publication.chapters[0].number).toBe(1);
+    expect(publication.chapters[1].number).toBe(2);
+    expect(publication.chapters[0].html).toContain('## 2. Fake fenced chapter');
+    expect(publication.chapters[0].html).not.toContain('id="fake-fenced-chapter"');
   });
 
   it('rejects an unknown publication status by name', () => {

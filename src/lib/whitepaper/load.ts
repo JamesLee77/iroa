@@ -30,7 +30,7 @@ import {
 
 const SOURCE_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.md';
 const METADATA_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.meta.json';
-const CHAPTER_PATTERN = /^## (\d+)\.\s+(.+)$/m;
+const CHAPTER_TITLE_PATTERN = /^(\d+)\.\s+(.+)$/;
 const EXPLICIT_ANCHOR_PATTERN = /\s+\{#([A-Za-z][\w:.-]*)\}\s*$/;
 
 interface ParsedChapter {
@@ -88,12 +88,27 @@ function assertMetadata(metadata: WhitepaperMetadata) {
 }
 
 function parseChapterBlocks(markdown: string): { preamble: string; chapters: ParsedChapter[] } {
-  const matches = [...markdown.matchAll(new RegExp(CHAPTER_PATTERN.source, 'gm'))];
-  const preamble = markdown.slice(0, matches[0]?.index ?? markdown.length);
-  const chapters = matches.map((match, index) => ({
-    number: Number(match[1]),
-    title: match[2].trim(),
-    markdown: markdown.slice((match.index ?? 0) + match[0].length, matches[index + 1]?.index).trim(),
+  const boundaries: Array<{ number: number; title: string; start: number; contentStart: number }> = [];
+  let offset = 0;
+  for (const token of marked.lexer(markdown, { gfm: true })) {
+    if (token.type === 'heading' && token.depth === 2) {
+      const titleMatch = token.text.match(CHAPTER_TITLE_PATTERN);
+      if (titleMatch) {
+        boundaries.push({
+          number: Number(titleMatch[1]),
+          title: titleMatch[2].trim(),
+          start: offset,
+          contentStart: offset + token.raw.length,
+        });
+      }
+    }
+    offset += token.raw.length;
+  }
+  const preamble = markdown.slice(0, boundaries[0]?.start ?? markdown.length);
+  const chapters = boundaries.map((boundary, index) => ({
+    number: boundary.number,
+    title: boundary.title,
+    markdown: markdown.slice(boundary.contentStart, boundaries[index + 1]?.start).trim(),
   }));
   return { preamble, chapters };
 }
@@ -214,14 +229,21 @@ function sanitize(html: string) {
   });
 }
 
-function imageHtml(rawPath: string, alt: string, lazyImages: boolean, assets: Map<string, LocalAsset>) {
+function inlineImageHtml(rawPath: string, alt: string, title: string | null, lazyImages: boolean, assets: Map<string, LocalAsset>) {
+  if (parseDestination(rawPath).isExternal) {
+    return `<img src="${rawPath}" alt="${alt}"${title ? ` title="${title}"` : ''}>`;
+  }
   const asset = assets.get(rawPath);
   if (!asset) throw new Error(`image URL is absent from parsed whitepaper inventory "${rawPath}"`);
   const image = imageAsset(asset, lazyImages);
-  return `<figure><img src="${image.publicUrl}" alt="${alt}" width="${image.width}" height="${image.height}"${image.lazy ? ' loading="lazy"' : ''}><figcaption>${alt}</figcaption></figure>`;
+  return `<img src="${image.publicUrl}" alt="${alt}" width="${image.width}" height="${image.height}"${image.lazy ? ' loading="lazy"' : ''}>`;
 }
 
-function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, lazyImages: boolean) {
+function imageHtml(rawPath: string, alt: string, lazyImages: boolean, assets: Map<string, LocalAsset>) {
+  return `<figure>${inlineImageHtml(rawPath, alt, null, lazyImages, assets)}<figcaption>${alt}</figcaption></figure>`;
+}
+
+function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, lazyImages: boolean, block: boolean) {
   let cursor = 0;
   let rewritten = '';
   for (const tag of scanHtmlStartTags(html)) {
@@ -229,7 +251,10 @@ function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, laz
     const source = htmlAttribute(tag, 'src');
     if (!source || parseDestination(source).isExternal) continue;
     rewritten += html.slice(cursor, tag.start);
-    rewritten += imageHtml(source, htmlAttribute(tag, 'alt'), lazyImages, assets);
+    const alt = htmlAttribute(tag, 'alt');
+    rewritten += block
+      ? imageHtml(source, alt, lazyImages, assets)
+      : inlineImageHtml(source, alt, null, lazyImages, assets);
     cursor = tag.end;
   }
   return cursor === 0 ? html : `${rewritten}${html.slice(cursor)}`;
@@ -244,6 +269,11 @@ function escapeAttribute(value: string) {
     .replaceAll('>', '&gt;');
 }
 
+function standaloneMarkdownImage(token: Tokens.Paragraph) {
+  if (token.tokens.length !== 1 || token.tokens[0].type !== 'image') return undefined;
+  return token.tokens[0];
+}
+
 function renderMarkdown(
   markdown: string,
   headings: WhitepaperHeading[],
@@ -255,6 +285,7 @@ function renderMarkdown(
   let currentSectionTitle = fallbackTableSubject;
   const tableOrdinals = new Map<string, number>();
   const renderer = new Renderer();
+  const renderParagraph = renderer.paragraph.bind(renderer);
   const renderTable = renderer.table.bind(renderer);
   renderer.heading = ({ depth, tokens }: Tokens.Heading) => {
     const content = textWithoutExplicitAnchor(renderer.parser.parseInline(tokens));
@@ -275,11 +306,15 @@ function renderMarkdown(
     const table = renderTable(token).replace('<table>', `<table aria-label="${tableName}">`);
     return `<div class="whitepaper-table-scroll" role="region" aria-label="${regionName}" tabindex="0">${table}</div>\n`;
   };
-  renderer.image = ({ href, title, text }: Tokens.Image) => {
-    if (parseDestination(href).isExternal) return `<img src="${href}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
-    return imageHtml(href, text, lazyImages, assets);
+  renderer.paragraph = (token: Tokens.Paragraph) => {
+    const image = standaloneMarkdownImage(token);
+    if (image) return `${imageHtml(image.href, image.text, lazyImages, assets)}\n`;
+    return renderParagraph(token);
   };
-  renderer.html = ({ text }: Tokens.HTML) => rewriteRawHtmlImages(text, assets, lazyImages);
+  renderer.image = ({ href, title, text }: Tokens.Image) => {
+    return inlineImageHtml(href, text, title, lazyImages, assets);
+  };
+  renderer.html = ({ text, block }: Tokens.HTML) => rewriteRawHtmlImages(text, assets, lazyImages, block);
   const rendered = marked.parse(markdown, { gfm: true, renderer }) as string;
   if (headingIndex !== headings.length) {
     throw new Error(`whitepaper heading renderer did not emit ${headings.length - headingIndex} collected lower heading IDs`);
