@@ -205,7 +205,9 @@ function sanitize(html: string) {
       ...sanitizeHtml.defaults.allowedAttributes,
       '*': ['id'],
       a: ['href', 'title'],
+      div: ['class', 'role', 'aria-label', 'tabindex'],
       img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+      table: ['aria-label'],
     },
     allowedSchemes: ['http', 'https', 'mailto'],
     allowProtocolRelative: false,
@@ -233,9 +235,27 @@ function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, laz
   return cursor === 0 ? html : `${rewritten}${html.slice(cursor)}`;
 }
 
-function renderMarkdown(markdown: string, headings: WhitepaperHeading[], lazyImages: boolean, assets: ReturnType<typeof resolveInventoryImages>) {
+function escapeAttribute(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+function renderMarkdown(
+  markdown: string,
+  headings: WhitepaperHeading[],
+  lazyImages: boolean,
+  assets: ReturnType<typeof resolveInventoryImages>,
+  fallbackTableSubject: string,
+) {
   let headingIndex = 0;
+  let currentSectionTitle = fallbackTableSubject;
+  const tableOrdinals = new Map<string, number>();
   const renderer = new Renderer();
+  const renderTable = renderer.table.bind(renderer);
   renderer.heading = ({ depth, tokens }: Tokens.Heading) => {
     const content = textWithoutExplicitAnchor(renderer.parser.parseInline(tokens));
     if (depth < 3) return `<h${depth}>${content}</h${depth}>\n`;
@@ -243,7 +263,17 @@ function renderMarkdown(markdown: string, headings: WhitepaperHeading[], lazyIma
     if (!heading || heading.level !== depth) {
       throw new Error(`whitepaper heading renderer mismatch at level ${depth}; expected lower heading ${headingIndex}`);
     }
+    currentSectionTitle = heading.title;
     return `<h${depth} id="${heading.id}">${content}</h${depth}>\n`;
+  };
+  renderer.table = (token: Tokens.Table) => {
+    const ordinal = (tableOrdinals.get(currentSectionTitle) ?? 0) + 1;
+    tableOrdinals.set(currentSectionTitle, ordinal);
+    const subject = ordinal === 1 ? currentSectionTitle : `${currentSectionTitle} ${ordinal}번`;
+    const tableName = escapeAttribute(`${subject} 표`);
+    const regionName = escapeAttribute(`${subject} 표 스크롤 영역`);
+    const table = renderTable(token).replace('<table>', `<table aria-label="${tableName}">`);
+    return `<div class="whitepaper-table-scroll" role="region" aria-label="${regionName}" tabindex="0">${table}</div>\n`;
   };
   renderer.image = ({ href, title, text }: Tokens.Image) => {
     if (parseDestination(href).isExternal) return `<img src="${href}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
@@ -296,7 +326,13 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
       number: chapter.number,
       slug: metadata.slugs[index],
       title: chapter.title,
-      html: renderMarkdown(chapter.markdown, chapterHeadings[index], true, assets),
+      html: renderMarkdown(
+        chapter.markdown,
+        chapterHeadings[index],
+        true,
+        assets,
+        `${chapter.number}. ${chapter.title}`,
+      ),
       headings: chapterHeadings[index],
       previous: undefined,
       next: undefined,
@@ -313,7 +349,11 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
     }
   }
   validateNavigation(chapters);
-  return { metadata, preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets), chapters };
+  return {
+    metadata,
+    preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets, '백서 개요'),
+    chapters,
+  };
 }
 
 export async function loadWhitepaper(): Promise<WhitepaperPublication> {

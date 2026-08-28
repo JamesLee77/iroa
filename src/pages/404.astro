@@ -1,6 +1,10 @@
 ---
 import { ArrowLeft, BookOpen } from 'lucide-astro';
+import ChapterIndex from '../components/whitepaper/ChapterIndex.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
+import { loadWhitepaper } from '../lib/whitepaper/load';
+
+const publication = await loadWhitepaper();
 ---
 
 <SiteLayout
@@ -17,5 +21,13 @@ import SiteLayout from '../layouts/SiteLayout.astro';
       <a href="/"><ArrowLeft aria-hidden="true" size={18} />홈으로</a>
       <a href="/whitepaper"><BookOpen aria-hidden="true" size={18} />웹 백서 목차</a>
     </div>
+    <section class="not-found__whitepaper" aria-labelledby="not-found-whitepaper-title">
+      <div>
+        <p class="section-kicker latin">WHITEPAPER RECOVERY</p>
+        <h2 id="not-found-whitepaper-title">웹 백서의 22개 장에서 이어 읽기</h2>
+        <p>요청한 장을 찾을 수 없어도 정규화된 한국어 기준본의 전체 목차에서 바로 복구할 수 있습니다.</p>
+      </div>
+      <ChapterIndex chapters={publication.chapters} />
+    </section>
   </section>
 </SiteLayout>

@@ -44,9 +44,7 @@ function prepareChapterHtml(chapter: WhitepaperChapter) {
     const permalink = `<a class="heading-permalink" href="#${id}" aria-label="${label}"><span aria-hidden="true">링크</span></a>`;
     html = `${html.slice(0, insertionAt)}${permalink}${html.slice(insertionAt)}`;
   }
-  return html
-    .replaceAll('<table>', '<div class="whitepaper-table-scroll" role="region" aria-label="백서 데이터 표" tabindex="0"><table aria-label="백서 데이터 표">')
-    .replaceAll('</table>', '</table></div>');
+  return html;
 }
 
 const chapterHtml = current ? prepareChapterHtml(current) : undefined;

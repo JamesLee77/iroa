@@ -1,3 +1,4 @@
+import { readFile, stat } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 const chapterSlugs = [
@@ -129,6 +130,84 @@ test('serves the branded 404 for an unknown whitepaper chapter', async ({ page }
     'content',
     'noindex,nofollow',
   );
+
+  const recoveryIndex = page.getByRole('navigation', { name: '백서 전체 목차' });
+  const recoveryLinks = recoveryIndex.getByRole('link');
+  await expect(recoveryLinks).toHaveCount(22);
+  const recoveryHrefs = await recoveryLinks.evaluateAll((links) =>
+    links.map((link) => link.getAttribute('href')),
+  );
+  expect(recoveryHrefs).toEqual(chapterSlugs.map((slug) => `/whitepaper/${slug}`));
+});
+
+test('serializes every public whitepaper canonical as the same slashless sitemap URL', async ({
+  request,
+}) => {
+  const routes = ['/whitepaper', ...chapterSlugs.map((slug) => `/whitepaper/${slug}`)];
+  const canonicalUrls: string[] = [];
+
+  for (const route of routes) {
+    const response = await request.get(route);
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
+    expect(canonical).toBe(`https://iroa.ai${route}`);
+    canonicalUrls.push(canonical!);
+  }
+
+  const sitemapResponse = await request.get('/sitemap-0.xml');
+  expect(sitemapResponse.status()).toBe(200);
+  const sitemap = await sitemapResponse.text();
+  const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  expect(sitemapUrls.toSorted()).toEqual(['https://iroa.ai/', ...canonicalUrls].toSorted());
+  expect(sitemapUrls.filter((url) => url !== 'https://iroa.ai/').every((url) => !url.endsWith('/')))
+    .toBe(true);
+});
+
+test('gives every table and scroll region a unique section-derived accessible name', async ({ page }) => {
+  for (const slug of chapterSlugs) {
+    await page.goto(`/whitepaper/${slug}`);
+    const tables = page.locator('.whitepaper-prose table');
+    const regions = page.locator('.whitepaper-table-scroll');
+    const tableNames = await tables.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute('aria-label')),
+    );
+    const regionNames = await regions.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute('aria-label')),
+    );
+
+    expect(regionNames).toHaveLength(tableNames.length);
+    const allNames = [...tableNames, ...regionNames];
+    expect(allNames.every((name) => name && !name.includes('백서 데이터 표'))).toBe(true);
+    expect(new Set(allNames).size).toBe(allNames.length);
+  }
+
+  await page.goto('/whitepaper/token-economy');
+  await expect(page.getByRole('table', { name: '16.2 토큰 배분 표' })).toBeVisible();
+  await expect(page.getByRole('table', { name: '16.3 초기 유통과 잠금 해제 표' })).toBeVisible();
+  await expect(page.getByRole('table', { name: '16.7 시뮬레이션 검증 결과 표' })).toBeVisible();
+  await expect(page.getByRole('region', { name: '16.2 토큰 배분 표 스크롤 영역' })).toBeVisible();
+});
+
+test('ships portable visual QA evidence with repository-relative image links', async () => {
+  const evidenceRoot = new URL('../docs/website/evidence/task-8-whitepaper/', import.meta.url);
+  const qa = await readFile(new URL('QA.md', evidenceRoot), 'utf8');
+  const imageNames = [
+    'reference-whitepaper-crop.png',
+    'comparison-whitepaper-desktop.png',
+    'comparison-whitepaper-mobile.png',
+  ];
+
+  expect(qa).toContain('final result: passed');
+  expect(qa).not.toContain('/Users/');
+  expect(qa).not.toContain('.superpowers/');
+  for (const imageName of imageNames) {
+    expect(qa).toContain(`./images/${imageName}`);
+    const imageUrl = new URL(`images/${imageName}`, evidenceRoot);
+    const [metadata, bytes] = await Promise.all([stat(imageUrl), readFile(imageUrl)]);
+    expect(metadata.size).toBeGreaterThan(10_000);
+    expect(bytes.subarray(1, 4).toString()).toBe('PNG');
+  }
 });
 
 test('loads every canonical local whitepaper image with nonzero natural width', async ({ page }) => {
