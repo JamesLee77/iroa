@@ -23,7 +23,6 @@
 }
 
 html {
-  min-width: 20rem;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
@@ -33,7 +32,6 @@ html {
 }
 
 body {
-  min-width: 20rem;
   min-height: 100vh;
   margin: 0;
   background: var(--color-bg);
