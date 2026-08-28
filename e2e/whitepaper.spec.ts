@@ -10,6 +10,13 @@ const chapterSlugs = [
   'prelaunch-validation', 'conclusion',
 ] as const;
 
+function sitemapUrlsForWhitepaper(sitemap: string) {
+  const whitepaperBase = 'https://iroa.ai/whitepaper';
+  return [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+    .map((match) => match[1])
+    .filter((url) => url === whitepaperBase || url.startsWith(`${whitepaperBase}/`));
+}
+
 test('publishes the Korean master index with document control, 22 chapters, and a real PDF', async ({
   page,
   request,
@@ -159,9 +166,47 @@ test('serializes every public whitepaper canonical as the same slashless sitemap
   expect(sitemapResponse.status()).toBe(200);
   const sitemap = await sitemapResponse.text();
   const sitemapUrls = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  expect(sitemapUrls.toSorted()).toEqual(['https://iroa.ai/', ...canonicalUrls].toSorted());
-  expect(sitemapUrls.filter((url) => url !== 'https://iroa.ai/').every((url) => !url.endsWith('/')))
+  const whitepaperSitemapUrls = sitemapUrlsForWhitepaper(sitemap);
+  expect(sitemapUrls).toContain('https://iroa.ai/');
+  expect(whitepaperSitemapUrls.toSorted()).toEqual(canonicalUrls.toSorted());
+  expect(whitepaperSitemapUrls.every((url) => !url.endsWith('/')))
     .toBe(true);
+});
+
+test('sitemap parity permits unrelated approved public routes without hiding whitepaper defects', () => {
+  const expectedWhitepaperUrls = [
+    'https://iroa.ai/whitepaper',
+    'https://iroa.ai/whitepaper/core-declaration',
+  ];
+  const sitemapWithApprovedProtocolRoute = `
+    <urlset>
+      <url><loc>https://iroa.ai/</loc></url>
+      <url><loc>https://iroa.ai/protocol</loc></url>
+      <url><loc>https://iroa.ai/whitepaper</loc></url>
+      <url><loc>https://iroa.ai/whitepaper/core-declaration</loc></url>
+    </urlset>
+  `;
+
+  expect(sitemapUrlsForWhitepaper(sitemapWithApprovedProtocolRoute).toSorted())
+    .toEqual(expectedWhitepaperUrls);
+  expect(sitemapUrlsForWhitepaper(
+    sitemapWithApprovedProtocolRoute.replace(
+      '</urlset>',
+      '<url><loc>https://iroa.ai/whitepaper/rogue</loc></url></urlset>',
+    ),
+  ).toSorted()).not.toEqual(expectedWhitepaperUrls);
+  expect(sitemapUrlsForWhitepaper(
+    sitemapWithApprovedProtocolRoute.replace(
+      '<url><loc>https://iroa.ai/whitepaper/core-declaration</loc></url>',
+      '',
+    ),
+  ).toSorted()).not.toEqual(expectedWhitepaperUrls);
+  expect(sitemapUrlsForWhitepaper(
+    sitemapWithApprovedProtocolRoute.replace(
+      'https://iroa.ai/whitepaper/core-declaration',
+      'https://iroa.ai/whitepaper/core-declaration/',
+    ),
+  ).toSorted()).not.toEqual(expectedWhitepaperUrls);
 });
 
 test('gives every table and scroll region a unique section-derived accessible name', async ({ page }) => {
