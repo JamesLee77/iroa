@@ -21,6 +21,11 @@ export interface WhitepaperInventoryEntry {
   raw: string;
   source: 'markdown' | 'html';
   alt?: string;
+  sourceContext: {
+    scope?: 'preamble' | 'chapter' | 'document';
+    chapterNumber?: number;
+    chapterSlug?: string;
+  };
 }
 
 export interface WhitepaperInventory {

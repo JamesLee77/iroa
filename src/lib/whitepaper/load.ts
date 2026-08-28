@@ -21,8 +21,10 @@ import {
   type WhitepaperPublication,
 } from './types';
 import {
+  htmlAttribute,
   parseDestination,
   parseWhitepaperInventory,
+  scanHtmlStartTags,
 } from '../../../tools/website/whitepaper-inventory.mjs';
 
 const SOURCE_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.md';
@@ -30,8 +32,6 @@ const METADATA_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.meta.json';
 const CHAPTER_PATTERN = /^## (\d+)\.\s+(.+)$/m;
 const LOWER_HEADING_PATTERN = /^(#{3,6})\s+(.+)$/gm;
 const EXPLICIT_ANCHOR_PATTERN = /\s+\{#([A-Za-z][\w:.-]*)\}\s*$/;
-const RAW_HTML_IMAGE_PATTERN = /<img\b[^>]*>/gi;
-const HTML_ATTRIBUTE_PATTERN = /\b([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
 
 interface ParsedChapter {
   number: number;
@@ -137,30 +137,45 @@ function brokenLink(entry: WhitepaperInventoryEntry, error: unknown): never {
   throw error;
 }
 
-function knownWhitepaperRoute(target: string, metadata: WhitepaperMetadata) {
-  return target === '/' || target === '/whitepaper' || metadata.slugs.some((slug) => target === `/whitepaper/${slug}`);
+function sourceScope(entry: WhitepaperInventoryEntry) {
+  return entry.sourceContext.chapterSlug ?? 'preamble';
 }
 
-function validateLinkInventory(inventory: WhitepaperInventory, metadata: WhitepaperMetadata, headingIds: Set<string>) {
+function whitepaperRouteScope(target: string, metadata: WhitepaperMetadata) {
+  if (target === '/whitepaper') return 'preamble';
+  return metadata.slugs.find((slug) => target === `/whitepaper/${slug}`);
+}
+
+function assertKnownFragment(fragment: string, scope: string, headingIdsByScope: Map<string, Set<string>>, message: string) {
+  if (!headingIdsByScope.get(scope)?.has(fragment)) throw new Error(message);
+}
+
+function validateLinkInventory(inventory: WhitepaperInventory, metadata: WhitepaperMetadata, headingIdsByScope: Map<string, Set<string>>) {
   for (const entry of inventory.links) {
     const destination = parseDestination(entry.raw);
     if (destination.isExternal) continue;
     if (!destination.path) {
-      if (destination.fragment && !headingIds.has(destination.fragment)) {
-        throw new Error(`unknown document fragment "#${destination.fragment}"`);
+      if (destination.fragment) {
+        const scope = sourceScope(entry);
+        const label = scope === 'preamble' ? 'whitepaper preamble' : `chapter ${entry.sourceContext.chapterNumber}`;
+        assertKnownFragment(destination.fragment, scope, headingIdsByScope, `unknown document fragment "#${destination.fragment}" in ${label}`);
       }
       continue;
     }
-    if (destination.isRootRelative && knownWhitepaperRoute(destination.path, metadata)) {
-      if (destination.fragment && !headingIds.has(destination.fragment)) {
-        throw new Error(`unknown document fragment "#${destination.fragment}"`);
+    const destinationScope = destination.isRootRelative ? whitepaperRouteScope(destination.path, metadata) : undefined;
+    if (destinationScope) {
+      if (destination.fragment) {
+        const label = destinationScope === 'preamble' ? 'whitepaper preamble' : `chapter "${destinationScope}"`;
+        assertKnownFragment(destination.fragment, destinationScope, headingIdsByScope, `unknown document fragment "#${destination.fragment}" for ${label}`);
       }
       continue;
     }
     try {
       const resolvedLink = resolveRepositoryLink(entry);
-      if (destination.fragment && resolvedLink.repositoryPath === SOURCE_PATH && !headingIds.has(destination.fragment)) {
-        throw new Error(`unknown document fragment "#${destination.fragment}"`);
+      if (destination.fragment && resolvedLink.repositoryPath === SOURCE_PATH) {
+        const scope = sourceScope(entry);
+        const label = scope === 'preamble' ? 'whitepaper preamble' : `chapter ${entry.sourceContext.chapterNumber}`;
+        assertKnownFragment(destination.fragment, scope, headingIdsByScope, `unknown document fragment "#${destination.fragment}" in ${label}`);
       }
     } catch (error) {
       brokenLink(entry, error);
@@ -197,13 +212,6 @@ function sanitize(html: string) {
   });
 }
 
-function htmlAttribute(tag: string, name: string) {
-  for (const attribute of tag.matchAll(HTML_ATTRIBUTE_PATTERN)) {
-    if (attribute[1].toLowerCase() === name) return attribute[2] ?? attribute[3] ?? attribute[4] ?? '';
-  }
-  return '';
-}
-
 function imageHtml(rawPath: string, alt: string, lazyImages: boolean, assets: Map<string, LocalAsset>) {
   const asset = assets.get(rawPath);
   if (!asset) throw new Error(`image URL is absent from parsed whitepaper inventory "${rawPath}"`);
@@ -212,11 +220,17 @@ function imageHtml(rawPath: string, alt: string, lazyImages: boolean, assets: Ma
 }
 
 function rewriteRawHtmlImages(html: string, assets: Map<string, LocalAsset>, lazyImages: boolean) {
-  return html.replace(RAW_HTML_IMAGE_PATTERN, (tag) => {
+  let cursor = 0;
+  let rewritten = '';
+  for (const tag of scanHtmlStartTags(html)) {
+    if (tag.name !== 'img') continue;
     const source = htmlAttribute(tag, 'src');
-    if (!source || parseDestination(source).isExternal) return tag;
-    return imageHtml(source, htmlAttribute(tag, 'alt'), lazyImages, assets);
-  });
+    if (!source || parseDestination(source).isExternal) continue;
+    rewritten += html.slice(cursor, tag.start);
+    rewritten += imageHtml(source, htmlAttribute(tag, 'alt'), lazyImages, assets);
+    cursor = tag.end;
+  }
+  return cursor === 0 ? html : `${rewritten}${html.slice(cursor)}`;
 }
 
 function renderMarkdown(markdown: string, headings: WhitepaperHeading[], lazyImages: boolean, assets: ReturnType<typeof resolveInventoryImages>) {
@@ -244,15 +258,29 @@ export function validateNavigation(chapters: WhitepaperChapter[]) {
 
 export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata): WhitepaperPublication {
   assertMetadata(metadata);
-  const inventory = parseWhitepaperInventory(markdown) as WhitepaperInventory;
   const { preamble, chapters: parsedChapters } = parseChapterBlocks(markdown);
   assertChapterOrder(parsedChapters);
   validateTokenAllocation(parsedChapters);
 
   const slugger = new GithubSlugger();
   const publicationIds = new Set<string>();
+  const preambleHeadings = collectHeadings(preamble, 0, slugger, publicationIds);
   const chapterHeadings = parsedChapters.map((chapter) => collectHeadings(chapter.markdown, chapter.number, slugger, publicationIds));
-  validateLinkInventory(inventory, metadata, publicationIds);
+  const headingIdsByScope = new Map<string, Set<string>>([
+    ['preamble', new Set(preambleHeadings.map(({ id }) => id))],
+    ...chapterHeadings.map((headings, index) => [metadata.slugs[index], new Set(headings.map(({ id }) => id))] as const),
+  ]);
+  const inventories = [
+    parseWhitepaperInventory(preamble, { scope: 'preamble' }),
+    ...parsedChapters.map((chapter, index) => parseWhitepaperInventory(chapter.markdown, {
+      scope: 'chapter', chapterNumber: chapter.number, chapterSlug: metadata.slugs[index],
+    })),
+  ] as WhitepaperInventory[];
+  const inventory: WhitepaperInventory = {
+    images: inventories.flatMap(({ images }) => images),
+    links: inventories.flatMap(({ links }) => links),
+  };
+  validateLinkInventory(inventory, metadata, headingIdsByScope);
   const assets = resolveInventoryImages(inventory);
   const chapters = parsedChapters.map((chapter, index): WhitepaperChapter => {
     const markdownWithoutExplicitAnchors = chapter.markdown.replace(LOWER_HEADING_PATTERN, (_line, hashes: string, rawTitle: string) => `${hashes} ${textWithoutExplicitAnchor(rawTitle)}`);
@@ -277,7 +305,7 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
     }
   }
   validateNavigation(chapters);
-  return { metadata, preambleHtml: renderMarkdown(preamble, [], false, assets), chapters };
+  return { metadata, preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets), chapters };
 }
 
 export async function loadWhitepaper(): Promise<WhitepaperPublication> {
