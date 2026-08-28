@@ -10,18 +10,12 @@ import SectionIntro from '../components/primitives/SectionIntro.astro';
 import StatusBadge from '../components/primitives/StatusBadge.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { STATUS_LABELS, type PublicStatus } from '../lib/content/status';
+import { DESIGN_SYSTEM_COLOR_ROLES } from '../lib/design-system/color-roles';
 import { PRIVACY_BOUNDARY, PROTOCOL_STAGES } from '../lib/protocol/flow';
 import { loadWhitepaper } from '../lib/whitepaper/load';
 
 const publication = await loadWhitepaper();
 const statuses = Object.entries(STATUS_LABELS) as [PublicStatus, string][];
-const colorRoles = [
-  { name: 'Background', token: '--color-bg', value: '#F9FAFB', contrast: 'Navy 14.2:1' },
-  { name: 'Surface', token: '--color-surface', value: '#FFFFFF', contrast: 'Navy 15.1:1' },
-  { name: 'Action', token: '--color-action', value: '#F06D5E', contrast: 'Navy 4.8:1' },
-  { name: 'Verified', token: '--color-verified', value: '#3D8B83', contrast: 'White 4.1:1 large text' },
-  { name: 'Settlement', token: '--color-settlement', value: '#246FD4', contrast: 'White 4.9:1' },
-] as const;
 const iconSamples = [
   { label: '검증', Icon: CheckCircle2 },
   { label: '프라이버시', Icon: LockKeyhole },
@@ -48,7 +42,7 @@ const iconSamples = [
     <section class="design-system-section container" aria-labelledby="foundations-title">
       <SectionIntro eyebrow="01 · SYSTEM LAYER" title="Foundations" lead="브랜드 원본, 의미 색상, 타이포그래피와 4/8px 간격 리듬을 고정합니다." id="foundations-title" />
       <ul class="design-system-colors" aria-label="의미 색상과 대비">
-        {colorRoles.map((color) => (
+        {DESIGN_SYSTEM_COLOR_ROLES.map((color) => (
           <li>
             <span class="design-system-swatch" style={`--swatch: var(${color.token})`} aria-hidden="true"></span>
             <strong>{color.name}</strong>

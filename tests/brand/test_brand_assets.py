@@ -1820,6 +1820,20 @@ class BrandContractTest(unittest.TestCase):
             audit_png(icons / name, size, size)
         audit_svg(icons / "favicon.svg")
 
+    def test_public_ico_embeds_the_approved_slot_specific_pixels_losslessly(self):
+        expected_sizes = {(16, 16), (32, 32), (48, 48)}
+        with Image.open("public/favicon.ico") as favicon:
+            self.assertEqual(favicon.ico.sizes(), expected_sizes)
+            for dimensions in sorted(expected_sizes):
+                size = dimensions[0]
+                embedded = favicon.ico.getimage(dimensions).convert("RGBA")
+                with Image.open(
+                    Path("docs/brand/exports/icons") / f"favicon-{size}.png"
+                ) as approved:
+                    approved_pixels = approved.convert("RGBA")
+                    self.assertEqual(embedded.size, approved_pixels.size)
+                    self.assertEqual(embedded.tobytes(), approved_pixels.tobytes(), size)
+
     def test_platform_icons_have_opaque_brand_backgrounds_and_maskable_safe_zone(self):
         digital = Path("docs/brand/exports/digital")
         icons = Path("docs/brand/exports/icons")

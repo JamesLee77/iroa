@@ -1,5 +1,5 @@
 import { readFile, stat } from 'node:fs/promises';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const chapterSlugs = [
   'core-declaration', 'daily-journeys', 'problem-and-market', 'product-system',
@@ -15,6 +15,40 @@ function sitemapUrlsForWhitepaper(sitemap: string) {
   return [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
     .map((match) => match[1])
     .filter((url) => url === whitepaperBase || url.startsWith(`${whitepaperBase}/`));
+}
+
+async function tabUntilFocused(page: Page, target: Locator, maximumTabs: number) {
+  const traversedHrefs: Array<string | null> = [];
+  for (let index = 0; index < maximumTabs; index += 1) {
+    await page.keyboard.press('Tab');
+    traversedHrefs.push(await page.evaluate(() => (
+      document.activeElement instanceof HTMLAnchorElement
+        ? document.activeElement.getAttribute('href')
+        : null
+    )));
+    if (await target.evaluate((element) => element === document.activeElement)) {
+      return traversedHrefs;
+    }
+  }
+  throw new Error(`target did not receive keyboard focus after ${maximumTabs} Tab presses`);
+}
+
+async function expectVisibleKeyboardFocus(target: Locator) {
+  await expect(target).toBeFocused();
+  const focusStyle = await target.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const bounds = element.getBoundingClientRect();
+    return {
+      outlineColor: style.outlineColor,
+      outlineStyle: style.outlineStyle,
+      outlineWidth: Number.parseFloat(style.outlineWidth),
+      visible: bounds.width > 0 && bounds.height > 0,
+    };
+  });
+  expect(focusStyle.visible).toBe(true);
+  expect(focusStyle.outlineStyle).not.toBe('none');
+  expect(focusStyle.outlineWidth).toBeGreaterThanOrEqual(3);
+  expect(focusStyle.outlineColor).not.toBe('rgba(0, 0, 0, 0)');
 }
 
 test('publishes the Korean master index with document control, 22 chapters, and a real PDF', async ({
@@ -361,5 +395,33 @@ test.describe('no-JavaScript whitepaper discovery', () => {
     await page.goto('/whitepaper/core-declaration');
     await expect(page.getByRole('article', { name: '핵심 선언' })).toBeVisible();
     await expect(page.getByRole('link', { name: /다음 장:/ })).toHaveAttribute('href', '/whitepaper/daily-journeys');
+  });
+});
+
+test.describe('keyboard-only whitepaper navigation without client JavaScript', () => {
+  test.use({ javaScriptEnabled: false, viewport: { width: 1440, height: 1000 } });
+
+  test('traverses the no-JavaScript chapter index and pager by keyboard', async ({ page }) => {
+    await page.goto('/whitepaper/token-economy');
+
+    const chapterIndex = page.getByRole('navigation', { name: '백서 전체 목차' });
+    const chapterLinks = chapterIndex.getByRole('link');
+    const firstChapter = chapterLinks.first();
+    const secondChapter = chapterLinks.nth(1);
+
+    await tabUntilFocused(page, firstChapter, 20);
+    await expectVisibleKeyboardFocus(firstChapter);
+    await page.keyboard.press('Tab');
+    await expectVisibleKeyboardFocus(secondChapter);
+
+    const previousChapter = page.getByRole('link', { name: '이전 장: 보상 경제', exact: true });
+    const nextChapter = page.getByRole('link', { name: '다음 장: 사업모델', exact: true });
+    const traversedToPager = await tabUntilFocused(page, previousChapter, 80);
+    expect(traversedToPager).toContain('/whitepaper/conclusion');
+    expect(traversedToPager.at(-1)).toBe('/whitepaper/reward-economy');
+    await expectVisibleKeyboardFocus(previousChapter);
+
+    await page.keyboard.press('Tab');
+    await expectVisibleKeyboardFocus(nextChapter);
   });
 });

@@ -112,7 +112,17 @@ test('moves visible focus from the skip link to the main content', async ({ page
   await expect(page.getByRole('main')).toBeFocused();
 });
 
-test('serves approved brand discovery icons without 404 responses', async ({ request }) => {
+test('serves approved brand discovery icons with slot-correct link metadata', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.locator('link[rel="icon"][href="/favicon.ico"]')).toHaveAttribute(
+    'sizes',
+    '16x16 32x32 48x48',
+  );
+  await expect(page.locator('link[rel="icon"][href="/favicon.svg"]')).toHaveAttribute(
+    'sizes',
+    'any',
+  );
+
   for (const asset of ['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png']) {
     const response = await request.get(asset);
     expect(response.status(), asset).toBe(200);
