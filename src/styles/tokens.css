@@ -1,51 +1,52 @@
-@font-face {
-  font-family: 'IROA Noto Sans KR';
-  src: url('../../docs/brand/assets/fonts/NotoSansKR-Medium.otf') format('opentype');
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IROA Noto Sans KR';
-  src: url('../../docs/brand/assets/fonts/NotoSansKR-Bold.otf') format('opentype');
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
-
 :root {
-  --color-ivory: #f7f3ea;
-  --color-navy: #16263d;
-  --color-coral: #f06d5e;
-  --color-teal: #3d8b83;
-  --color-light-teal: #83cdc4;
-  --color-white: #ffffff;
-  --color-ink: #111c2b;
-  --color-muted: #526174;
-  --color-line: #c9c4b8;
-  --color-surface: #fffcf6;
-  --color-surface-teal: #e5f1ee;
-  --color-surface-coral: #fbe5df;
-  --font-sans: 'IROA Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  --font-size-body: 1rem;
-  --line-height-body: 1.72;
+  --brand-navy: #16263d;
+  --brand-coral: #f06d5e;
+  --brand-ivory: #f7f3ea;
+  --brand-teal: #3d8b83;
+  --brand-light-teal: #83cdc4;
+  --brand-ink: #19222e;
+  --brand-white: #ffffff;
+
+  --color-bg: #f9fafb;
+  --color-surface: var(--brand-white);
+  --color-surface-soft: var(--brand-ivory);
+  --color-text: var(--brand-navy);
+  --color-text-muted: #526174;
+  --color-action: var(--brand-coral);
+  --color-on-action: var(--brand-navy);
+  --color-verified: var(--brand-teal);
+  --color-border: #d9dee5;
+  --color-focus: var(--brand-navy);
+  --color-dark-bg: #0d1726;
+  --color-on-dark: var(--brand-white);
+
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
-  --space-5: 1.5rem;
-  --space-6: 2rem;
-  --space-7: 3rem;
-  --space-8: 4rem;
-  --space-9: 6rem;
-  --radius-sm: 0.75rem;
-  --radius-md: 1.25rem;
-  --radius-lg: 2rem;
-  --container: 75rem;
-  --control-height: 2.75rem;
-  --shadow-soft: 0 1.25rem 4rem rgb(22 38 61 / 10%);
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-11: 2.75rem;
+  --space-12: 3rem;
+  --container: 77.5rem;
+  --gutter: clamp(1rem, 4vw, 2.5rem);
+  --control-min: 2.75rem;
   --motion-fast: 180ms;
   --motion-base: 240ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-sans: 'Inter Variable', 'IROA Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic',
+    sans-serif;
+  --font-latin: 'Inter Variable', Inter, Arial, sans-serif;
+  --font-size-body: 1rem;
+  --line-height-body: 1.65;
+  --measure-article: 68ch;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-pill: 999px;
+  --shadow-soft: 0 1.25rem 4rem rgb(22 38 61 / 10%);
 }

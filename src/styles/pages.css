@@ -1,0 +1,19 @@
+.page--homepage {
+  --page-section-space: clamp(var(--space-12), 8vw, 7rem);
+}
+
+.page--homepage :where(h1, h2) {
+  max-inline-size: 18ch;
+}
+
+.page--whitepaper {
+  --page-section-space: clamp(var(--space-10), 6vw, 5rem);
+}
+
+.page--whitepaper :where(article, .prose) {
+  max-inline-size: var(--measure-article);
+}
+
+.page--whitepaper :where(h2, h3) {
+  scroll-margin-block-start: var(--space-12);
+}
