@@ -1,148 +1,263 @@
-import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
-import cafePaymentUrl from '../../docs/brand/assets/photos/cafe-payment-4064023.jpg?url';
-import communityConversationUrl from '../../docs/brand/assets/photos/community-conversation-6647066.jpg?url';
-import coverConversationUrl from '../../docs/brand/assets/photos/cover-conversation-6248760.jpg?url';
-import telehealthCallUrl from '../../docs/brand/assets/photos/telehealth-call-8376171.jpg?url';
-import photoManifestUrl from '../../docs/brand/assets/photos/PHOTO-MANIFEST.md?url';
-import whitepaperUrl from '../../docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf';
+import type { PublicStatus } from '../lib/content/status';
+import { PRIVACY_BOUNDARY } from '../lib/protocol/flow';
 import type { HomepageContent } from '../types/home';
 
-export const homeKo: HomepageContent = {
+type StatusedContent = { status: PublicStatus };
+type SectionLink = { label: string; href: string };
+
+export const homeKo = {
   navigation: [
-    { label: '작동 방식', href: '#how-it-works' },
-    { label: '활용 사례', href: '#scenarios' },
-    { label: '안전과 신뢰', href: '#safety' },
-    { label: '생태계', href: '#ecosystem' },
+    { label: '프로토콜', href: '#protocol' },
     { label: '네트워크', href: '#network' },
-    { label: '기관 도입', href: '#contact' },
-  ],
+    { label: '이코노미', href: '#economy' },
+    { label: '백서', href: '#whitepaper-entry' },
+    { label: '로드맵', href: '#roadmap' },
+  ] as unknown as HomepageContent['navigation'],
   hero: {
-    eyebrow: 'REAL-WORLD ORCHESTRATION FOR EVERYONE',
-    title: '말로 요청하면, 현실의 일이 안전하게 완료됩니다.',
+    eyebrow: 'IROA NETWORK ATLAS',
+    title: '현실 세계를 위한 검증 가능한 실행 네트워크.',
     description:
-      'IROA는 디지털 접근이 어려운 사람의 요청을 이해하고, 필요한 서비스와 사람을 연결해 실행부터 확인까지 돕는 현실 실행 네트워크입니다.',
-    primaryCta: { label: '기관 도입·PoC 상담', href: '#contact' },
-    secondaryCta: { label: 'IROA 작동 방식 보기', href: '#how-it-works' },
-    trust: ['사용자 승인 중심', '사람에게 연결', '개인정보 최소화', '완료 검증'],
-    imageUrl: coverConversationUrl,
-    imageAlt: '밝은 실내에서 차를 마시며 편안하게 이야기하는 두 명의 고령자',
+      'IROA는 AI, 사람, 기관, 그리고 요청별로 검증되는 Node를 연결해 사용자가 승인한 현실의 일을 결과까지 조정하는 프로토콜 방향입니다.',
+    primaryCta: { label: '네트워크 살펴보기', href: '#protocol' },
+    secondaryCta: { label: '웹 백서 읽기', href: '/whitepaper' },
+    facts: [
+      { label: 'Base Primary Network', status: 'planned' },
+      { label: 'Native USDC Settlement', status: 'planned' },
+      { label: 'Personal Data Off-chain', status: 'current' },
+      { label: 'IROA Rewards · 검증 중', status: 'validation' },
+    ] satisfies readonly (StatusedContent & { label: string })[],
+    trust: ['사용자 승인 중심', '개인정보 최소화', '결과 검증'],
+    imageUrl: '/docs/brand/assets/photos/cover-conversation-6248760.jpg',
+    imageAlt: 'IROA Network Atlas를 설명하는 추상 네트워크 표면',
+  } as unknown as HomepageContent['hero'] & {
+    facts: readonly (StatusedContent & { label: string })[];
   },
   lifecycle: [
     { title: '요청', description: '말·글·터치로 원하는 결과를 표현합니다.' },
     { title: '계획', description: '해야 할 일과 예상 시간·비용을 쉬운 말로 구성합니다.' },
     { title: '선택', description: '가능한 서비스와 사람 중 사용자가 직접 고릅니다.' },
     { title: '승인', description: '결제·제출·민감정보 전송 전 범위를 다시 확인합니다.' },
-    { title: '실행', description: '승인된 기관·현장 제공자·실행 공간이 일을 수행합니다.' },
-    { title: '검증', description: '예약번호·접수 결과·영수증처럼 외부 결과를 확인합니다.' },
-    { title: '복구·사람 인계', description: '실패하면 취소·재시도하거나 승인된 사람에게 연결합니다.' },
-  ],
+    { title: '실행', description: '승인된 실행 공간이 제한된 권한 안에서 일을 수행합니다.' },
+    { title: '검증', description: '외부 결과를 확인한 뒤에만 완료로 기록합니다.' },
+    { title: '복구·사람 인계', description: '불확실하면 취소·재시도하거나 사람에게 연결합니다.' },
+  ] as unknown as HomepageContent['lifecycle'],
   protections: [
-    { title: '사용자 통제', description: '비용과 권한을 이해하고 승인하기 전에는 되돌리기 어려운 일을 실행하지 않습니다.' },
-    { title: '사람 연결', description: '자동화가 불확실하거나 사용자가 원하면 보호자·담당자·현장 지원자에게 전환합니다.' },
-    { title: '완료 책임', description: '화면 변화가 아니라 실제 서비스의 결과를 확인한 뒤 완료로 기록합니다.' },
-  ],
+    { title: '사용자 통제', description: '되돌리기 어려운 실행은 이해 가능한 방식으로 다시 승인합니다.' },
+    { title: '최소 권한', description: '요청에 필요한 범위와 시간만 권한을 사용합니다.' },
+    { title: '결과 검증', description: '화면 변화가 아니라 외부 결과를 확인합니다.' },
+  ] as unknown as HomepageContent['protections'],
   scenarios: [
     {
-      title: '병원 방문 지원',
-      quote: '“다음 주 진료를 예약하고, 이동도 도와줘.”',
-      description: '예약 후보와 비용을 확인하고 접근 가능한 이동, 방문 전 알림, 귀가 확인까지 하나의 요청으로 이어갑니다.',
-      flow: ['진료 시간 확인', '사용자 승인', '이동 지원 연결', '방문·귀가 확인'],
-      status: '목표 경험',
-      imageUrl: telehealthCallUrl,
-      imageAlt: '고령자가 태블릿 화면의 의료진과 영상으로 상담하는 모습',
+      title: '예약·이동 지원',
+      quote: '“다음 주 병원 일정을 준비해줘.”',
+      description: '제한된 요청 범위와 승인 지점을 검증하는 방향입니다.',
+      flow: ['요청 확인', '사용자 승인', '제한된 실행', '외부 결과 확인'],
+      status: 'validation',
+      imageUrl: '/docs/brand/assets/photos/telehealth-call-8376171.jpg',
+      imageAlt: '화상으로 대화하는 사용자와 의료진',
     },
-    {
-      title: '생활 서비스 지원',
-      quote: '“전등이 고장 났는데 믿을 수 있는 사람을 불러줘.”',
-      description: '요청 범위와 예상 비용을 먼저 설명하고, 승인된 제공자의 작업 결과까지 확인합니다.',
-      flow: ['요청 확인', '비용 제안', '제공자 연결', '완료 확인'],
-      status: '목표 경험',
-      imageUrl: cafePaymentUrl,
-      imageAlt: '휠체어 이용자가 카페에서 스마트폰으로 결제하는 모습',
-    },
-    {
-      title: '보호자·기관 연계',
-      quote: '“오늘 지원 일정이 잘 끝났는지 알려줘.”',
-      description: '허용된 범위의 수행 상태만 확인하고 지연이나 이상 상황은 담당자에게 책임 있게 연결합니다.',
-      flow: ['권한 확인', '수행 상태 확인', '이상 감지', '사람에게 연결'],
-      status: '목표 경험',
-      imageUrl: communityConversationUrl,
-      imageAlt: '지원자와 고령자가 주방에서 차를 마시며 편안하게 대화하는 모습',
-    },
-  ],
+  ] as unknown as HomepageContent['scenarios'],
   institutions: [
     {
-      title: '지자체·복지기관',
-      value: '분산된 생활 지원 요청과 진행 상태를 하나의 책임 흐름으로 연결합니다.',
-      pilot: '이동·방문·생활 지원 요청',
+      title: '기관·현장 검증',
+      value: '대상 사용자와 하나의 현실 업무를 정해 검증 범위를 설계합니다.',
+      pilot: '요청·승인·결과 확인',
     },
-    {
-      title: '병원·돌봄기관',
-      value: '진료 전후 준비와 보호자·담당자 인계를 사용자의 승인 안에서 이어갑니다.',
-      pilot: '예약·이동·귀가 확인',
-    },
-    {
-      title: '기업·프랜차이즈·CSR',
-      value: '접근 가능한 서비스 제공과 검증 가능한 지원 프로그램을 함께 설계합니다.',
-      pilot: '매장 주문·사회공헌 지원',
-    },
-  ],
+  ] as unknown as HomepageContent['institutions'],
   safety: [
-    { title: '사용자 권한', description: '무엇을 요청하고 승인했는지 쉬운 말로 다시 확인합니다.' },
-    { title: '정보 보호', description: '필요한 정보만 필요한 곳에 필요한 시간 동안 제공합니다.' },
-    { title: '실행 통제', description: '결제·제출·외부 전송은 별도의 확인 지점을 통과합니다.' },
-    { title: '사람 중심 회복', description: '실패와 불확실성을 숨기지 않고 사람 연결을 선택지로 제공합니다.' },
-    { title: '완료 검증과 정산', description: '외부 결과를 확인한 뒤 보고와 정산을 진행합니다.' },
-  ],
+    { title: '개인정보 경계', description: '개인정보 원문은 오프체인에 둡니다.' },
+    { title: '사람 인계', description: '불확실성과 실패를 숨기지 않고 사람에게 연결합니다.' },
+  ] as unknown as HomepageContent['safety'],
   safetyBoundaries: [
-    '민감정보는 퍼블릭 블록체인에 기록하지 않습니다.',
-    '온체인에는 필요한 경우 최소 정산 기록이나 완료 영수증 해시만 남깁니다.',
+    '개인정보 원문은 오프체인에 머뭅니다.',
     '자동화 신뢰도나 권한이 부족하면 추측하여 실행하지 않습니다.',
-    '현재·목표 경험·계획·장기 기능을 명확하게 구분합니다.',
-  ],
+  ] as HomepageContent['safetyBoundaries'],
   ecosystem: [
-    { title: '사용자 접점', description: '사용자가 편한 방식으로 요청하고 승인합니다.', items: ['Mobile', 'Watch', 'Kiosk', 'Companion'] },
-    { title: 'IROA Agent', description: '요청을 이해하고 계획·선택·승인을 관리합니다.', items: ['요청 이해', '계획', '제안', '승인 관리'] },
-    { title: 'Orchestration & Safety Core', description: '상태·권한·복구·완료 책임을 유지합니다.', items: ['상태 관리', '최소 권한', '복구', '완료 검증'] },
-    { title: '현실 실행 네트워크', description: '기관과 사람이 실제 서비스를 수행합니다.', items: ['Institution', 'Partner', 'Node', 'Human Support', 'Robot'], status: '장기' },
-    { title: '검증 가능한 정산', description: '완료가 확인된 B2B 기여를 정산합니다.', items: ['Base', 'Circle Native USDC'], status: '계획' },
-  ],
+    {
+      title: '실행 네트워크',
+      description: 'Node와 기관·사람의 역할을 분리해 검증합니다.',
+      items: ['Interaction', 'Control', 'Execution', 'Settlement'],
+      status: 'planned',
+    },
+  ] as unknown as HomepageContent['ecosystem'],
+  protocol: {
+    title: '사람의 의사와 현실의 결과를 연결하는 네 개의 영역',
+    description:
+      '각 영역은 역할을 나누며, 외부 서비스의 권한과 결과를 IROA가 소유한 것처럼 표현하지 않습니다.',
+    planes: [
+      {
+        id: 'interaction',
+        label: 'Interaction Plane',
+        status: 'validation',
+        description: '전화·워치·모바일·키오스크·반려기기에서 사용자의 의사와 승인을 받습니다.',
+      },
+      {
+        id: 'control',
+        label: 'Control Plane',
+        status: 'validation',
+        description: '요청 상태, 동의, 정책, 신뢰 수준을 분리해 관리합니다.',
+      },
+      {
+        id: 'execution',
+        label: 'Execution Plane',
+        status: 'validation',
+        description: '격리된 Task Capsule이 필요한 최소 권한으로 실행되고 종료 후 정리됩니다.',
+      },
+      {
+        id: 'settlement',
+        label: 'Settlement Plane',
+        status: 'planned',
+        description: '검증된 완료 증빙을 바탕으로 향후 B2B 정산 경계를 검토합니다.',
+      },
+    ] satisfies readonly (StatusedContent & {
+      id: 'interaction' | 'control' | 'execution' | 'settlement';
+      label: string;
+      description: string;
+    })[],
+  },
+  network: {
+    title: 'Node와 증빙은 역할을 나누어 검증합니다.',
+    description:
+      'Node는 요청 전체를 독점하지 않으며, 사용자 승인·제한 권한·외부 결과 확인을 각각의 경계로 둡니다.',
+    node: {
+      level: 'N2',
+      status: 'validation',
+      description: 'N2는 키오스크·복지관·반려기기 같은 승인 접근 거점의 검증 기준을 설계·검토하는 단계입니다.',
+    } satisfies StatusedContent & { level: 'N0' | 'N1' | 'N2' | 'N3' | 'N4'; description: string },
+    proof: {
+      result: '외부 결과 확인 전에는 완료로 표시하지 않습니다.',
+      proofId: '증빙 식별자는 배포·운영 근거가 있을 때만 공개합니다.',
+      policyVersion: '정책 버전은 최소 증빙으로 분리합니다.',
+      disputeState: '불확실한 결과는 사람 검토와 분쟁 절차로 넘깁니다.',
+    },
+    privacy: {
+      status: 'current',
+      ...PRIVACY_BOUNDARY,
+    } satisfies StatusedContent & { statement: string; onChain: readonly string[]; offChain: readonly string[] },
+  },
   settlement: {
+    title: '사용자 결제와 B2B 정산을 분리합니다.',
+    status: 'planned',
     network: 'Base',
     asset: 'Circle Native USDC',
-    consumerPayment: '일반 사용자는 원화·카드·계좌·기존 전자지갑을 사용합니다.',
-    title: '사용자에게는 단순하게, 기관 정산은 검증 가능하게',
-    description: 'Base와 Native USDC는 서비스 전면이 아니라 완료 이후 기관·상점·Node·도움 제공자 사이에서 작동하는 B2B 정산 레이어입니다.',
+    consumerPayment: '소비자 결제는 원화, 카드, 계좌이체와 기존 결제 채널을 사용합니다.',
+    description:
+      'Base와 Circle Native USDC는 배포·법률·보안 검토와 완료 증빙이 갖춰진 뒤 검토할 B2B 정산 방향이며, 현재 운영 중인 정산이 아닙니다.',
+    boundaries: [
+      '가스와 지갑 관리는 소비자 이용 조건이 아닙니다.',
+      '자체 스테이블코인은 초기 발행하지 않습니다.',
+      '개인정보 원문과 상세 실행 기록은 온체인에 올리지 않습니다.',
+    ],
     steps: [
-      { title: '사용자 결제', description: '원화·카드·계좌' },
+      { title: '소비자 결제', description: '원화·카드·계좌이체·기존 결제 채널' },
       { title: '요청과 승인', description: '범위·비용·권한 확인' },
-      { title: '현실 실행', description: '기관·상점·제공자 수행' },
-      { title: '완료 검증', description: '결과·영수증·분쟁 상태 확인' },
-      { title: 'B2B 정산', description: 'Base · Circle Native USDC' },
+      { title: '결과 확인', description: '외부 결과와 분쟁 상태 확인' },
+      { title: 'B2B 정산', description: 'Base · Circle Native USDC · 계획' },
     ],
     principles: [
-      '가스와 지갑은 사용자에게 보이지 않습니다.',
-      '자체 스테이블코인은 초기 발행하지 않습니다.',
-      '민감정보 원문과 상세 실행 기록은 온체인에 올리지 않습니다.',
-      '향후 체인 어댑터로 Solana·BNB 연결 가능성을 보존합니다.',
+      '가스와 지갑은 소비자 이용 조건이 아닙니다.',
+      '개인정보 원문은 온체인에 기록하지 않습니다.',
+    ],
+  } satisfies StatusedContent & {
+    title: string;
+    network: 'Base';
+    asset: 'Circle Native USDC';
+    consumerPayment: string;
+    description: string;
+    boundaries: string[];
+    steps: HomepageContent['settlement']['steps'];
+    principles: string[];
+  },
+  economy: {
+    title: '보상 설계는 서비스의 지속 가능성을 먼저 검증합니다.',
+    description:
+      'IROA 보상은 검증된 실행, 접근성 품질, 보안과 삭제 준수의 기여를 검토하는 방향이며, 이용자의 필수 서비스 접근을 보유량과 연결하지 않습니다.',
+    rewards: {
+      label: 'IROA Rewards',
+      status: 'validation',
+      description: 'IROA 보상은 발행, 법률 검토, 배포, 감사 근거가 갖춰질 때까지 검증 중입니다.',
+    } satisfies StatusedContent & { label: string; description: string },
+    boundaries: [
+      '가격, 수익률, 유동성, 거래소 상장을 약속하지 않습니다.',
+      '검증된 기여와 분쟁·취소·품질 기준을 함께 검토합니다.',
+      '토큰 보유 여부는 생활 지원의 필수 조건이 아닙니다.',
     ],
   },
+  whitepaper: {
+    title: 'IROA.AI 백서',
+    version: '1.0',
+    language: 'Korean',
+    status: 'current',
+    description: '한국어 원문을 기준으로 발행한 IROA.AI 백서입니다.',
+    primaryCta: { label: '웹 백서 읽기', href: '/whitepaper' },
+    chapters: [
+      { label: '핵심 선언', href: '/whitepaper/core-declaration' },
+      { label: '보안 실행 공간', href: '/whitepaper/secure-execution-space' },
+      { label: '토큰 이코노미', href: '/whitepaper/token-economy' },
+    ] satisfies readonly SectionLink[],
+  } satisfies StatusedContent & {
+    title: string;
+    version: string;
+    language: string;
+    description: string;
+    primaryCta: SectionLink;
+    chapters: readonly SectionLink[];
+  },
   roadmap: [
-    { title: 'Foundation', status: '현재', description: '서비스 원칙과 시각 언어를 정립합니다.', evidence: '백서·승인된 BI·기관 파일럿 설계' },
-    { title: 'Institutional Pilot', status: '다음', description: '범위를 제한한 실제 요청과 사람 인계를 검증합니다.', evidence: '요청 생명주기·기관 연동·완료 측정' },
-    { title: 'Settlement Pilot', status: '계획', description: '완료 증빙과 운영·법률 검토 후 B2B 정산을 시험합니다.', evidence: 'Base · Circle Native USDC' },
-    { title: 'Network Expansion', status: '장기', description: '검증된 실행 공간과 파트너 모듈을 확장합니다.', evidence: 'Node·기관 연결·선택적 체인 어댑터' },
-  ],
+    {
+      title: 'Foundation',
+      status: 'current',
+      description: '백서와 공통 원칙을 공개하고, 각 기능의 상태 언어를 고정합니다.',
+      entryCriteria: '공개 정보가 운영 증거와 계획을 구분합니다.',
+      evidence: '백서 v1.0과 공개 설계 원칙',
+    },
+    {
+      title: 'Request Validation',
+      status: 'next',
+      description: '사용자 승인, 실패 복구, 사람 인계가 필요한 요청을 제한된 범위에서 검증합니다.',
+      entryCriteria: '사용자가 목표와 결과를 이해하고 확인할 수 있습니다.',
+      evidence: '요청 생명주기와 현장 검증 기준',
+    },
+    {
+      title: 'Secure Execution',
+      status: 'planned',
+      description: '요청별 격리 실행, 일회성 권한, 삭제 확인을 설계·검토합니다.',
+      entryCriteria: '민감정보 잔존과 중복 실행을 통제합니다.',
+      evidence: 'Task Capsule과 보안 실행 공간 원칙',
+    },
+    {
+      title: 'Network Research',
+      status: 'research',
+      description: '기관 연계, 실행 공간 보상, 반려기기와 로봇의 고위험 경계를 장기 연구합니다.',
+      entryCriteria: '법률·안전·현장 검증의 근거가 선행합니다.',
+      evidence: 'Node 신뢰 수준과 단계별 안전 검토',
+    },
+  ] as unknown as HomepageContent['roadmap'] & readonly (StatusedContent & {
+    title: string;
+    description: string;
+    entryCriteria: string;
+    evidence: string;
+  })[],
   contact: {
-    title: '우리 기관의 첫 번째 IROA 요청을 함께 설계합니다.',
-    description: '거대한 시스템 교체보다 대상 사용자와 하나의 현실 업무를 정해 안전한 파일럿부터 시작합니다.',
-    intake: ['기관과 대상 사용자', '해결하려는 한 가지 업무', '현재의 실패·지연·사람 인계 방식'],
-    privacyNotice: '공식 문의 채널 연결 전에는 개인정보를 수집하지 않습니다.',
+    title: '기관과 현장의 검증 범위를 함께 설계합니다.',
+    status: 'planned',
+    description:
+      '향후 참여 논의는 대상 사용자, 한 가지 현실 업무, 현재의 실패·지연·사람 인계 방식을 기준으로 시작합니다.',
+    intake: ['기관과 대상 사용자', '검증하려는 한 가지 현실 업무', '현재의 실패·지연·사람 인계 방식'],
+    privacyNotice: '공식 문의 채널이 마련되기 전에는 개인정보를 수집하지 않습니다.',
     channelLabel: '공식 문의 채널 준비 중',
+    whitepaperHref: '/whitepaper',
+  } as unknown as HomepageContent['contact'] & StatusedContent & {
+    title: string;
+    description: string;
+    intake: string[];
+    privacyNotice: string;
+    channelLabel: string;
+    whitepaperHref: string;
   },
   assets: {
-    wordmarkUrl,
-    whitepaperUrl,
-    photoManifestUrl,
+    wordmarkUrl: '/docs/brand/masters/wordmark/iroa-wordmark-color.svg',
+    whitepaperUrl: '/docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf',
+    photoManifestUrl: '/docs/brand/assets/photos/PHOTO-MANIFEST.md',
   },
-};
+} as const;
