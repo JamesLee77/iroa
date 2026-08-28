@@ -60,9 +60,11 @@ Its color evidence now comes directly from the production semantic tokens and on
 
 ## Whole-branch final record
 
-- Verified code revision: `b42c2e6c440286feb20facfa223abfeff77e9cfd`.
+- Verified code revision: `a8774bcf4476ebe9af52d32c2370a9c84af1f38e`.
 - The documentation commit containing this record is the documentation-only successor of that immutable code revision.
-- Fresh final integration used the existing visual evidence plus a unique preview on port `4469`: unit `59/59`, typecheck `0` issues, build `26` pages with `22` chapters, browser E2E `47/47`, and brand/optical parity `69/69`.
+- Fresh final integration used the existing visual evidence plus a unique preview on port `4473`: unit `63/63`, typecheck `0` issues, build `26` pages with `22` chapters, browser E2E `47/47`, and brand/optical parity `69/69`.
+- Raw HTML image regressions passed `4/4`: standalone images render as captioned figures, while paragraph, blockquote, and table-cell images retain their containing HTML structure.
+- Static integrity covered `24` sitemap URLs, `11` valid built image references, a byte-identical `3,586,280`-byte PDF, `12` repository-relative portable links, and `11` valid evidence PNGs.
 - The approved light Network Atlas implementation and canonical public copy are unchanged. The homepage content bundle now emits zero hashed copies of the unused legacy photographs or photo manifest, avoiding `576,406` duplicate bytes.
 - Byte-identical public copies of the two photographs remain available under `/generated/docs/brand/assets/photos/` because the canonical web whitepaper consumes them. The source photo manifest is not emitted.
 

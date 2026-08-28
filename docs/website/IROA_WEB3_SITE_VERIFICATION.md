@@ -4,7 +4,7 @@
 
 - Branch: `codex/iroa-homepage-v1`
 - BASE: `d0509382910b5b778b9ac1804556f7831338d439`
-- Verified code revision: `b42c2e6c440286feb20facfa223abfeff77e9cfd`
+- Verified code revision: `a8774bcf4476ebe9af52d32c2370a9c84af1f38e`
 - Evidence record revision: this documentation-only successor of the verified code revision. Its own hash is intentionally not embedded, avoiding a self-referential commit-hash cycle.
 - Initial Task 9 commit: `6036d18b0f5d7e4042efff7237482dd347f37e74` (`test: verify IROA Web3 public site`).
 - Fix Round 1 commit: `bb1a92554515e859832c077558bdd27a65e5e4bd` (`fix: harden Task 9 verification contracts`).
@@ -27,14 +27,15 @@ Discovery output includes `robots.txt`, `sitemap-index.xml`, `sitemap-0.xml`, a 
 
 ## Final verification commands and results
 
-The final acceptance gate runs `npm run test:run`, `npm run typecheck`, `npm run build`, `IROA_PREVIEW_PORT=4469 npx playwright test`, `python3 -m unittest tests.brand.test_brand_assets tests.brand.test_comparison_optical_parity`, the static/PDF/asset-inventory check, and `git diff --check` from the repository root at the verified code revision. Every command exits `0`. Playwright consumes the single fresh build instead of invoking a duplicate pretest build.
+The final acceptance gate runs `npm run test:run`, `npm run typecheck`, the production build pipeline (`npm run sync:whitepaper-assets`, `npm run render:og`, and `npx astro build`), `IROA_PREVIEW_PORT=4473 npx playwright test`, `python3 -m unittest tests.brand.test_brand_assets tests.brand.test_comparison_optical_parity`, the static/PDF/image/asset-inventory and portable-integrity check, and `git diff --check` from the repository root at the verified code revision. Every command exits `0`. Playwright consumes that single fresh build instead of invoking a duplicate pretest build.
 
-- Unit: 11 files, 59 tests passed, including the token-derived contrast contract, whitepaper loader regressions, and focused homepage asset-emission inventory. The pre-cleanup replacement gate passed 11 files and 61 tests; the later count reflects intentional legacy-suite deletion plus current regression coverage, not missing execution.
+- Unit: 11 files, 63 tests passed, including the token-derived contrast contract, homepage asset-emission inventory, and whitepaper raw-image loader regressions. The pre-cleanup replacement gate passed 11 files and 61 tests; the current count reflects intentional legacy-suite deletion plus the complete current regression set, not missing execution.
 - Typecheck: 58 Astro files, 0 errors, 0 warnings, 0 hints.
 - Build: 26 pages, including exactly 22 chapter outputs; sitemap emitted.
 - Browser E2E: 47 tests passed.
 - Brand/optical parity: 69 tests passed.
-- Static/PDF/asset inventory: 26 HTML outputs, 22 chapters, 24 sitemap URLs, 14 distinct local generated references, 11 portable evidence PNGs, and a byte-identical `3,586,280`-byte publication PDF. The three forbidden legacy source assets emitted zero hashed `_astro` files.
+- Raw HTML image regression: standalone figure, paragraph-inline, blockquote-inline, and table-cell-inline cases passed 4/4. The standalone case receives figure semantics while the three container cases remain inside their existing paragraph, blockquote, or table structure.
+- Static/PDF/image/asset inventory: 26 HTML outputs, 22 chapters, 24 sitemap URLs with matching static files, 11 valid built local-image references, 12 valid repository-relative portable links, 11 portable evidence PNGs, and a byte-identical `3,586,280`-byte publication PDF. The three forbidden legacy source assets emitted zero hashed `_astro` files.
 - Diff integrity: clean.
 
 The brand suite discovers the currently installed packaged document runtime deterministically, requires exactly one supported `documents/*/skills/documents` match, and verifies the pinned accessibility-auditor SHA before use. No compatibility path or tool-cache mutation is required.
