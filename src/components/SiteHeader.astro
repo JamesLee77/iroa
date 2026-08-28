@@ -1,0 +1,208 @@
+---
+import { ChevronDown, Menu } from 'lucide-astro';
+import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
+import ButtonLink from './primitives/ButtonLink.astro';
+
+const navigationItems = [
+  { label: '프로토콜', href: '/#protocol' },
+  { label: '네트워크', href: '/#network' },
+  { label: '이코노미', href: '/#economy' },
+  { label: '백서', href: '/whitepaper' },
+  { label: '로드맵', href: '/#roadmap' },
+] as const;
+---
+
+<header class="site-header">
+  <div class="site-header__inner container">
+    <a class="site-header__brand" href="/" aria-label="IROA.AI 홈">
+      <img src={wordmarkUrl} alt="" width="600" height="180" />
+    </a>
+
+    <nav class="site-header__desktop-nav" aria-label="주요 메뉴">
+      <ul>
+        {
+          navigationItems.map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="site-header__desktop-action">
+      <ButtonLink href="/whitepaper">웹 백서 읽기</ButtonLink>
+    </div>
+
+    <details class="site-header__mobile-menu">
+      <summary>
+        <Menu aria-hidden="true" size={20} strokeWidth={2} />
+        <span>메뉴</span>
+        <ChevronDown class="site-header__summary-chevron" aria-hidden="true" size={18} strokeWidth={2} />
+      </summary>
+      <div class="site-header__mobile-panel">
+        <nav aria-label="모바일 메뉴">
+          <ul>
+            {
+              navigationItems.map((item) => (
+                <li><a href={item.href}>{item.label}</a></li>
+              ))
+            }
+          </ul>
+        </nav>
+        <ButtonLink href="/whitepaper">웹 백서 읽기</ButtonLink>
+      </div>
+    </details>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    z-index: 100;
+    inset-block-start: 0;
+    border-block-end: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .site-header__inner {
+    display: flex;
+    min-block-size: 5rem;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .site-header__brand {
+    display: inline-flex;
+    min-inline-size: var(--control-min);
+    min-block-size: var(--control-min);
+    align-items: center;
+    padding-block: var(--space-2);
+  }
+
+  .site-header__brand img {
+    inline-size: 7.5rem;
+    block-size: auto;
+  }
+
+  .site-header__desktop-nav,
+  .site-header__desktop-action {
+    display: none;
+  }
+
+  .site-header__desktop-nav ul,
+  .site-header__mobile-panel ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .site-header__mobile-menu {
+    position: relative;
+    margin-inline-start: auto;
+  }
+
+  .site-header__mobile-menu summary {
+    display: inline-flex;
+    min-inline-size: var(--control-min);
+    min-block-size: var(--control-min);
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    font-weight: 700;
+    list-style: none;
+  }
+
+  .site-header__mobile-menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .site-header__mobile-menu summary:hover {
+    background: var(--color-surface-soft);
+  }
+
+  .site-header__mobile-menu :global(.site-header__summary-chevron) {
+    transition: transform var(--motion-fast) var(--ease-out);
+  }
+
+  .site-header__mobile-menu[open] :global(.site-header__summary-chevron) {
+    transform: rotate(180deg);
+  }
+
+  .site-header__mobile-panel {
+    position: absolute;
+    inset-block-start: calc(100% + var(--space-2));
+    inset-inline-end: 0;
+    inline-size: min(20rem, calc(100vw - (2 * var(--gutter))));
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .site-header__mobile-panel nav {
+    margin-block-end: var(--space-3);
+  }
+
+  .site-header__mobile-panel a:not([data-variant]) {
+    display: flex;
+    min-inline-size: var(--control-min);
+    min-block-size: var(--control-min);
+    align-items: center;
+    padding-inline: var(--space-4);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+
+  .site-header__mobile-panel a:not([data-variant]):hover {
+    background: var(--color-surface-soft);
+  }
+
+  @media (min-width: 64rem) {
+    .site-header__inner {
+      gap: var(--space-5);
+    }
+
+    .site-header__brand img {
+      inline-size: 8.5rem;
+    }
+
+    .site-header__desktop-nav {
+      display: block;
+      margin-inline-start: auto;
+    }
+
+    .site-header__desktop-nav ul {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+
+    .site-header__desktop-nav a {
+      display: inline-flex;
+      min-inline-size: var(--control-min);
+      min-block-size: var(--control-min);
+      align-items: center;
+      padding-inline: var(--space-3);
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+    }
+
+    .site-header__desktop-nav a:hover {
+      background: var(--color-surface-soft);
+    }
+
+    .site-header__desktop-action {
+      display: block;
+    }
+
+    .site-header__mobile-menu {
+      display: none;
+    }
+  }
+</style>

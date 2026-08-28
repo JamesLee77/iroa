@@ -1,0 +1,106 @@
+---
+import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner container">
+    <div class="site-footer__identity">
+      <a class="site-footer__brand" href="/" aria-label="IROA.AI 홈으로 돌아가기">
+        <img src={wordmarkUrl} alt="" width="600" height="180" />
+      </a>
+      <p>현실 세계를 위한 검증 가능한 실행 네트워크.</p>
+    </div>
+
+    <nav aria-label="보조 메뉴">
+      <ul>
+        <li><a href="/#protocol">프로토콜</a></li>
+        <li><a href="/#network">네트워크</a></li>
+        <li><a href="/whitepaper">백서</a></li>
+        <li><a href="/#roadmap">로드맵</a></li>
+      </ul>
+    </nav>
+
+    <p class="site-footer__legal">© {currentYear} IROA.AI</p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-block-start: clamp(var(--space-12), 8vw, 7rem);
+    border-block-start: 1px solid var(--color-border);
+    background: var(--color-surface-soft);
+  }
+
+  .site-footer__inner {
+    display: grid;
+    gap: var(--space-8);
+    padding-block: var(--space-10);
+  }
+
+  .site-footer__identity {
+    max-inline-size: 30rem;
+  }
+
+  .site-footer__brand {
+    display: inline-flex;
+    min-inline-size: var(--control-min);
+    min-block-size: var(--control-min);
+    align-items: center;
+    margin-block-end: var(--space-3);
+  }
+
+  .site-footer__brand img {
+    inline-size: 8.5rem;
+    block-size: auto;
+  }
+
+  .site-footer__identity p,
+  .site-footer__legal {
+    margin-block-end: 0;
+    color: var(--color-text-muted);
+  }
+
+  .site-footer ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .site-footer nav a {
+    display: inline-flex;
+    min-inline-size: var(--control-min);
+    min-block-size: var(--control-min);
+    align-items: center;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .site-footer nav a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+
+  .site-footer__legal {
+    font-family: var(--font-latin);
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 48rem) {
+    .site-footer__inner {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+    }
+
+    .site-footer__legal {
+      grid-column: 1 / -1;
+      padding-block-start: var(--space-5);
+      border-block-start: 1px solid var(--color-border);
+    }
+  }
+</style>

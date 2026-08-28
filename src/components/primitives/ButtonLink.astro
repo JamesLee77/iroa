@@ -1,0 +1,103 @@
+---
+import { ExternalLink } from 'lucide-astro';
+
+interface Props {
+  href: string;
+  variant?: 'primary' | 'secondary' | 'quiet';
+  external?: boolean;
+  fileMeta?: string;
+}
+
+const { href, variant = 'primary', external = false, fileMeta } = Astro.props;
+---
+
+<a
+  class:list={['button-link', `button-link--${variant}`]}
+  data-variant={variant}
+  href={href}
+  target={external ? '_blank' : undefined}
+  rel={external ? 'noreferrer' : undefined}
+>
+  <span class="button-link__label"><slot /></span>
+  {fileMeta && <span class="button-link__meta">{fileMeta}</span>}
+  {
+    external && (
+      <>
+        <ExternalLink aria-hidden="true" size={16} strokeWidth={2} />
+        <span class="sr-only">(새 창에서 열림)</span>
+      </>
+    )
+  }
+</a>
+
+<style>
+  .button-link {
+    display: inline-flex;
+    min-inline-size: var(--control-min);
+    min-block-size: var(--control-min);
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    color: var(--color-text);
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+    text-decoration: none;
+    transition:
+      background-color var(--motion-fast) var(--ease-out),
+      border-color var(--motion-fast) var(--ease-out),
+      box-shadow var(--motion-fast) var(--ease-out);
+  }
+
+  .button-link--primary {
+    border-color: var(--color-action);
+    background: var(--color-action);
+    color: var(--color-on-action);
+  }
+
+  .button-link--secondary {
+    border-color: var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .button-link--quiet {
+    background: transparent;
+  }
+
+  .button-link:hover {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .button-link--quiet:hover {
+    background: var(--color-surface-soft);
+    box-shadow: none;
+  }
+
+  .button-link__label {
+    white-space: nowrap;
+  }
+
+  .button-link__meta {
+    padding-inline-start: var(--space-2);
+    border-inline-start: 1px solid currentColor;
+    font-family: var(--font-latin);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    opacity: 0.78;
+    white-space: nowrap;
+  }
+
+  .button-link :global(svg) {
+    flex: 0 0 auto;
+  }
+
+  @media (max-width: 24rem) {
+    .button-link {
+      flex-wrap: wrap;
+    }
+  }
+</style>

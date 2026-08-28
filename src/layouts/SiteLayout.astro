@@ -3,6 +3,8 @@ import '../styles/tokens.css';
 import '../styles/foundations.css';
 import '../styles/components.css';
 import '../styles/pages.css';
+import SiteFooter from '../components/SiteFooter.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 
 interface Props {
   title: string;
@@ -46,6 +48,8 @@ const shareImage = new URL(imagePath, Astro.site);
   </head>
   <body>
     <a class="skip-link" href="#main-content">본문으로 바로가기</a>
-    <main id="main-content"><slot /></main>
+    <SiteHeader />
+    <main id="main-content" tabindex="-1"><slot /></main>
+    <SiteFooter />
   </body>
 </html>
