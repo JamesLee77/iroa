@@ -334,3 +334,32 @@ for (const width of [375, 768, 1024, 1440]) {
     expect(geometry.wideContent).toBe(0);
   });
 }
+
+test('keeps article and chapter controls visible at a 200 percent zoom-equivalent width', async ({ page }) => {
+  await page.setViewportSize({ width: 720, height: 900 });
+  await page.goto('/whitepaper/token-economy');
+
+  await expect(page.getByRole('article', { name: 'IROA 토큰 이코노미' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /이전 장:/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /다음 장:/ })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(720);
+});
+
+test.describe('no-JavaScript whitepaper discovery', () => {
+  test.use({ javaScriptEnabled: false, viewport: { width: 375, height: 812 } });
+
+  test('keeps chapter links, canonical text, and PDF download usable', async ({ page }) => {
+    await page.goto('/whitepaper');
+    await expect(page.getByRole('heading', { level: 1, name: 'IROA.AI 백서' })).toBeVisible();
+    const disclosure = page.locator('details.whitepaper-mobile-index');
+    await disclosure.locator('summary').click();
+    await expect(
+      page.getByRole('navigation', { name: '모바일 백서 전체 목차' }).getByRole('link'),
+    ).toHaveCount(22);
+    await expect(page.getByRole('link', { name: /PDF 다운로드/ })).toHaveAttribute('download', 'IROA_WHITEPAPER_KO.pdf');
+
+    await page.goto('/whitepaper/core-declaration');
+    await expect(page.getByRole('article', { name: '핵심 선언' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /다음 장:/ })).toHaveAttribute('href', '/whitepaper/daily-journeys');
+  });
+});

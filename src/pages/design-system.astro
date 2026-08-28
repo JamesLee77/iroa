@@ -1,0 +1,173 @@
+---
+import { BookOpen, CheckCircle2, FileText, LockKeyhole, ShieldCheck } from 'lucide-astro';
+import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
+import ChapterIndex from '../components/whitepaper/ChapterIndex.astro';
+import DocumentControl from '../components/whitepaper/DocumentControl.astro';
+import PrivacyBoundary from '../components/patterns/PrivacyBoundary.astro';
+import ProtocolPath from '../components/patterns/ProtocolPath.astro';
+import ButtonLink from '../components/primitives/ButtonLink.astro';
+import SectionIntro from '../components/primitives/SectionIntro.astro';
+import StatusBadge from '../components/primitives/StatusBadge.astro';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { STATUS_LABELS, type PublicStatus } from '../lib/content/status';
+import { PRIVACY_BOUNDARY, PROTOCOL_STAGES } from '../lib/protocol/flow';
+import { loadWhitepaper } from '../lib/whitepaper/load';
+
+const publication = await loadWhitepaper();
+const statuses = Object.entries(STATUS_LABELS) as [PublicStatus, string][];
+const colorRoles = [
+  { name: 'Background', token: '--color-bg', value: '#F9FAFB', contrast: 'Navy 14.2:1' },
+  { name: 'Surface', token: '--color-surface', value: '#FFFFFF', contrast: 'Navy 15.1:1' },
+  { name: 'Action', token: '--color-action', value: '#F06D5E', contrast: 'Navy 4.8:1' },
+  { name: 'Verified', token: '--color-verified', value: '#3D8B83', contrast: 'White 4.1:1 large text' },
+  { name: 'Settlement', token: '--color-settlement', value: '#246FD4', contrast: 'White 4.9:1' },
+] as const;
+const iconSamples = [
+  { label: '검증', Icon: CheckCircle2 },
+  { label: '프라이버시', Icon: LockKeyhole },
+  { label: '보호', Icon: ShieldCheck },
+  { label: '문서', Icon: FileText },
+  { label: '읽기', Icon: BookOpen },
+] as const;
+---
+
+<SiteLayout
+  title="IROA Web3 Design System | Internal Inventory"
+  description="IROA.AI 공개 웹사이트의 승인된 토큰, 컴포넌트, 프로토콜 패턴과 백서 리더 내부 검토 화면입니다."
+  canonicalPath="/design-system"
+  robots="noindex,nofollow"
+>
+  <div class="design-system-page">
+    <header class="design-system-hero container">
+      <p class="section-kicker latin">INTERNAL VISUAL INVENTORY · NOINDEX</p>
+      <img src={wordmarkUrl} alt="IROA.AI 컬러 워드마크" width="600" height="180" />
+      <h1>IROA Web3 Design System</h1>
+      <p>승인된 Track A 자산과 실제 공개 사이트 컴포넌트를 한 화면에서 검토합니다. 이 경로는 검색과 사이트맵에서 제외됩니다.</p>
+    </header>
+
+    <section class="design-system-section container" aria-labelledby="foundations-title">
+      <SectionIntro eyebrow="01 · SYSTEM LAYER" title="Foundations" lead="브랜드 원본, 의미 색상, 타이포그래피와 4/8px 간격 리듬을 고정합니다." id="foundations-title" />
+      <ul class="design-system-colors" aria-label="의미 색상과 대비">
+        {colorRoles.map((color) => (
+          <li>
+            <span class="design-system-swatch" style={`--swatch: var(${color.token})`} aria-hidden="true"></span>
+            <strong>{color.name}</strong>
+            <code>{color.token}</code>
+            <span>{color.value}</span>
+            <small>{color.contrast}</small>
+          </li>
+        ))}
+      </ul>
+      <div class="design-system-foundation-grid">
+        <section aria-labelledby="type-scale-title">
+          <h3 id="type-scale-title">Type scale</h3>
+          <p class="design-system-display">검증 가능한 실행</p>
+          <p class="design-system-heading">Human Utility Protocol</p>
+          <p>한국어 본문은 Noto Sans KR, 영문과 표 숫자는 Inter를 사용합니다.</p>
+          <p class="latin tabular">Base · Native USDC · 10,000,000,000 IROA</p>
+        </section>
+        <section aria-labelledby="spacing-scale-title">
+          <h3 id="spacing-scale-title">Spacing scale</h3>
+          <ol class="design-system-spacing">
+            {[4, 8, 16, 24, 32, 48].map((size) => <li><span style={`inline-size:${size}px`}></span><code>{size}px</code></li>)}
+          </ol>
+        </section>
+      </div>
+    </section>
+
+    <section class="design-system-section design-system-section--soft" aria-labelledby="primitives-title">
+      <div class="container">
+        <SectionIntro eyebrow="02 · COMPONENT LAYER" title="Primitives" lead="공개 화면에서 사용하는 실제 action, icon, focus와 native disclosure 표면입니다." id="primitives-title" />
+        <div class="design-system-actions" aria-label="Action variants">
+          <ButtonLink href="#protocol-patterns">Primary action</ButtonLink>
+          <ButtonLink href="/whitepaper" variant="secondary">Secondary action</ButtonLink>
+          <ButtonLink href="#status" variant="quiet">Quiet action</ButtonLink>
+        </div>
+        <ul class="design-system-icons" aria-label="아이콘 패밀리">
+          {iconSamples.map(({ label, Icon }) => <li><Icon aria-hidden="true" size={24} strokeWidth={1.8} /><span>{label}</span></li>)}
+        </ul>
+        <details class="design-system-disclosure">
+          <summary>Native disclosure 상태 보기</summary>
+          <p>핵심 정보는 클라이언트 JavaScript 없이도 읽고 조작할 수 있습니다.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="status" class="design-system-section container" aria-labelledby="status-title">
+      <SectionIntro eyebrow="03 · TRUTH MODEL" title="Status" lead="현재 사실과 다음·계획·검증·연구 상태를 같은 어휘로 구분합니다." id="status-title" />
+      <ul class="design-system-statuses" aria-label="공개 상태 전체">
+        {statuses.map(([status, label]) => <li><StatusBadge status={status} label={label} /></li>)}
+      </ul>
+    </section>
+
+    <section id="protocol-patterns" class="design-system-section design-system-section--dark" aria-labelledby="protocol-patterns-title">
+      <div class="container">
+        <SectionIntro eyebrow="04 · IROA LAYER" title="Protocol Patterns" lead="요청, Task Capsule, Node, 증빙, 정산과 프라이버시 경계를 실제 프로덕션 패턴으로 렌더링합니다." id="protocol-patterns-title" />
+        <ProtocolPath stages={PROTOCOL_STAGES} />
+        <PrivacyBoundary boundary={PRIVACY_BOUNDARY} />
+      </div>
+    </section>
+
+    <section class="design-system-section container" aria-labelledby="whitepaper-reader-title">
+      <SectionIntro eyebrow="05 · DOCUMENT LAYER" title="Whitepaper Reader" lead="정규화된 한국어 기준본의 실제 문서 제어와 22장 목차를 사용합니다." id="whitepaper-reader-title" />
+      <div class="design-system-reader">
+        <DocumentControl publication={publication} />
+        <div class="design-system-reader__index">
+          <p class="section-kicker latin">DOCUMENT INDEX · 22 CHAPTERS</p>
+          <ChapterIndex chapters={publication.chapters} label="디자인 시스템 백서 전체 목차" />
+        </div>
+      </div>
+    </section>
+  </div>
+</SiteLayout>
+
+<style>
+  .design-system-page { --design-system-section-space: clamp(5rem, 9vw, 8rem); }
+  .design-system-hero { padding-block: clamp(4rem, 10vw, 8rem); }
+  .design-system-hero img { inline-size: min(11rem, 44vw); block-size: auto; margin-block-end: var(--space-10); }
+  .design-system-hero h1 { max-inline-size: 12ch; margin-block-end: var(--space-6); font-size: clamp(3rem, 8vw, 6.5rem); letter-spacing: -0.06em; word-break: keep-all; }
+  .design-system-hero > p:last-child { max-inline-size: 46rem; margin: 0; color: var(--color-text-muted); font-size: clamp(1rem, 2vw, 1.25rem); }
+  .design-system-section { padding-block: var(--design-system-section-space); }
+  .design-system-section > :global(.section-intro), .design-system-section > .container > :global(.section-intro) { margin-block-end: var(--space-10); }
+  .design-system-section--soft { background: var(--color-surface-soft); }
+  .design-system-section--dark { background: var(--color-dark-bg); }
+  .design-system-section--dark :global(.section-intro h2), .design-system-section--dark :global(.section-intro__lead) { color: var(--color-on-dark); }
+  .design-system-section--dark :global(.section-intro__eyebrow) { color: var(--brand-light-teal); }
+  .design-system-colors, .design-system-icons, .design-system-statuses, .design-system-spacing { padding: 0; margin: 0; list-style: none; }
+  .design-system-colors { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); }
+  .design-system-colors li { display: grid; min-inline-size: 0; gap: var(--space-1); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+  .design-system-colors code, .design-system-colors span, .design-system-colors small { overflow-wrap: anywhere; }
+  .design-system-colors small { color: var(--color-text-muted); }
+  .design-system-swatch { display: block; inline-size: 100%; block-size: 4rem; margin-block-end: var(--space-3); border: 1px solid var(--color-border); border-radius: calc(var(--radius-sm) / 2); background: var(--swatch); }
+  .design-system-foundation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); margin-block-start: var(--space-8); }
+  .design-system-foundation-grid > section { padding: var(--space-6); border-block-start: 2px solid var(--color-text); background: var(--color-surface); }
+  .design-system-display { margin-block: var(--space-6) var(--space-3); font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1.1; }
+  .design-system-heading { font-family: var(--font-latin); font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 700; }
+  .design-system-spacing { display: grid; gap: var(--space-3); margin-block-start: var(--space-6); }
+  .design-system-spacing li { display: grid; grid-template-columns: minmax(3rem, 1fr) auto; align-items: center; gap: var(--space-4); }
+  .design-system-spacing span { block-size: var(--space-3); background: var(--color-action); }
+  .design-system-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .design-system-icons { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); margin-block-start: var(--space-8); }
+  .design-system-icons li { display: grid; min-block-size: 7rem; place-items: center; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+  .design-system-icons :global(svg) { color: var(--color-verified); }
+  .design-system-disclosure { max-inline-size: 42rem; margin-block-start: var(--space-8); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+  .design-system-disclosure summary { display: flex; min-block-size: var(--control-min); align-items: center; padding: var(--space-3) var(--space-4); cursor: pointer; font-weight: 700; }
+  .design-system-disclosure p { padding: 0 var(--space-4) var(--space-4); margin: 0; color: var(--color-text-muted); }
+  .design-system-statuses { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); }
+  .design-system-statuses li { display: flex; min-block-size: 7rem; align-items: center; padding: var(--space-5); border-block-start: 2px solid var(--color-text); background: var(--color-surface); }
+  .design-system-section--dark :global(.protocol-path), .design-system-section--dark :global(.privacy-boundary) { box-shadow: none; }
+  .design-system-reader { display: grid; grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr); gap: var(--space-6); align-items: start; }
+  .design-system-reader__index { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-soft); }
+  .design-system-reader__index > p { padding: var(--space-5); margin: 0; border-block-end: 1px solid var(--color-border); }
+  .design-system-reader__index :global(.whitepaper-chapter-index) { max-block-size: 35rem; overflow-y: auto; padding-block: var(--space-2); }
+  @media (max-width: 63.99rem) {
+    .design-system-colors { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .design-system-statuses, .design-system-icons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .design-system-reader { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 47.99rem) {
+    .design-system-colors, .design-system-foundation-grid, .design-system-statuses, .design-system-icons { grid-template-columns: 1fr; }
+    .design-system-actions > * { flex: 1 1 100%; }
+    .design-system-section--dark :global(.protocol-path), .design-system-section--dark :global(.privacy-boundary) { padding: var(--space-4); }
+  }
+</style>

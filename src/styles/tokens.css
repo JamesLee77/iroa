@@ -15,6 +15,7 @@
   --color-action: var(--brand-coral);
   --color-on-action: var(--brand-navy);
   --color-verified: var(--brand-teal);
+  --color-verified-text: #2d6f69;
   --color-settlement: #246fd4;
   --color-border: #d9dee5;
   --color-focus: var(--brand-navy);

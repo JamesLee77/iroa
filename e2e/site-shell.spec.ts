@@ -101,3 +101,21 @@ test('applies the reduced-motion document treatment', async ({ page }) => {
   expect(motion.scrollBehavior).toBe('auto');
   expect(motion.transitionMilliseconds).toBeLessThanOrEqual(0.01);
 });
+
+test('moves visible focus from the skip link to the main content', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: '본문으로 바로가기' });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toHaveCSS('outline-style', 'solid');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('main')).toBeFocused();
+});
+
+test('serves approved brand discovery icons without 404 responses', async ({ request }) => {
+  for (const asset of ['/favicon.ico', '/favicon.svg', '/apple-touch-icon.png']) {
+    const response = await request.get(asset);
+    expect(response.status(), asset).toBe(200);
+    expect((await response.body()).byteLength, asset).toBeGreaterThan(0);
+  }
+});

@@ -244,15 +244,28 @@ _WORKSPACE_PYTHON = Path(
 )
 _AUTHORITATIVE_SOFFICE = Path("/opt/homebrew/bin/soffice")
 _AUTHORITATIVE_PDF_PRODUCER = "LibreOffice 26.2.5.2 (AARCH64)"
-_PACKAGED_DOCX_RENDERER = Path(
-    "/Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/"
-    "documents/render_docx.py"
-)
-_A11Y_AUDIT = Path(
-    "/Users/hyunsuklee/.codex/plugins/cache/openai-primary-runtime/documents/26.826.11250/skills/"
-    "documents/scripts/a11y_audit.py"
-)
 _A11Y_TOOL_SHA256 = "f79d0c4a9c95bee33c40a9cffffc2132ee8f040060c762e8d77b93b887307c5d"
+
+
+def _discover_packaged_document_tools() -> tuple[Path, Path]:
+    codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+    documents_root = codex_home / "plugins/cache/openai-primary-runtime/documents"
+    matches: list[tuple[Path, Path]] = []
+    for runtime in sorted(documents_root.glob("*/skills/documents")):
+        renderer = runtime / "render_docx.py"
+        a11y_audit = runtime / "scripts/a11y_audit.py"
+        if renderer.is_file() and a11y_audit.is_file() and _digest(a11y_audit) == _A11Y_TOOL_SHA256:
+            matches.append((renderer, a11y_audit))
+    if len(matches) != 1:
+        versions = [str(renderer.parents[2].name) for renderer, _ in matches]
+        raise RuntimeError(
+            "expected exactly one checksum-bound documents runtime; "
+            f"found {len(matches)} supported matches: {versions}"
+        )
+    return matches[0]
+
+
+_PACKAGED_DOCX_RENDERER, _A11Y_AUDIT = _discover_packaged_document_tools()
 _PLATFORM_ICON_BACKGROUND = (22, 38, 61)
 
 
@@ -634,6 +647,12 @@ def _assert_packaged_renderer_pdf_compatibility(
 
 
 class BrandContractTest(unittest.TestCase):
+    def test_packaged_document_tools_resolve_from_one_installed_runtime(self):
+        self.assertTrue(_PACKAGED_DOCX_RENDERER.is_file(), _PACKAGED_DOCX_RENDERER)
+        self.assertTrue(_A11Y_AUDIT.is_file(), _A11Y_AUDIT)
+        self.assertEqual(_PACKAGED_DOCX_RENDERER.parent, _A11Y_AUDIT.parent.parent)
+        self.assertEqual(_digest(_A11Y_AUDIT), _A11Y_TOOL_SHA256)
+
     def test_bi_guide_has_v1_contract(self):
         guide = Path("docs/brand/IROA_BI_GUIDE_KO.md").read_text(encoding="utf-8")
         for required in (

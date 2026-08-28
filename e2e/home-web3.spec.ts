@@ -181,6 +181,7 @@ test('keeps every desktop protocol detail inside the Network Atlas surface', asy
     return details;
   });
 
+  expect(geometry).toHaveLength(stageLabels.length);
   expect(
     geometry.every(({ bottom, surfaceBottom }) => bottom <= surfaceBottom + 1),
     JSON.stringify(geometry),
@@ -208,10 +209,30 @@ test('desktop protocol navigation clears the sticky header without overflow', as
   await expectNoHorizontalOverflow(page);
 });
 
-for (const width of [375, 768, 1024]) {
+for (const width of [375, 768, 1024, 1440]) {
   test(`protocol sample reflows without horizontal overflow at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/');
     await expectNoHorizontalOverflow(page);
   });
 }
+
+test('keeps the homepage core path usable without client JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 375, height: 812 } });
+  const page = await context.newPage();
+  await page.goto('/');
+
+  await expect(page.getByRole('heading', { level: 1, name: '현실 세계를 위한 검증 가능한 실행 네트워크.' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'IROA 프로토콜 경로' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '웹 백서 읽기', exact: true }).first()).toHaveAttribute('href', '/whitepaper');
+  await context.close();
+});
+
+test('keeps homepage content and controls visible at a 200 percent zoom-equivalent width', async ({ page }) => {
+  await page.setViewportSize({ width: 720, height: 900 });
+  await page.goto('/');
+
+  await expect(page.getByRole('heading', { level: 1, name: '현실 세계를 위한 검증 가능한 실행 네트워크.' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '네트워크 살펴보기', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(720);
+});

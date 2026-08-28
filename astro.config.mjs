@@ -8,6 +8,9 @@ export default defineConfig({
   integrations: [
     react(),
     sitemap({
+      filter(page) {
+        return new URL(page).pathname.replace(/\/+$/, '') !== '/design-system';
+      },
       serialize(item) {
         const url = new URL(item.url);
         if (url.pathname !== '/') url.pathname = url.pathname.replace(/\/+$/, '');
