@@ -20,8 +20,6 @@ export interface HeroContent {
   secondaryCta: NavigationItem;
   facts: HeroFact[];
   trust: string[];
-  imageUrl: string;
-  imageAlt: string;
 }
 
 export interface LifecycleStep {
@@ -40,8 +38,6 @@ export interface ScenarioStory {
   description: string;
   flow: string[];
   status: PublicStatus;
-  imageUrl: string;
-  imageAlt: string;
 }
 
 export interface InstitutionModel {
@@ -173,6 +169,5 @@ export interface HomepageContent {
   assets: {
     wordmarkUrl: string;
     whitepaperUrl: string;
-    photoManifestUrl: string;
   };
 }

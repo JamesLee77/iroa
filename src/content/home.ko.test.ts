@@ -1,9 +1,39 @@
 import { describe, expect, it } from 'vitest';
+import { build } from 'vite';
 import { homeKo } from './home.ko';
 
 const serializedContent = JSON.stringify(homeKo);
 
 describe('approved Korean homepage content', () => {
+  it('does not emit legacy photo or manifest sources from the homepage content module', async () => {
+    const output = await build({
+      configFile: false,
+      logLevel: 'silent',
+      build: {
+        write: false,
+        rollupOptions: {
+          input: new URL('./home.ko.ts', import.meta.url).pathname,
+        },
+      },
+    });
+    if (!Array.isArray(output) && !('output' in output)) {
+      throw new Error('focused homepage asset build unexpectedly entered watch mode');
+    }
+    const emittedNames = (Array.isArray(output) ? output : [output])
+      .flatMap(({ output: bundleOutput }) => bundleOutput)
+      .map(({ fileName }) => fileName);
+
+    for (const forbiddenSourceName of [
+      'cover-conversation-6248760',
+      'telehealth-call-8376171',
+      'PHOTO-MANIFEST',
+    ]) {
+      expect(emittedNames).not.toEqual(expect.arrayContaining([
+        expect.stringContaining(forbiddenSourceName),
+      ]));
+    }
+  });
+
   it('keeps protocol capabilities explicitly statused', () => {
     expect(homeKo.hero.title).toBe('현실 세계를 위한 검증 가능한 실행 네트워크.');
     expect(homeKo.protocol.planes.map(({ id }) => id)).toEqual([

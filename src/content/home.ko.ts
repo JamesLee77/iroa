@@ -1,7 +1,4 @@
 import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
-import coverConversationUrl from '../../docs/brand/assets/photos/cover-conversation-6248760.jpg?url';
-import telehealthCallUrl from '../../docs/brand/assets/photos/telehealth-call-8376171.jpg?url';
-import photoManifestUrl from '../../docs/brand/assets/photos/PHOTO-MANIFEST.md?url';
 import whitepaperUrl from '../../docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf';
 import { PRIVACY_BOUNDARY } from '../lib/protocol/flow';
 import type { HomepageContent } from '../types/home';
@@ -28,8 +25,6 @@ export const homeKo: HomepageContent = {
       { label: 'IROA Rewards · 검증 중', status: 'validation' },
     ],
     trust: ['사용자 승인 중심', '개인정보 최소화', '결과 검증'],
-    imageUrl: coverConversationUrl,
-    imageAlt: 'IROA Network Atlas를 설명하는 추상 네트워크 표면',
   },
   lifecycle: [
     { title: '요청', description: '말·글·터치로 원하는 결과를 표현합니다.' },
@@ -52,8 +47,6 @@ export const homeKo: HomepageContent = {
       description: '제한된 요청 범위와 승인 지점을 검증하는 방향입니다.',
       flow: ['요청 확인', '사용자 승인', '제한된 실행', '외부 결과 확인'],
       status: 'validation',
-      imageUrl: telehealthCallUrl,
-      imageAlt: '화상으로 대화하는 사용자와 의료진',
     },
   ],
   institutions: [
@@ -225,6 +218,5 @@ export const homeKo: HomepageContent = {
   assets: {
     wordmarkUrl,
     whitepaperUrl,
-    photoManifestUrl,
   },
 };
