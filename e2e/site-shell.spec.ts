@@ -15,6 +15,16 @@ test('serves the shared IROA site shell', async ({ page }) => {
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'IROA.AI 홈', exact: true })).toBeVisible();
 
+  const imageState = await page.locator('img').evaluateAll((images) => ({
+    total: images.length,
+    broken: images.filter(
+      (image) =>
+        !(image as HTMLImageElement).complete || (image as HTMLImageElement).naturalWidth === 0,
+    ).length,
+  }));
+  expect(imageState.total).toBeGreaterThan(0);
+  expect(imageState.broken).toBe(0);
+
   const primaryNavigation = page.getByRole('navigation', { name: '주요 메뉴' });
   await expect(primaryNavigation).toBeVisible();
   for (const item of navigationItems) {
@@ -65,4 +75,30 @@ test.describe('mobile shell without client JavaScript', () => {
       ).toHaveAttribute('href', item.href);
     }
   });
+});
+
+test('applies the reduced-motion document treatment', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+
+  const motion = await page.evaluate(() => {
+    const toMilliseconds = (duration: string) => {
+      const value = Number.parseFloat(duration);
+      return duration.endsWith('ms') ? value : value * 1000;
+    };
+    const documentStyle = getComputedStyle(document.documentElement);
+    const transitionStyle = getComputedStyle(
+      document.querySelector('.site-header__summary-chevron')!,
+    );
+
+    return {
+      scrollBehavior: documentStyle.scrollBehavior,
+      transitionMilliseconds: Math.max(
+        ...transitionStyle.transitionDuration.split(',').map(toMilliseconds),
+      ),
+    };
+  });
+
+  expect(motion.scrollBehavior).toBe('auto');
+  expect(motion.transitionMilliseconds).toBeLessThanOrEqual(0.01);
 });

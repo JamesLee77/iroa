@@ -8,6 +8,12 @@ const stageLabels = [
   'Base Settlement',
 ] as const;
 
+async function expectNoHorizontalOverflow(page: import('@playwright/test').Page) {
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).toBe(true);
+}
+
 test('exposes the ordered IROA protocol path and its truthful public boundaries', async ({
   page,
 }) => {
@@ -52,3 +58,32 @@ test('keeps every desktop protocol detail inside the Network Atlas surface', asy
     JSON.stringify(geometry),
   ).toBe(true);
 });
+
+test('desktop protocol navigation clears the sticky header without overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+
+  await page
+    .getByRole('navigation', { name: '주요 메뉴' })
+    .getByRole('link', { name: '프로토콜', exact: true })
+    .click();
+
+  const protocol = page.getByRole('region', { name: 'IROA 프로토콜 경로' });
+  await expect(protocol).toBeInViewport();
+  await expect.poll(async () =>
+    page.evaluate(() => {
+      const header = document.querySelector('.site-header')!.getBoundingClientRect();
+      const heading = document.querySelector('#protocol h2')!.getBoundingClientRect();
+      return heading.top >= header.bottom;
+    }),
+  ).toBe(true);
+  await expectNoHorizontalOverflow(page);
+});
+
+for (const width of [375, 768, 1024]) {
+  test(`protocol sample reflows without horizontal overflow at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto('/');
+    await expectNoHorizontalOverflow(page);
+  });
+}
