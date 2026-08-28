@@ -24,7 +24,7 @@
   padding-block: clamp(4.5rem, 8vw, 7.5rem) var(--space-10);
 }
 
-.home-hero__copy { align-self: center; }
+.home-hero__copy { grid-column: 1; grid-row: 1; align-self: center; }
 
 .home-hero__eyebrow,
 .network-atlas__label {
@@ -84,6 +84,8 @@
 
 .network-atlas {
   position: relative;
+  grid-column: 2;
+  grid-row: 1;
   min-block-size: 38rem;
   padding: var(--space-7);
   overflow: hidden;
@@ -162,7 +164,7 @@
 
 .network-atlas__path li:first-child .network-atlas__node::before,
 .network-atlas__path li:nth-child(4) .network-atlas__node::before { border-color: var(--color-action); }
-.network-atlas__path li:last-child .network-atlas__node::before { border-color: #2879e8; background: #2879e8; }
+.network-atlas__path li:last-child .network-atlas__node::before { border-color: var(--color-settlement); background: var(--color-settlement); }
 .network-atlas__node small { color: var(--color-text-muted); font-size: 0.7rem; }
 
 .network-atlas__planes {
@@ -200,6 +202,7 @@
 
 .home-hero__facts {
   grid-column: 1 / -1;
+  grid-row: 2;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-block-start: var(--space-6);
@@ -209,6 +212,13 @@
 .home-hero__facts li { min-inline-size: 0; padding: var(--space-5); }
 .home-hero__facts li + li { border-inline-start: 1px solid var(--color-border); }
 .home-hero__facts .status-badge { font-family: var(--font-latin); font-size: 0.82rem; }
+.home-hero__fact-status {
+  display: block;
+  margin-block-start: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
 
 .protocol-planes__heading {
   display: grid;
@@ -331,6 +341,9 @@
 
 @media (max-width: 63.99rem) {
   .home-hero { grid-template-columns: 1fr; }
+  .home-hero__copy,
+  .home-hero__facts,
+  .network-atlas { grid-column: 1; grid-row: auto; }
   .network-atlas { min-block-size: 34rem; }
   .home-hero__facts,
   .protocol-planes__rail,

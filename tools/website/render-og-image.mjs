@@ -34,6 +34,7 @@ try {
         <meta charset="utf-8" />
         <style>
           @font-face { font-family: IROA; src: url('${fontUrl}') format('opentype'); font-weight: 700; }
+          :root { --color-settlement: #246fd4; }
           * { box-sizing: border-box; }
           html, body { width: 1200px; height: 630px; margin: 0; overflow: hidden; }
           body { background: #f9fafb; color: #16263d; font-family: IROA, Arial, sans-serif; }
@@ -64,12 +65,12 @@ try {
           .node { display: flex; min-height: 52px; align-items: center; gap: 10px; padding: 0 18px; border: 1px solid #d9dee5; border-radius: 999px; background: #fff; box-shadow: 0 12px 28px rgba(22,38,61,.1); font: 700 13px Arial, sans-serif; white-space: nowrap; }
           .node::before { width: 10px; height: 10px; border: 2px solid #3d8b83; border-radius: 50%; content: ''; }
           .path li:first-child .node::before, .path li:nth-child(4) .node::before { border-color: #f06d5e; }
-          .path li:last-child .node::before { border-color: #2879e8; background: #2879e8; }
+          .path li:last-child .node::before { border-color: var(--color-settlement); background: var(--color-settlement); }
           .node small { color: #526174; font-size: 10px; }
           .planes { position: absolute; z-index: 3; top: 78px; right: 22px; bottom: 42px; display: flex; width: 142px; flex-direction: column; justify-content: space-between; }
           .planes li { display: grid; grid-template-columns: 20px 1fr; gap: 6px; font: 700 9px/1.35 Arial, sans-serif; text-transform: uppercase; }
           .planes b { color: #3d8b83; }
-          .settlement { color: #2879e8; }
+          .settlement { color: var(--color-settlement); }
         </style>
       </head>
       <body>
@@ -88,7 +89,7 @@ try {
               <li><b class="index">02</b><span class="node">Task Capsule</span></li>
               <li><b class="index">03</b><span class="node">N2 Verified Node</span></li>
               <li><b class="index">04</b><span class="node">Proof Receipt</span></li>
-              <li><b class="index">05</b><span class="node settlement">Base Settlement <small>Native USDC</small></span></li>
+              <li><b class="index">05</b><span class="node settlement">Base Settlement · 계획 <small>Native USDC · 계획</small></span></li>
             </ol>
             <ol class="planes">
               <li><b>01</b><span>Interaction Plane</span></li>

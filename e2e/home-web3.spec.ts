@@ -50,6 +50,11 @@ test('composes the complete Network Atlas homepage with truthful actions and sta
   await expect(hero.getByRole('link', { name: '웹 백서 읽기', exact: true })).toHaveCount(1);
   await expect(page.locator('#top').getByText('Base Primary Network', { exact: true })).toBeVisible();
   await expect(page.locator('#top').getByText('Native USDC Settlement', { exact: true })).toBeVisible();
+  for (const fact of ['Base Primary Network', 'Native USDC Settlement']) {
+    await expect(
+      hero.getByRole('listitem').filter({ hasText: fact }).getByText('계획', { exact: true }),
+    ).toBeVisible();
+  }
   await expect(page.locator('#top').getByText('Personal Data Off-chain', { exact: true })).toBeVisible();
   await expect(page.locator('#top').getByText('IROA Rewards · 검증 중', { exact: true })).toBeVisible();
 
@@ -61,6 +66,61 @@ test('composes the complete Network Atlas homepage with truthful actions and sta
     'content',
     /\/og\/iroa-network-atlas\.png$/,
   );
+});
+
+test('exposes the hero atlas stages and planes to accessibility APIs', async ({ page }) => {
+  await page.goto('/');
+
+  const atlas = page.getByRole('region', { name: 'Network Atlas 실행 경로' });
+  const atlasStages = atlas.getByRole('list', { name: '실행 경로 단계' }).getByRole('listitem');
+  await expect(atlasStages).toHaveCount(5);
+  for (const [index, label] of [
+    'Voice Request',
+    'Task Capsule',
+    'Verified Node',
+    'Proof Receipt',
+    'Base Settlement',
+  ].entries()) {
+    await expect(atlasStages.nth(index).getByText(label, { exact: true })).toBeVisible();
+  }
+  await expect(atlasStages.last().getByText('Native USDC · 계획', { exact: true })).toBeVisible();
+  await expect(
+    atlas.getByRole('list', { name: '프로토콜 영역' }).getByRole('listitem'),
+  ).toHaveCount(4);
+});
+
+test('uses the semantic settlement color for the Base terminal', async ({ page }) => {
+  await page.goto('/');
+
+  const colors = await page
+    .locator('#top [data-stage="base-settlement"] .network-atlas__node')
+    .evaluate((node) => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--color-settlement)';
+      document.body.append(probe);
+      const token = getComputedStyle(probe).color;
+      probe.remove();
+      return {
+        marker: getComputedStyle(node, '::before').backgroundColor,
+        token,
+      };
+    });
+
+  expect(colors.token).not.toBe('');
+  expect(colors.marker).toBe(colors.token);
+});
+
+test('keeps planned Base and Native USDC status in the mobile first viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 1000 });
+  await page.goto('/');
+
+  for (const fact of ['Base Primary Network', 'Native USDC Settlement']) {
+    await expect(
+      page.locator('#top .home-hero__facts li').filter({ hasText: fact }).getByText('계획', {
+        exact: true,
+      }),
+    ).toBeInViewport();
+  }
 });
 
 test('keeps institutional contact honest until an approved channel exists', async ({ page }) => {

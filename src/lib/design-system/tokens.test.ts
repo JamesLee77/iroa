@@ -11,6 +11,7 @@ describe('IROA semantic tokens', () => {
     '--color-action',
     '--color-on-action',
     '--color-verified',
+    '--color-settlement',
     '--color-focus',
     '--control-min',
   ])('defines %s', (token) => expect(css).toContain(`${token}:`));

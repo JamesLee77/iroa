@@ -1,5 +1,6 @@
 ---
 import { ArrowDown, BookOpen, ShieldCheck } from 'lucide-astro';
+import { getStatusLabel } from '../../lib/content/status';
 import { PROTOCOL_STAGES } from '../../lib/protocol/flow';
 import type { HeroContent } from '../../types/home';
 import ButtonLink from '../primitives/ButtonLink.astro';
@@ -30,17 +31,21 @@ const planeLabels = ['Interaction', 'Control', 'Execution', 'Settlement'] as con
     </ul>
   </div>
 
-  <div class="network-atlas" role="img" aria-label="요청부터 Base 정산까지 이어지는 Network Atlas 실행 경로">
+  <ul class="home-hero__facts" aria-label="핵심 공개 상태">
+    {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} />{fact.status === 'planned' && <span class="home-hero__fact-status">{getStatusLabel(fact.status)}</span>}</li>)}
+  </ul>
+
+  <section class="network-atlas" aria-label="Network Atlas 실행 경로">
     <p class="network-atlas__label latin">VERIFIABLE EXECUTION PATH</p>
-    <ol class="network-atlas__path">
+    <ol class="network-atlas__path" aria-label="실행 경로 단계">
       {
         PROTOCOL_STAGES.map((stage, index) => (
           <li data-stage={stage.id}>
             <span class="network-atlas__index tabular">{String(index + 1).padStart(2, '0')}</span>
             <span class="network-atlas__node">
-              <strong class="latin">{stage.label}</strong>
+              <strong class="latin">{stage.id === 'request' ? 'Voice Request' : stage.label}</strong>
               {stage.id === 'verified-node' && <small class="latin">N2</small>}
-              {stage.id === 'base-settlement' && <small class="latin">Native USDC</small>}
+              {stage.id === 'base-settlement' && <small class="latin">Native USDC · 계획</small>}
             </span>
           </li>
         ))
@@ -49,9 +54,5 @@ const planeLabels = ['Interaction', 'Control', 'Execution', 'Settlement'] as con
     <ol class="network-atlas__planes" aria-label="프로토콜 영역">
       {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
     </ol>
-  </div>
-
-  <ul class="home-hero__facts" aria-label="핵심 공개 상태">
-    {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} /></li>)}
-  </ul>
+  </section>
 </section>
