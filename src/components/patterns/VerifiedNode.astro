@@ -1,0 +1,20 @@
+---
+import type { PublicStatus } from '../../lib/content/status';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  level: 'N0' | 'N1' | 'N2' | 'N3' | 'N4';
+  status: PublicStatus;
+  description: string;
+}
+
+const { level, status, description } = Astro.props;
+---
+
+<section class="protocol-pattern verified-node" aria-label="Verified Node 상세">
+  <div class="protocol-pattern__heading-row">
+    <p class="protocol-pattern__identifier latin">{level} Node</p>
+    <StatusBadge status={status} />
+  </div>
+  <p class="protocol-pattern__description">{description}</p>
+</section>

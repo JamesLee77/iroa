@@ -1,0 +1,39 @@
+---
+import type { PublicStatus } from '../../lib/content/status';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  purpose: string;
+  permission: string;
+  dataClass: 'D0' | 'D1' | 'D2' | 'D3' | 'D4';
+  duration: string;
+  status: PublicStatus;
+}
+
+const { purpose, permission, dataClass, duration, status } = Astro.props;
+---
+
+<section class="protocol-pattern task-capsule" aria-label="Task Capsule 상세">
+  <dl class="protocol-definition-list">
+    <div>
+      <dt>목적</dt>
+      <dd>{purpose}</dd>
+    </div>
+    <div>
+      <dt>권한</dt>
+      <dd>{permission}</dd>
+    </div>
+    <div>
+      <dt>데이터 등급</dt>
+      <dd class="latin tabular">{dataClass}</dd>
+    </div>
+    <div>
+      <dt>유효 시간</dt>
+      <dd>{duration}</dd>
+    </div>
+    <div>
+      <dt>공개 상태</dt>
+      <dd><StatusBadge status={status} /></dd>
+    </div>
+  </dl>
+</section>

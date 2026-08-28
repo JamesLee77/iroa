@@ -1,0 +1,30 @@
+---
+import type { PublicStatus } from '../../lib/content/status';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  network: 'Base';
+  asset: 'Circle Native USDC';
+  status: PublicStatus;
+}
+
+const { network, asset, status } = Astro.props;
+---
+
+<section class="protocol-pattern settlement-record" aria-label="Base Settlement 상세">
+  <dl class="protocol-definition-list">
+    <div>
+      <dt>네트워크</dt>
+      <dd class="latin">{network}</dd>
+    </div>
+    <div>
+      <dt>정산 자산</dt>
+      <dd class="latin">{asset}</dd>
+    </div>
+    <div>
+      <dt>공개 상태</dt>
+      <dd><StatusBadge status={status} /></dd>
+    </div>
+  </dl>
+  <p class="protocol-pattern__note">배포·법률·보안 검토 이후의 B2B 정산 방향입니다.</p>
+</section>

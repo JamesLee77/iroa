@@ -1,0 +1,31 @@
+---
+interface Props {
+  result: string;
+  proofId: string;
+  policyVersion: string;
+  disputeState: string;
+}
+
+const { result, proofId, policyVersion, disputeState } = Astro.props;
+---
+
+<section class="protocol-pattern proof-receipt" aria-label="Proof Receipt 상세">
+  <dl class="protocol-definition-list">
+    <div>
+      <dt>결과</dt>
+      <dd>{result}</dd>
+    </div>
+    <div>
+      <dt>증빙 ID</dt>
+      <dd>{proofId}</dd>
+    </div>
+    <div>
+      <dt>정책 기준</dt>
+      <dd>{policyVersion}</dd>
+    </div>
+    <div>
+      <dt>분쟁 상태</dt>
+      <dd>{disputeState}</dd>
+    </div>
+  </dl>
+</section>

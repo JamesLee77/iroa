@@ -1,0 +1,43 @@
+---
+import { Database, LockKeyhole } from 'lucide-astro';
+import type { PRIVACY_BOUNDARY } from '../../lib/protocol/flow';
+
+interface Props {
+  boundary: typeof PRIVACY_BOUNDARY;
+}
+
+const { boundary } = Astro.props;
+---
+
+<section class="privacy-boundary" aria-labelledby="privacy-boundary-title">
+  <div class="privacy-boundary__intro">
+    <p class="privacy-boundary__eyebrow latin">Privacy Boundary</p>
+    <h2 id="privacy-boundary-title">원문이 아니라 최소 증빙만 남깁니다.</h2>
+    <p class="privacy-boundary__statement">{boundary.statement}</p>
+  </div>
+
+  <dl class="privacy-boundary__zones">
+    <div class="privacy-boundary__zone">
+      <dt>
+        <Database aria-hidden="true" size={22} strokeWidth={1.8} />
+        온체인 최소 증빙
+      </dt>
+      <dd>
+        <ul>
+          {boundary.onChain.map((item) => <li>{item}</li>)}
+        </ul>
+      </dd>
+    </div>
+    <div class="privacy-boundary__zone privacy-boundary__zone--protected">
+      <dt>
+        <LockKeyhole aria-hidden="true" size={22} strokeWidth={1.8} />
+        오프체인 보호 영역
+      </dt>
+      <dd>
+        <ul>
+          {boundary.offChain.map((item) => <li>{item}</li>)}
+        </ul>
+      </dd>
+    </div>
+  </dl>
+</section>

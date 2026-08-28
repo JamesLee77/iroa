@@ -1,5 +1,8 @@
 ---
+import PrivacyBoundary from '../components/patterns/PrivacyBoundary.astro';
+import ProtocolPath from '../components/patterns/ProtocolPath.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
+import { PRIVACY_BOUNDARY, PROTOCOL_STAGES } from '../lib/protocol/flow';
 ---
 
 <SiteLayout
@@ -7,5 +10,9 @@ import SiteLayout from '../layouts/SiteLayout.astro';
   description="현실 세계를 위한 검증 가능한 실행 네트워크, IROA.AI"
   canonicalPath="/"
 >
-  <h1>현실 세계를 위한 검증 가능한 실행 네트워크.</h1>
+  <div class="homepage-pattern-sample container">
+    <h1>현실 세계를 위한 검증 가능한 실행 네트워크.</h1>
+    <ProtocolPath stages={PROTOCOL_STAGES} />
+    <PrivacyBoundary boundary={PRIVACY_BOUNDARY} />
+  </div>
 </SiteLayout>
