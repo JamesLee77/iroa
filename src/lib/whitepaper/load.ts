@@ -237,16 +237,24 @@ function renderMarkdown(markdown: string, headings: WhitepaperHeading[], lazyIma
   let headingIndex = 0;
   const renderer = new Renderer();
   renderer.heading = ({ depth, tokens }: Tokens.Heading) => {
-    const heading = headings[headingIndex++];
     const content = renderer.parser.parseInline(tokens);
-    return heading ? `<h${depth} id="${heading.id}">${content}</h${depth}>\n` : `<h${depth}>${content}</h${depth}>\n`;
+    if (depth < 3) return `<h${depth}>${content}</h${depth}>\n`;
+    const heading = headings[headingIndex++];
+    if (!heading || heading.level !== depth) {
+      throw new Error(`whitepaper heading renderer mismatch at level ${depth}; expected lower heading ${headingIndex}`);
+    }
+    return `<h${depth} id="${heading.id}">${content}</h${depth}>\n`;
   };
   renderer.image = ({ href, title, text }: Tokens.Image) => {
     if (parseDestination(href).isExternal) return `<img src="${href}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
     return imageHtml(href, text, lazyImages, assets);
   };
   renderer.html = ({ text }: Tokens.HTML) => rewriteRawHtmlImages(text, assets, lazyImages);
-  return sanitize(marked.parse(markdown, { gfm: true, renderer }) as string);
+  const rendered = marked.parse(markdown, { gfm: true, renderer }) as string;
+  if (headingIndex !== headings.length) {
+    throw new Error(`whitepaper heading renderer did not emit ${headings.length - headingIndex} collected lower heading IDs`);
+  }
+  return sanitize(rendered);
 }
 
 export function validateNavigation(chapters: WhitepaperChapter[]) {
@@ -305,7 +313,8 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
     }
   }
   validateNavigation(chapters);
-  return { metadata, preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets), chapters };
+  const preambleWithoutExplicitAnchors = preamble.replace(LOWER_HEADING_PATTERN, (_line, hashes: string, rawTitle: string) => `${hashes} ${textWithoutExplicitAnchor(rawTitle)}`);
+  return { metadata, preambleHtml: renderMarkdown(preambleWithoutExplicitAnchors, preambleHeadings, false, assets), chapters };
 }
 
 export async function loadWhitepaper(): Promise<WhitepaperPublication> {
