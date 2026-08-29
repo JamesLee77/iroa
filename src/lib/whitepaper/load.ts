@@ -19,6 +19,7 @@ import {
   type WhitepaperChapter,
   type WhitepaperHeading,
   type WhitepaperMetadata,
+  type WhitepaperLocale,
   type WhitepaperPublication,
 } from './types';
 import {
@@ -28,8 +29,18 @@ import {
   scanHtmlStartTags,
 } from '../../../tools/website/whitepaper-inventory.mjs';
 
-const SOURCE_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.md';
-const METADATA_PATH = 'docs/whitepaper/IROA_WHITEPAPER_KO.meta.json';
+const PUBLICATIONS = {
+  ko: {
+    sourcePath: 'docs/whitepaper/IROA_WHITEPAPER_KO.md',
+    metadataPath: 'docs/whitepaper/IROA_WHITEPAPER_KO.meta.json',
+    routeBase: '/whitepaper' as const,
+  },
+  en: {
+    sourcePath: 'docs/whitepaper/IROA_WHITEPAPER_EN.md',
+    metadataPath: 'docs/whitepaper/IROA_WHITEPAPER_EN.meta.json',
+    routeBase: '/en/whitepaper' as const,
+  },
+};
 const CHAPTER_TITLE_PATTERN = /^(\d+)\.\s+(.+)$/;
 const EXPLICIT_ANCHOR_PATTERN = /\s+\{#([A-Za-z][\w:.-]*)\}\s*$/;
 
@@ -156,16 +167,22 @@ function sourceScope(entry: WhitepaperInventoryEntry) {
   return entry.sourceContext.chapterSlug ?? 'preamble';
 }
 
-function whitepaperRouteScope(target: string, metadata: WhitepaperMetadata) {
-  if (target === '/whitepaper') return 'preamble';
-  return metadata.slugs.find((slug) => target === `/whitepaper/${slug}`);
+function whitepaperRouteScope(target: string, metadata: WhitepaperMetadata, routeBase: string) {
+  if (target === routeBase) return 'preamble';
+  return metadata.slugs.find((slug) => target === `${routeBase}/${slug}`);
 }
 
 function assertKnownFragment(fragment: string, scope: string, headingIdsByScope: Map<string, Set<string>>, message: string) {
   if (!headingIdsByScope.get(scope)?.has(fragment)) throw new Error(message);
 }
 
-function validateLinkInventory(inventory: WhitepaperInventory, metadata: WhitepaperMetadata, headingIdsByScope: Map<string, Set<string>>) {
+function validateLinkInventory(
+  inventory: WhitepaperInventory,
+  metadata: WhitepaperMetadata,
+  headingIdsByScope: Map<string, Set<string>>,
+  sourcePath: string,
+  routeBase: string,
+) {
   for (const entry of inventory.links) {
     const destination = parseDestination(entry.raw);
     if (destination.isExternal) continue;
@@ -177,7 +194,7 @@ function validateLinkInventory(inventory: WhitepaperInventory, metadata: Whitepa
       }
       continue;
     }
-    const destinationScope = destination.isRootRelative ? whitepaperRouteScope(destination.path, metadata) : undefined;
+    const destinationScope = destination.isRootRelative ? whitepaperRouteScope(destination.path, metadata, routeBase) : undefined;
     if (destinationScope) {
       if (destination.fragment) {
         const label = destinationScope === 'preamble' ? 'whitepaper preamble' : `chapter "${destinationScope}"`;
@@ -187,7 +204,7 @@ function validateLinkInventory(inventory: WhitepaperInventory, metadata: Whitepa
     }
     try {
       const resolvedLink = resolveRepositoryLink(entry);
-      if (destination.fragment && resolvedLink.repositoryPath === SOURCE_PATH) {
+      if (destination.fragment && resolvedLink.repositoryPath === sourcePath) {
         const scope = sourceScope(entry);
         const label = scope === 'preamble' ? 'whitepaper preamble' : `chapter ${entry.sourceContext.chapterNumber}`;
         assertKnownFragment(destination.fragment, scope, headingIdsByScope, `unknown document fragment "#${destination.fragment}" in ${label}`);
@@ -202,7 +219,7 @@ function validateTokenAllocation(chapters: ParsedChapter[]) {
   const tokenChapter = chapters.find(({ number }) => number === 16);
   if (!tokenChapter) throw new Error('chapter 16 token allocation table is missing or unparseable');
   const rows = [...tokenChapter.markdown.matchAll(/^\|\s*([^|]+?)\s*\|\s*\*?\*?([\d.]+)%\*?\*?\s*\|\s*\*?\*?([\d,]+)\*?\*?\s*\|/gm)]
-    .filter((match) => !match[1].includes('비율') && !match[1].includes('합계'));
+    .filter((match) => !/비율|합계|allocation|total/i.test(match[1]));
   if (rows.length === 0) throw new Error('chapter 16 token allocation table is missing or unparseable');
 
   const totalPercent = rows.reduce((sum, match) => sum + Number(match[2]), 0);
@@ -290,6 +307,7 @@ function renderMarkdown(
   lazyImages: boolean,
   assets: ReturnType<typeof resolveInventoryImages>,
   fallbackTableSubject: string,
+  locale: WhitepaperLocale = 'ko',
 ) {
   let headingIndex = 0;
   let currentSectionTitle = fallbackTableSubject;
@@ -312,9 +330,11 @@ function renderMarkdown(
   renderer.table = (token: Tokens.Table) => {
     const ordinal = (tableOrdinals.get(currentSectionTitle) ?? 0) + 1;
     tableOrdinals.set(currentSectionTitle, ordinal);
-    const subject = ordinal === 1 ? currentSectionTitle : `${currentSectionTitle} ${ordinal}번`;
-    const tableName = escapeAttribute(`${subject} 표`);
-    const regionName = escapeAttribute(`${subject} 표 스크롤 영역`);
+    const subject = ordinal === 1
+      ? currentSectionTitle
+      : (locale === 'en' ? `${currentSectionTitle} table ${ordinal}` : `${currentSectionTitle} ${ordinal}번`);
+    const tableName = escapeAttribute(locale === 'en' ? `${subject} table` : `${subject} 표`);
+    const regionName = escapeAttribute(locale === 'en' ? `Scrollable region for ${subject} table` : `${subject} 표 스크롤 영역`);
     rawImageContainerDepth += 1;
     let table: string;
     try {
@@ -355,7 +375,12 @@ export function validateNavigation(chapters: WhitepaperChapter[]) {
   }
 }
 
-export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata): WhitepaperPublication {
+export function parseWhitepaper(
+  markdown: string,
+  metadata: WhitepaperMetadata,
+  locale: WhitepaperLocale = 'ko',
+): WhitepaperPublication {
+  const publication = PUBLICATIONS[locale];
   assertMetadata(metadata);
   const { preamble, chapters: parsedChapters } = parseChapterBlocks(markdown);
   assertChapterOrder(parsedChapters);
@@ -380,7 +405,7 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
     links: inventories.flatMap(({ links }) => links),
     headings: inventories.flatMap(({ headings }) => headings),
   };
-  validateLinkInventory(inventory, metadata, headingIdsByScope);
+  validateLinkInventory(inventory, metadata, headingIdsByScope, publication.sourcePath, publication.routeBase);
   const assets = resolveInventoryImages(inventory);
   const chapters = parsedChapters.map((chapter, index): WhitepaperChapter => {
     return {
@@ -393,6 +418,7 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
         true,
         assets,
         `${chapter.number}. ${chapter.title}`,
+        locale,
       ),
       headings: chapterHeadings[index],
       previous: undefined,
@@ -412,15 +438,18 @@ export function parseWhitepaper(markdown: string, metadata: WhitepaperMetadata):
   validateNavigation(chapters);
   return {
     metadata,
-    preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets, '백서 개요'),
+    preambleHtml: renderMarkdown(preamble, preambleHeadings, false, assets, locale === 'en' ? 'Whitepaper overview' : '백서 개요', locale),
     chapters,
+    locale,
+    routeBase: publication.routeBase,
   };
 }
 
-export async function loadWhitepaper(): Promise<WhitepaperPublication> {
+export async function loadWhitepaper(locale: WhitepaperLocale = 'ko'): Promise<WhitepaperPublication> {
+  const publication = PUBLICATIONS[locale];
   const [markdown, metadataSource] = await Promise.all([
-    readFile(path.join(REPOSITORY_ROOT, SOURCE_PATH), 'utf8'),
-    readFile(path.join(REPOSITORY_ROOT, METADATA_PATH), 'utf8'),
+    readFile(path.join(REPOSITORY_ROOT, publication.sourcePath), 'utf8'),
+    readFile(path.join(REPOSITORY_ROOT, publication.metadataPath), 'utf8'),
   ]);
-  return parseWhitepaper(markdown, JSON.parse(metadataSource) as WhitepaperMetadata);
+  return parseWhitepaper(markdown, JSON.parse(metadataSource) as WhitepaperMetadata, locale);
 }

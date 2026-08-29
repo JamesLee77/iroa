@@ -5,7 +5,10 @@ import { parseDestination, parseWhitepaperInventory } from './whitepaper-invento
 
 const toolDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultProjectRoot = path.resolve(toolDirectory, '../..');
-const sourcePath = 'docs/whitepaper/IROA_WHITEPAPER_KO.md';
+const sources = [
+  { path: 'docs/whitepaper/IROA_WHITEPAPER_KO.md', optional: false },
+  { path: 'docs/whitepaper/IROA_WHITEPAPER_EN.md', optional: true },
+];
 
 function inside(boundary, candidate) {
   const relative = path.relative(boundary, candidate);
@@ -31,7 +34,7 @@ async function existingPathSafety(boundary, target) {
   }
 }
 
-async function resolveSourceAsset(rawPath, repositoryRoot) {
+async function resolveSourceAsset(rawPath, repositoryRoot, sourcePath) {
   const destination = parseDestination(rawPath);
   if (destination.isExternal || !destination.path) return null;
   const candidate = path.resolve(
@@ -72,10 +75,21 @@ export async function syncWhitepaperAssets({ projectRoot = defaultProjectRoot } 
     path.join(publicRoot, 'docs/whitepaper'),
     path.join(publicRoot, 'docs/brand'),
   ];
-  const markdown = await readFile(path.join(repositoryRoot, sourcePath), 'utf8');
-  const inventory = parseWhitepaperInventory(markdown);
-  const assets = (await Promise.all(inventory.images.map((image) => resolveSourceAsset(image.raw, repositoryRoot))))
+  const inventories = (await Promise.all(sources.map(async (source) => {
+    try {
+      return {
+        sourcePath: source.path,
+        inventory: parseWhitepaperInventory(await readFile(path.join(repositoryRoot, source.path), 'utf8')),
+      };
+    } catch (error) {
+      if (source.optional && error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return null;
+      throw error;
+    }
+  }))).filter(Boolean);
+  const resolvedAssets = (await Promise.all(inventories.flatMap(({ sourcePath, inventory }) =>
+    inventory.images.map((image) => resolveSourceAsset(image.raw, repositoryRoot, sourcePath)))))
     .filter(Boolean);
+  const assets = [...new Map(resolvedAssets.map((asset) => [asset.relativePath, asset])).values()];
 
   await existingPathSafety(repositoryRoot, publicRoot);
   await makeDirectoriesSafely(repositoryRoot, path.join(repositoryRoot, 'public'));

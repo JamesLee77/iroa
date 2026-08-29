@@ -12,6 +12,8 @@ interface Props {
   canonicalPath: string;
   robots?: string;
   imagePath?: string;
+  locale?: 'ko' | 'en';
+  alternatePath?: string;
 }
 
 const {
@@ -20,13 +22,19 @@ const {
   canonicalPath,
   robots = 'index,follow',
   imagePath = '/og/iroa-network-atlas.png',
+  locale = 'ko',
+  alternatePath,
 } = Astro.props;
 const canonical = new URL(canonicalPath, Astro.site);
 const shareImage = new URL(imagePath, Astro.site);
+const alternate = alternatePath ? new URL(alternatePath, Astro.site) : undefined;
+const copy = locale === 'en'
+  ? { skip: 'Skip to main content', ogLocale: 'en_US' }
+  : { skip: '본문으로 바로가기', ogLocale: 'ko_KR' };
 ---
 
 <!doctype html>
-<html lang="ko">
+<html lang={locale}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -36,9 +44,11 @@ const shareImage = new URL(imagePath, Astro.site);
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="canonical" href={canonical} />
+    {alternate && <link rel="alternate" hreflang={locale === 'en' ? 'ko' : 'en'} href={alternate} />}
+    <link rel="alternate" hreflang={locale} href={canonical} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="IROA.AI" />
-    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:locale" content={copy.ogLocale} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
@@ -53,9 +63,9 @@ const shareImage = new URL(imagePath, Astro.site);
     <title>{title}</title>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">본문으로 바로가기</a>
-    <SiteHeader />
+    <a class="skip-link" href="#main-content">{copy.skip}</a>
+    <SiteHeader locale={locale} currentPath={canonicalPath} />
     <main id="main-content" tabindex="-1"><slot /></main>
-    <SiteFooter />
+    <SiteFooter locale={locale} />
   </body>
 </html>

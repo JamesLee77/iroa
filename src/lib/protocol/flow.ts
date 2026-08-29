@@ -36,8 +36,44 @@ export const PROTOCOL_STAGES: readonly ProtocolStage[] = [
   },
 ];
 
+export const PROTOCOL_STAGES_EN: readonly ProtocolStage[] = [
+  {
+    id: 'request',
+    label: 'Request',
+    description: 'The user states a goal by voice, text, or touch and directly approves every consequential action.',
+  },
+  {
+    id: 'task-capsule',
+    label: 'Task Capsule',
+    description: 'Purpose, one-time permission, data class, expiry, and confirmation points are bound to each request.',
+  },
+  {
+    id: 'verified-node',
+    label: 'Verified Node',
+    description: 'A Node with the required trust level and verified runtime performs only the bounded task.',
+  },
+  {
+    id: 'proof-receipt',
+    label: 'Proof Receipt',
+    description: 'External outcomes and policy requirements are checked, leaving only the minimum evidence required.',
+  },
+  {
+    id: 'base-settlement',
+    label: 'Base Settlement',
+    description: 'A future B2B settlement direction, subject to deployment, legal, and security review.',
+    network: 'Base',
+    asset: 'Circle Native USDC',
+  },
+];
+
 export const PRIVACY_BOUNDARY = {
   onChain: ['정책 버전', '결과 무결성 해시', '개인과 분리된 최소 정산 증빙'],
   offChain: ['개인정보 원문', '대화·건강·예약 상세 기록', '비밀번호·OTP·결제키'],
   statement: '개인정보 원문은 오프체인에 머뭅니다.',
+} as const;
+
+export const PRIVACY_BOUNDARY_EN = {
+  onChain: ['Policy version', 'Outcome-integrity hash', 'Minimal settlement proof separated from identity'],
+  offChain: ['Raw personal data', 'Conversation, health, and booking details', 'Passwords, OTPs, and payment keys'],
+  statement: 'Raw personal data remains off-chain.',
 } as const;

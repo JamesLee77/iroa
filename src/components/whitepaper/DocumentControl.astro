@@ -3,21 +3,27 @@ import { stat } from 'node:fs/promises';
 import path from 'node:path';
 import { Download, FileText } from 'lucide-astro';
 import pdfUrl from '../../../docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf?url';
+import pdfUrlEn from '../../../docs/whitepaper/exports/IROA_WHITEPAPER_EN.pdf?url';
 import { REPOSITORY_ROOT } from '../../lib/whitepaper/assets';
 import type { WhitepaperPublication, WhitepaperStatus } from '../../lib/whitepaper/types';
 
 interface Props {
   publication: WhitepaperPublication;
+  variant?: 'panel' | 'inline';
 }
 
-const { publication } = Astro.props;
-const expectedPdfPath = 'docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf';
+const { publication, variant = 'panel' } = Astro.props;
+const english = publication.locale === 'en';
+const expectedPdfPath = english
+  ? 'docs/whitepaper/exports/IROA_WHITEPAPER_EN.pdf'
+  : 'docs/whitepaper/exports/IROA_WHITEPAPER_KO.pdf';
 if (publication.metadata.pdfPath !== expectedPdfPath) {
   throw new Error(`whitepaper PDF path must be ${expectedPdfPath}; received ${publication.metadata.pdfPath}`);
 }
 const pdf = await stat(path.join(REPOSITORY_ROOT, publication.metadata.pdfPath));
 if (!pdf.isFile() || pdf.size === 0) throw new Error('whitepaper PDF must be a non-empty file');
 const pdfSize = `${(pdf.size / (1024 * 1024)).toFixed(1)} MB`;
+const publicationPdfUrl = english ? pdfUrlEn : pdfUrl;
 
 const statusLabels: Record<WhitepaperStatus, string> = {
   draft: '초안',
@@ -25,9 +31,15 @@ const statusLabels: Record<WhitepaperStatus, string> = {
   reviewed: '검토됨',
   published: '발행됨',
 };
+const statusLabelsEn: Record<WhitepaperStatus, string> = {
+  draft: 'Draft', validation: 'In validation', reviewed: 'Reviewed', published: 'Published',
+};
+const copy = english
+  ? { aria: 'Whitepaper document information', version: 'Version', date: 'Publication date', language: 'Controlling language', languageValue: 'Korean original', status: 'Edition status', authority: 'The Korean edition is the controlling version.', download: 'Download PDF' }
+  : { aria: '백서 문서 정보', version: '버전', date: '발행일', language: '기준 언어', languageValue: '한국어 원문', status: '판본 상태', authority: '한국어판이 이 문서의 기준본입니다.', download: 'PDF 다운로드' };
 ---
 
-<section class="whitepaper-document-control" aria-label="백서 문서 정보">
+<section class:list={['whitepaper-document-control', { 'whitepaper-document-control--inline': variant === 'inline' }]} aria-label={copy.aria}>
   <div class="whitepaper-document-control__heading">
     <FileText aria-hidden="true" size={24} strokeWidth={1.75} />
     <div>
@@ -36,17 +48,17 @@ const statusLabels: Record<WhitepaperStatus, string> = {
     </div>
   </div>
   <dl>
-    <div><dt>버전</dt><dd class="latin tabular">v{publication.metadata.version}</dd></div>
-    <div><dt>발행일</dt><dd><time datetime={publication.metadata.date} class="latin tabular">{publication.metadata.date}</time></dd></div>
-    <div><dt>기준 언어</dt><dd>한국어 원문</dd></div>
-    <div><dt>판본 상태</dt><dd>{statusLabels[publication.metadata.status]}</dd></div>
+    <div><dt>{copy.version}</dt><dd class="latin tabular">v{publication.metadata.version}</dd></div>
+    <div><dt>{copy.date}</dt><dd><time datetime={publication.metadata.date} class="latin tabular">{publication.metadata.date}</time></dd></div>
+    <div><dt>{copy.language}</dt><dd>{copy.languageValue}</dd></div>
+    <div class="whitepaper-document-control__status"><dt>{copy.status}</dt><dd>{(english ? statusLabelsEn : statusLabels)[publication.metadata.status]}</dd></div>
   </dl>
-  <p class="whitepaper-document-control__authority">한국어판이 이 문서의 기준본입니다.</p>
+  <p class="whitepaper-document-control__authority">{copy.authority}</p>
   <a
     class="whitepaper-pdf-link latin"
-    href={pdfUrl}
-    download="IROA_WHITEPAPER_KO.pdf"
-    aria-label={`PDF 다운로드 — PDF · ${pdfSize}`}
+    href={publicationPdfUrl}
+    download={english ? 'IROA_WHITEPAPER_EN.pdf' : 'IROA_WHITEPAPER_KO.pdf'}
+    aria-label={`${copy.download} — PDF · ${pdfSize}`}
   >
     <span>PDF · {pdfSize}</span>
     <Download aria-hidden="true" size={18} strokeWidth={1.8} />

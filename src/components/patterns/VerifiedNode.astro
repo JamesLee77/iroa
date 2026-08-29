@@ -6,15 +6,16 @@ interface Props {
   level: 'N0' | 'N1' | 'N2' | 'N3' | 'N4';
   status: PublicStatus;
   description: string;
+  locale?: 'ko' | 'en';
 }
 
-const { level, status, description } = Astro.props;
+const { level, status, description, locale = 'ko' } = Astro.props;
 ---
 
-<section class="protocol-pattern verified-node" aria-label="Verified Node 상세">
+<section class="protocol-pattern verified-node" aria-label={locale === 'en' ? 'Verified Node details' : 'Verified Node 상세'}>
   <div class="protocol-pattern__heading-row">
     <p class="protocol-pattern__identifier latin">{level} Node</p>
-    <StatusBadge status={status} />
+    <StatusBadge status={status} locale={locale} />
   </div>
   <p class="protocol-pattern__description">{description}</p>
 </section>

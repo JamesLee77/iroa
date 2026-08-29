@@ -4,27 +4,29 @@ interface Props {
   proofId: string;
   policyVersion: string;
   disputeState: string;
+  locale?: 'ko' | 'en';
 }
 
-const { result, proofId, policyVersion, disputeState } = Astro.props;
+const { result, proofId, policyVersion, disputeState, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
-<section class="protocol-pattern proof-receipt" aria-label="Proof Receipt 상세">
+<section class="protocol-pattern proof-receipt" aria-label={english ? 'Proof Receipt details' : 'Proof Receipt 상세'}>
   <dl class="protocol-definition-list">
     <div>
-      <dt>결과</dt>
+      <dt>{english ? 'Outcome' : '결과'}</dt>
       <dd>{result}</dd>
     </div>
     <div>
-      <dt>증빙 ID</dt>
+      <dt>{english ? 'Proof ID' : '증빙 ID'}</dt>
       <dd>{proofId}</dd>
     </div>
     <div>
-      <dt>정책 기준</dt>
+      <dt>{english ? 'Policy baseline' : '정책 기준'}</dt>
       <dd>{policyVersion}</dd>
     </div>
     <div>
-      <dt>분쟁 상태</dt>
+      <dt>{english ? 'Dispute state' : '분쟁 상태'}</dt>
       <dd>{disputeState}</dd>
     </div>
   </dl>

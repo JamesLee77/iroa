@@ -1,0 +1,52 @@
+---
+import pdfUrl from '../../../../docs/whitepaper/exports/IROA_WHITEPAPER_EN.pdf?url';
+import WhitepaperLayout from '../../../layouts/WhitepaperLayout.astro';
+import { loadWhitepaper } from '../../../lib/whitepaper/load';
+import { prepareChapterHtml } from '../../../lib/whitepaper/render';
+
+const publication = await loadWhitepaper('en');
+const preambleHtml = publication.preambleHtml.replace(/^<h1>[\s\S]*?<\/h1>\s*/, '');
+const chapters = publication.chapters.map((chapter) => ({
+  ...chapter,
+  preparedHtml: prepareChapterHtml(chapter, { eagerImages: true, locale: 'en' }),
+}));
+---
+
+<WhitepaperLayout publication={publication}>
+  <article class="whitepaper-overview" aria-label="Complete IROA.AI Whitepaper">
+    <section class="whitepaper-preface" aria-label="Whitepaper preface">
+      <div class="whitepaper-prose" set:html={preambleHtml} />
+
+      <section class="whitepaper-disclosure" aria-labelledby="whitepaper-publication-boundary">
+        <p class="section-kicker latin">PUBLICATION BOUNDARY</p>
+        <h3 id="whitepaper-publication-boundary">Document status is separate from operational status.</h3>
+        <p><strong>Publication status applies only to this document edition.</strong> Tokens, rewards, Nodes, Base settlement, and institutional links described here are not live capabilities until the validation, legal, and deployment conditions stated in each chapter are satisfied.</p>
+        <p>Raw personal and sensitive data remains off-chain. Public records contain only the minimum evidence and status required.</p>
+      </section>
+
+      <a class="whitepaper-secondary-download" href={pdfUrl} download="IROA_WHITEPAPER_EN.pdf">Download PDF for offline reading</a>
+    </section>
+
+    {chapters.map((chapter) => (
+      <section
+        class="whitepaper-continuous-chapter"
+        id={`chapter-${chapter.slug}`}
+        data-whitepaper-chapter={chapter.slug}
+        aria-labelledby={`chapter-${chapter.slug}-title`}
+      >
+        <p class="whitepaper-reader__breadcrumb latin">CHAPTER {String(chapter.number).padStart(2, '0')} / 22</p>
+        <div class="whitepaper-continuous-chapter__heading">
+          <h2 id={`chapter-${chapter.slug}-title`}>{chapter.number}. {chapter.title}</h2>
+          <a href={`/en/whitepaper/${chapter.slug}`} aria-label={`Open chapter ${chapter.number} at its own URL`}>Open chapter</a>
+        </div>
+        <div class="whitepaper-prose" set:html={chapter.preparedHtml} />
+        {chapter.next && (
+          <a class="whitepaper-continuous-chapter__next" href={`#chapter-${chapter.next.slug}`}>
+            <span>Next chapter</span>
+            <strong>{chapter.next.number}. {chapter.next.title}</strong>
+          </a>
+        )}
+      </section>
+    ))}
+  </article>
+</WhitepaperLayout>

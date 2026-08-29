@@ -1,18 +1,34 @@
 ---
+import { Image } from 'astro:assets';
 import { ArrowRight } from 'lucide-astro';
+import settlementVisual from '../../assets/home/iroa-settlement-boundary-v1.png';
 import type { SettlementContent } from '../../types/home';
 import SettlementRecord from '../patterns/SettlementRecord.astro';
 import SectionIntro from '../primitives/SectionIntro.astro';
 
 interface Props {
   content: SettlementContent;
+  locale?: 'ko' | 'en';
 }
 
-const { content } = Astro.props;
+const { content, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
 <section class="home-section settlement-overview container" aria-labelledby="settlement-overview-title">
   <SectionIntro eyebrow="SETTLEMENT BOUNDARY" title={content.title} lead={content.description} id="settlement-overview-title" />
+  <figure class="settlement-overview__visual">
+    <Image
+      src={settlementVisual}
+      alt={english ? 'IROA settlement boundary separating everyday consumer payment, outcome verification, and institutional settlement' : '일상적인 소비자 결제와 결과 검증, 기관 간 정산을 서로 다른 계층으로 분리한 IROA 정산 경계'}
+      widths={[640, 960, 1280]}
+      sizes="(max-width: 1239px) calc(100vw - 2rem), 1240px"
+      format="webp"
+      quality={88}
+      loading="lazy"
+    />
+    <figcaption><span>Consumer Payment</span><span>Verified Proof Gate</span><span>Base · Native USDC</span></figcaption>
+  </figure>
   <div class="settlement-overview__grid">
     <div class="settlement-overview__flow">
       <p class="settlement-overview__consumer">{content.consumerPayment}</p>
@@ -29,7 +45,7 @@ const { content } = Astro.props;
       </ol>
     </div>
     <div class="settlement-overview__record">
-      <SettlementRecord network={content.network} asset={content.asset} status={content.status} />
+      <SettlementRecord network={content.network} asset={content.asset} status={content.status} locale={locale} />
       <ul>{content.boundaries.map((boundary) => <li>{boundary}</li>)}</ul>
     </div>
   </div>

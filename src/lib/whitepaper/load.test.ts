@@ -67,7 +67,7 @@ describe('canonical whitepaper loader', () => {
     const firstFigure = publication.chapters[3].html;
     const laterFigure = publication.chapters[15].html;
 
-    expect(firstFigure).toMatch(/src="\/generated\/docs\/brand\/assets\/photos\/tablet-support-6646818\.jpg"/);
+    expect(firstFigure).toMatch(/src="\/generated\/docs\/brand\/assets\/illustrations\/iroa-product-system-v1\.png"/);
     expect(firstFigure).toMatch(/width="\d+" height="\d+"/);
     expect(laterFigure).toContain('loading="lazy"');
     expect(laterFigure).toContain('alt="IROA 토큰 배분"');

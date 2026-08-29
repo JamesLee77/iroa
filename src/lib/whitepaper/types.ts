@@ -10,6 +10,7 @@ export const LOCKED_WHITEPAPER_SLUGS = [
 ] as const;
 
 export type WhitepaperStatus = (typeof WHITEPAPER_STATUSES)[number];
+export type WhitepaperLocale = 'ko' | 'en';
 
 export interface WhitepaperMetadata {
   title: string;
@@ -48,4 +49,6 @@ export interface WhitepaperPublication {
   metadata: WhitepaperMetadata;
   preambleHtml: string;
   chapters: WhitepaperChapter[];
+  locale: WhitepaperLocale;
+  routeBase: '/whitepaper' | '/en/whitepaper';
 }

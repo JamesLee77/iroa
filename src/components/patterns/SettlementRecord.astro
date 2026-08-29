@@ -6,25 +6,27 @@ interface Props {
   network: 'Base';
   asset: 'Circle Native USDC';
   status: PublicStatus;
+  locale?: 'ko' | 'en';
 }
 
-const { network, asset, status } = Astro.props;
+const { network, asset, status, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
-<section class="protocol-pattern settlement-record" aria-label="Base Settlement 상세">
+<section class="protocol-pattern settlement-record" aria-label={english ? 'Base Settlement details' : 'Base Settlement 상세'}>
   <dl class="protocol-definition-list">
     <div>
-      <dt>네트워크</dt>
+      <dt>{english ? 'Network' : '네트워크'}</dt>
       <dd class="latin">{network}</dd>
     </div>
     <div>
-      <dt>정산 자산</dt>
+      <dt>{english ? 'Settlement asset' : '정산 자산'}</dt>
       <dd class="latin">{asset}</dd>
     </div>
     <div>
-      <dt>공개 상태</dt>
-      <dd><StatusBadge status={status} /></dd>
+      <dt>{english ? 'Public status' : '공개 상태'}</dt>
+      <dd><StatusBadge status={status} locale={locale} /></dd>
     </div>
   </dl>
-  <p class="protocol-pattern__note">배포·법률·보안 검토 이후의 B2B 정산 방향입니다.</p>
+  <p class="protocol-pattern__note">{english ? 'A future B2B settlement direction, subject to deployment, legal, and security review.' : '배포·법률·보안 검토 이후의 B2B 정산 방향입니다.'}</p>
 </section>

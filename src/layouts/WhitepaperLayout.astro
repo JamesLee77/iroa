@@ -3,6 +3,7 @@ import ChapterIndex from '../components/whitepaper/ChapterIndex.astro';
 import ChapterPager from '../components/whitepaper/ChapterPager.astro';
 import DocumentControl from '../components/whitepaper/DocumentControl.astro';
 import OnThisPage from '../components/whitepaper/OnThisPage.astro';
+import { prepareChapterHtml } from '../lib/whitepaper/render';
 import type { WhitepaperChapter, WhitepaperPublication } from '../lib/whitepaper/types';
 import SiteLayout from './SiteLayout.astro';
 
@@ -12,71 +13,81 @@ interface Props {
 }
 
 const { publication, current } = Astro.props;
-const canonicalPath = current ? `/whitepaper/${current.slug}` : '/whitepaper';
+const english = publication.locale === 'en';
+const canonicalPath = current ? `${publication.routeBase}/${current.slug}` : publication.routeBase;
+const alternatePath = english ? canonicalPath.replace(/^\/en/, '') : `/en${canonicalPath}`;
 const title = current
   ? `${current.number}. ${current.title} | ${publication.metadata.title}`
-  : `${publication.metadata.title} | 웹 백서`;
+  : `${publication.metadata.title} | ${english ? 'Web Whitepaper' : '웹 백서'}`;
 const description = current
-  ? `${publication.metadata.title} ${current.number}장 ${current.title}. 정규화된 한국어 원문을 읽습니다.`
-  : 'IROA.AI의 사용자 권한, 실행 구조, 개인정보 보호, NODE, 보상 경제와 검증 계획을 22개 장으로 읽습니다.';
+  ? (english
+      ? `Read chapter ${current.number}, ${current.title}, in the complete English edition of the IROA.AI Whitepaper.`
+      : `${publication.metadata.title} ${current.number}장 ${current.title}. 정규화된 한국어 원문을 읽습니다.`)
+  : (english
+      ? 'Read the IROA.AI Whitepaper in English: user authority, execution architecture, privacy, Nodes, reward economy, and validation across 22 chapters.'
+      : 'IROA.AI의 사용자 권한, 실행 구조, 개인정보 보호, NODE, 보상 경제와 검증 계획을 22개 장으로 읽습니다.');
+const copy = english
+  ? {
+      kicker: 'ENGLISH EDITION · WEB WHITEPAPER',
+      summary: 'The Human Utility Protocol document that connects real-world requests to safe execution and verifiable outcomes.',
+      noticeLabel: 'Important document notice',
+      noticeTitle: 'Important document notice',
+      notice: 'This document is not a token-sale offer, a guarantee of returns, a legal opinion, or confirmation of completed deployment. Operational status and validation conditions follow the explicit boundaries in each chapter.',
+      index: 'Full contents',
+      mobileIndex: 'Complete mobile whitepaper contents',
+    }
+  : {
+      kicker: 'KOREAN MASTER · WEB WHITEPAPER',
+      summary: '현실의 요청을 안전한 실행과 검증 가능한 결과로 연결하는 Human Utility Protocol 문서입니다.',
+      noticeLabel: '중요 문서 고지',
+      noticeTitle: '중요 문서 고지',
+      notice: '이 문서는 토큰 판매 제안, 수익 보장, 법률 의견 또는 배포 완료 확인이 아닙니다. 운영 상태와 검증 조건은 각 장의 명시된 경계를 따릅니다.',
+      index: '전체 목차',
+      mobileIndex: '모바일 백서 전체 목차',
+    };
 
-function escapeAttribute(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
-
-function prepareChapterHtml(chapter: WhitepaperChapter) {
-  let html = chapter.html;
-  for (const heading of chapter.headings) {
-    const id = escapeAttribute(heading.id);
-    const opening = `<h${heading.level} id="${id}">`;
-    const openingAt = html.indexOf(opening);
-    if (openingAt === -1) throw new Error(`missing rendered heading ${heading.id}`);
-    const closing = `</h${heading.level}>`;
-    const closingAt = html.indexOf(closing, openingAt + opening.length);
-    if (closingAt === -1) throw new Error(`missing closing tag for heading ${heading.id}`);
-    const insertionAt = closingAt + closing.length;
-    const label = escapeAttribute(`${heading.title} 제목 링크`);
-    const permalink = `<a class="heading-permalink" href="#${id}" aria-label="${label}"><span aria-hidden="true">링크</span></a>`;
-    html = `${html.slice(0, insertionAt)}${permalink}${html.slice(insertionAt)}`;
-  }
-  return html;
-}
-
-const chapterHtml = current ? prepareChapterHtml(current) : undefined;
+const chapterHtml = current ? prepareChapterHtml(current, { locale: publication.locale }) : undefined;
 ---
 
-<SiteLayout title={title} description={description} canonicalPath={canonicalPath}>
-  <div class="page--whitepaper whitepaper-shell">
+<SiteLayout title={title} description={description} canonicalPath={canonicalPath} alternatePath={alternatePath} locale={publication.locale}>
+  <div class:list={['page--whitepaper whitepaper-shell', { 'whitepaper-shell--continuous': !current }]}>
     <header class="whitepaper-masthead container">
-      <div>
-        <p class="section-kicker latin">IROA.AI · WEB WHITEPAPER</p>
+      <div class="whitepaper-masthead__copy">
+        <p class="section-kicker latin">{copy.kicker}</p>
         <h1>{publication.metadata.title}</h1>
-        <p>현실의 요청을 안전한 실행과 검증 가능한 결과로 연결하는 Human Utility Protocol 문서입니다.</p>
+        <p>{copy.summary}</p>
       </div>
-      <DocumentControl publication={publication} />
+      <DocumentControl publication={publication} variant="inline" />
+      <aside class="whitepaper-masthead__notice" aria-label={copy.noticeLabel}>
+        <strong>{copy.noticeTitle}</strong>
+        <p>{copy.notice}</p>
+      </aside>
     </header>
 
     <details class="whitepaper-mobile-index">
       <summary>
-        <span>전체 목차</span>
-        {current && <strong class="tabular">{String(current.number).padStart(2, '0')} / 22</strong>}
+        <span>{copy.index}</span>
+        <strong class="tabular">{current ? `${String(current.number).padStart(2, '0')} / 22` : '22 CHAPTERS'}</strong>
       </summary>
       <ChapterIndex
         chapters={publication.chapters}
         currentSlug={current?.slug}
-        label="모바일 백서 전체 목차"
+        mode={current ? 'route' : 'anchor'}
+        label={copy.mobileIndex}
+        routeBase={publication.routeBase}
       />
     </details>
 
-    <div class="whitepaper-reader container">
+    <div class="whitepaper-reader container" data-whitepaper-reader={current ? 'chapter' : 'continuous'}>
       <aside class="whitepaper-reader__index">
         <p class="latin">DOCUMENT INDEX</p>
-        <ChapterIndex chapters={publication.chapters} currentSlug={current?.slug} />
+        <ChapterIndex
+          chapters={publication.chapters}
+          currentSlug={current?.slug}
+          mode={current ? 'route' : 'anchor'}
+          label={copy.index}
+          routeBase={publication.routeBase}
+        />
       </aside>
 
       <div class="whitepaper-reader__document">
@@ -87,13 +98,69 @@ const chapterHtml = current ? prepareChapterHtml(current) : undefined;
             </p>
             <article class="whitepaper-chapter" aria-label={current.title}>
               <h2 id="whitepaper-chapter-title">{current.number}. {current.title}</h2>
-              <OnThisPage headings={current.headings} />
+              <OnThisPage headings={current.headings} locale={publication.locale} />
               <div class="whitepaper-prose" set:html={chapterHtml} />
             </article>
-            <ChapterPager chapter={current} />
+            <ChapterPager chapter={current} routeBase={publication.routeBase} locale={publication.locale} />
           </>
         ) : <slot />}
       </div>
     </div>
+    {!current && (
+      <script is:inline>
+        const reader = document.querySelector('[data-whitepaper-reader="continuous"]');
+        if (reader) {
+          const chapterLinks = Array.from(document.querySelectorAll('[data-whitepaper-index="anchor"] a[data-chapter-slug]'));
+          const chapterSections = Array.from(reader.querySelectorAll('[data-whitepaper-chapter]'));
+          const alignHashTarget = () => {
+            const targetId = decodeURIComponent(window.location.hash.slice(1));
+            if (!targetId) return;
+            const target = document.getElementById(targetId);
+            if (!target) return;
+            requestAnimationFrame(() => {
+              const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+              document.documentElement.style.scrollBehavior = 'auto';
+              target.scrollIntoView({ block: 'start' });
+              requestAnimationFrame(() => {
+                document.documentElement.style.scrollBehavior = previousScrollBehavior;
+              });
+            });
+          };
+          const setCurrentChapter = (slug) => {
+            for (const link of chapterLinks) {
+              const isCurrent = link.dataset.chapterSlug === slug;
+              link.closest('li')?.classList.toggle('is-current', isCurrent);
+              if (isCurrent) {
+                link.setAttribute('aria-current', 'location');
+                const index = link.closest('.whitepaper-chapter-index');
+                if (index) {
+                  index.scrollTop = Math.max(0, link.offsetTop - ((index.clientHeight - link.clientHeight) / 2));
+                }
+              } else link.removeAttribute('aria-current');
+            }
+          };
+
+          const observer = new IntersectionObserver((entries) => {
+            const visible = entries
+              .filter((entry) => entry.isIntersecting)
+              .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+            if (visible) setCurrentChapter(visible.target.dataset.whitepaperChapter);
+          }, { rootMargin: '-18% 0px -72% 0px' });
+
+          for (const section of chapterSections) observer.observe(section);
+          const pageReady = document.readyState === 'complete'
+            ? Promise.resolve()
+            : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
+          Promise.all([pageReady, document.fonts.ready]).then(alignHashTarget);
+          window.addEventListener('hashchange', alignHashTarget);
+          for (const link of chapterLinks) {
+            link.addEventListener('click', () => {
+              const mobileIndex = link.closest('.whitepaper-mobile-index');
+              if (mobileIndex instanceof HTMLDetailsElement) mobileIndex.open = false;
+            });
+          }
+        }
+      </script>
+    )}
   </div>
 </SiteLayout>

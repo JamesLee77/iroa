@@ -4,29 +4,32 @@ import type { WhitepaperChapter } from '../../lib/whitepaper/types';
 
 interface Props {
   chapter: WhitepaperChapter;
+  routeBase?: string;
+  locale?: 'ko' | 'en';
 }
 
-const { chapter } = Astro.props;
+const { chapter, routeBase = '/whitepaper', locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
-<nav class="whitepaper-chapter-pager" aria-label="장 이동">
+<nav class="whitepaper-chapter-pager" aria-label={english ? 'Chapter navigation' : '장 이동'}>
   {chapter.previous ? (
     <a
       class="whitepaper-chapter-pager__previous"
-      href={`/whitepaper/${chapter.previous.slug}`}
-      aria-label={`이전 장: ${chapter.previous.title}`}
+      href={`${routeBase}/${chapter.previous.slug}`}
+      aria-label={`${english ? 'Previous chapter' : '이전 장'}: ${chapter.previous.title}`}
     >
       <ArrowLeft aria-hidden="true" size={20} />
-      <span><small>이전 장</small><strong>{chapter.previous.number}. {chapter.previous.title}</strong></span>
+      <span><small>{english ? 'Previous chapter' : '이전 장'}</small><strong>{chapter.previous.number}. {chapter.previous.title}</strong></span>
     </a>
   ) : <span />}
   {chapter.next && (
     <a
       class="whitepaper-chapter-pager__next"
-      href={`/whitepaper/${chapter.next.slug}`}
-      aria-label={`다음 장: ${chapter.next.title}`}
+      href={`${routeBase}/${chapter.next.slug}`}
+      aria-label={`${english ? 'Next chapter' : '다음 장'}: ${chapter.next.title}`}
     >
-      <span><small>다음 장</small><strong>{chapter.next.number}. {chapter.next.title}</strong></span>
+      <span><small>{english ? 'Next chapter' : '다음 장'}</small><strong>{chapter.next.number}. {chapter.next.title}</strong></span>
       <ArrowRight aria-hidden="true" size={20} />
     </a>
   )}

@@ -14,9 +14,11 @@ import VerifiedNode from './VerifiedNode.astro';
 
 interface Props {
   stages: readonly ProtocolStage[];
+  locale?: 'ko' | 'en';
 }
 
-const { stages } = Astro.props;
+const { stages, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 const stageIcons = {
   request: MousePointerClick,
   'task-capsule': PackageCheck,
@@ -29,9 +31,9 @@ const stageIcons = {
 <section id="protocol" class="protocol-path" aria-labelledby="protocol-path-title">
   <div class="protocol-path__intro">
     <p class="protocol-path__eyebrow latin">Network Atlas</p>
-    <h2 id="protocol-path-title">IROA 프로토콜 경로</h2>
+    <h2 id="protocol-path-title">{english ? 'IROA Protocol Path' : 'IROA 프로토콜 경로'}</h2>
     <p>
-      요청은 제한된 권한으로 실행되고, 검증 가능한 결과를 거쳐 계획된 정산 경계로 이어집니다.
+      {english ? 'Requests execute with bounded authority, pass through verifiable outcomes, and reach a planned settlement boundary.' : '요청은 제한된 권한으로 실행되고, 검증 가능한 결과를 거쳐 계획된 정산 경계로 이어집니다.'}
     </p>
   </div>
 
@@ -58,39 +60,42 @@ const stageIcons = {
               <p class="protocol-path__description">{stage.description}</p>
 
               {stage.id === 'request' && (
-                <section class="protocol-pattern protocol-request" aria-label="Request 상세">
-                  <p class="protocol-pattern__identifier">사용자 승인 지점</p>
+                <section class="protocol-pattern protocol-request" aria-label={english ? 'Request details' : 'Request 상세'}>
+                  <p class="protocol-pattern__identifier">{english ? 'User approval point' : '사용자 승인 지점'}</p>
                   <p class="protocol-pattern__description">
-                    중요한 실행은 사용자가 확인한 뒤 다음 단계로 이동합니다.
+                    {english ? 'Consequential actions advance only after the user confirms them.' : '중요한 실행은 사용자가 확인한 뒤 다음 단계로 이동합니다.'}
                   </p>
                 </section>
               )}
               {stage.id === 'task-capsule' && (
                 <TaskCapsule
-                  purpose="승인된 요청 실행"
-                  permission="요청 범위의 일회성 권한"
+                  purpose={english ? 'Execute the approved request' : '승인된 요청 실행'}
+                  permission={english ? 'One-time permission within request scope' : '요청 범위의 일회성 권한'}
                   dataClass="D2"
-                  duration="작업 완료 또는 만료 시점까지"
+                  duration={english ? 'Until completion or expiry' : '작업 완료 또는 만료 시점까지'}
                   status="validation"
+                  locale={locale}
                 />
               )}
               {stage.id === 'verified-node' && (
                 <VerifiedNode
                   level="N2"
                   status="validation"
-                  description="정책과 실행 환경을 확인하는 검증 단계 예시입니다."
+                  description={english ? 'An example verification stage that checks policy and runtime state.' : '정책과 실행 환경을 확인하는 검증 단계 예시입니다.'}
+                  locale={locale}
                 />
               )}
               {stage.id === 'proof-receipt' && (
                 <ProofReceipt
-                  result="검증 가능한 결과 요약"
-                  proofId="실거래 식별자 미게시"
-                  policyVersion="공개 백서 기준"
-                  disputeState="검증 절차 설계 중"
+                  result={english ? 'Verifiable outcome summary' : '검증 가능한 결과 요약'}
+                  proofId={english ? 'No live transaction identifier published' : '실거래 식별자 미게시'}
+                  policyVersion={english ? 'Published whitepaper baseline' : '공개 백서 기준'}
+                  disputeState={english ? 'Validation process in design' : '검증 절차 설계 중'}
+                  locale={locale}
                 />
               )}
               {stage.id === 'base-settlement' && stage.network && stage.asset && (
-                <SettlementRecord network={stage.network} asset={stage.asset} status="planned" />
+                <SettlementRecord network={stage.network} asset={stage.asset} status="planned" locale={locale} />
               )}
             </div>
           </li>

@@ -6,9 +6,10 @@ import StatusBadge from '../primitives/StatusBadge.astro';
 
 interface Props {
   content: EconomyContent;
+  locale?: 'ko' | 'en';
 }
 
-const { content } = Astro.props;
+const { content, locale = 'ko' } = Astro.props;
 ---
 
 <section id="economy" class="home-section economy-status" aria-labelledby="economy-status-title">
@@ -17,7 +18,7 @@ const { content } = Astro.props;
     <div class="economy-status__board">
       <div class="economy-status__reward">
         <p class="latin">{content.rewards.label}</p>
-        <StatusBadge status={content.rewards.status} />
+        <StatusBadge status={content.rewards.status} locale={locale} />
         <strong>{content.rewards.description}</strong>
       </div>
       <ul>

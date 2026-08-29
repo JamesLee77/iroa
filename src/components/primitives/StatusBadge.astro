@@ -4,9 +4,10 @@ import { getStatusLabel, type PublicStatus } from '../../lib/content/status';
 interface Props {
   status: PublicStatus;
   label?: string;
+  locale?: 'ko' | 'en';
 }
 
-const { status, label = getStatusLabel(status) } = Astro.props;
+const { status, locale = 'ko', label = getStatusLabel(status, locale) } = Astro.props;
 ---
 
 <span class="status-badge" data-status={status}>

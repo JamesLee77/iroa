@@ -1,0 +1,31 @@
+---
+import EconomyStatus from '../../components/sections/EconomyStatus.astro';
+import HomeHero from '../../components/sections/HomeHero.astro';
+import NetworkProof from '../../components/sections/NetworkProof.astro';
+import ParticipationContact from '../../components/sections/ParticipationContact.astro';
+import ProtocolPlanes from '../../components/sections/ProtocolPlanes.astro';
+import RoadmapPreview from '../../components/sections/RoadmapPreview.astro';
+import SettlementOverview from '../../components/sections/SettlementOverview.astro';
+import WhitepaperEntry from '../../components/sections/WhitepaperEntry.astro';
+import { homeEn } from '../../content/home.en';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  title="IROA.AI | Verifiable Execution Network"
+  description="IROA.AI is a verifiable execution network for the real world."
+  canonicalPath="/en/"
+  alternatePath="/"
+  locale="en"
+>
+  <div class="page--homepage">
+    <HomeHero content={homeEn.hero} locale="en" />
+    <ProtocolPlanes content={homeEn.protocol} locale="en" />
+    <NetworkProof content={homeEn.network} locale="en" />
+    <SettlementOverview content={homeEn.settlement} locale="en" />
+    <EconomyStatus content={homeEn.economy} locale="en" />
+    <WhitepaperEntry content={homeEn.whitepaper} locale="en" />
+    <RoadmapPreview content={homeEn.roadmap} locale="en" />
+    <ParticipationContact content={homeEn.contact} locale="en" />
+  </div>
+</SiteLayout>

@@ -3,14 +3,16 @@ import type { WhitepaperHeading } from '../../lib/whitepaper/types';
 
 interface Props {
   headings: WhitepaperHeading[];
+  locale?: 'ko' | 'en';
 }
 
-const { headings } = Astro.props;
+const { headings, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
 {headings.length > 0 && (
-  <nav class="whitepaper-on-this-page" aria-label="이 장의 목차">
-    <p>이 장의 목차</p>
+  <nav class="whitepaper-on-this-page" aria-label={english ? 'On this page' : '이 장의 목차'}>
+    <p>{english ? 'On this page' : '이 장의 목차'}</p>
     <ol>
       {headings.map((heading) => (
         <li class:list={[`whitepaper-on-this-page__level-${heading.level}`]}>

@@ -1,14 +1,15 @@
 ---
-import { PROTOCOL_STAGES } from '../../lib/protocol/flow';
+import { PROTOCOL_STAGES, PROTOCOL_STAGES_EN } from '../../lib/protocol/flow';
 import type { ProtocolContent } from '../../types/home';
 import ProtocolPath from '../patterns/ProtocolPath.astro';
 import StatusBadge from '../primitives/StatusBadge.astro';
 
 interface Props {
   content: ProtocolContent;
+  locale?: 'ko' | 'en';
 }
 
-const { content } = Astro.props;
+const { content, locale = 'ko' } = Astro.props;
 ---
 
 <section class="home-section protocol-planes container" aria-labelledby="protocol-planes-title">
@@ -25,11 +26,11 @@ const { content } = Astro.props;
           <div>
             <h3 class="latin">{plane.label}</h3>
             <p>{plane.description}</p>
-            <StatusBadge status={plane.status} />
+            <StatusBadge status={plane.status} locale={locale} />
           </div>
         </li>
       ))
     }
   </ol>
-  <ProtocolPath stages={PROTOCOL_STAGES} />
+  <ProtocolPath stages={locale === 'en' ? PROTOCOL_STAGES_EN : PROTOCOL_STAGES} locale={locale} />
 </section>

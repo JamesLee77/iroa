@@ -2,23 +2,30 @@
 import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
 
 const currentYear = new Date().getFullYear();
+interface Props { locale?: 'ko' | 'en' }
+const { locale = 'ko' } = Astro.props;
+const english = locale === 'en';
+const root = english ? '/en/' : '/';
+const copy = english
+  ? { home: 'Return to IROA.AI home', tagline: 'A verifiable execution network for the real world.', nav: 'Footer navigation', protocol: 'Protocol', network: 'Network', whitepaper: 'Whitepaper', roadmap: 'Roadmap' }
+  : { home: 'IROA.AI 홈으로 돌아가기', tagline: '현실 세계를 위한 검증 가능한 실행 네트워크.', nav: '보조 메뉴', protocol: '프로토콜', network: '네트워크', whitepaper: '백서', roadmap: '로드맵' };
 ---
 
 <footer class="site-footer">
   <div class="site-footer__inner container">
     <div class="site-footer__identity">
-      <a class="site-footer__brand" href="/" aria-label="IROA.AI 홈으로 돌아가기">
+      <a class="site-footer__brand" href={root} aria-label={copy.home}>
         <img src={wordmarkUrl} alt="" width="600" height="180" />
       </a>
-      <p>현실 세계를 위한 검증 가능한 실행 네트워크.</p>
+      <p>{copy.tagline}</p>
     </div>
 
-    <nav aria-label="보조 메뉴">
+    <nav aria-label={copy.nav}>
       <ul>
-        <li><a href="/#protocol">프로토콜</a></li>
-        <li><a href="/#network">네트워크</a></li>
-        <li><a href="/whitepaper">백서</a></li>
-        <li><a href="/#roadmap">로드맵</a></li>
+        <li><a href={`${root}#protocol`}>{copy.protocol}</a></li>
+        <li><a href={`${root}#network`}>{copy.network}</a></li>
+        <li><a href={english ? '/en/whitepaper' : '/whitepaper'}>{copy.whitepaper}</a></li>
+        <li><a href={`${root}#roadmap`}>{copy.roadmap}</a></li>
       </ul>
     </nav>
 

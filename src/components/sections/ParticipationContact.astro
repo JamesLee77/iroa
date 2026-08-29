@@ -1,28 +1,44 @@
 ---
+import { Image } from 'astro:assets';
 import { Building2, LockKeyhole } from 'lucide-astro';
+import humanHandoffVisual from '../../assets/home/iroa-human-handoff-v1.png';
 import type { ContactContent } from '../../types/home';
 import ButtonLink from '../primitives/ButtonLink.astro';
 import StatusBadge from '../primitives/StatusBadge.astro';
 
 interface Props {
   content: ContactContent;
+  locale?: 'ko' | 'en';
 }
 
-const { content } = Astro.props;
+const { content, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
 <section id="contact" class="home-section participation-contact container" aria-labelledby="participation-contact-title">
+  <figure class="participation-contact__visual">
+    <Image
+      src={humanHandoffVisual}
+      alt={english ? 'IROA human handoff in which a support worker and user review an uncertain request together' : '불확실한 요청을 지원 담당자와 이용자가 함께 확인하는 IROA 사람 인계 장면'}
+      widths={[640, 960, 1280]}
+      sizes="(max-width: 1239px) calc(100vw - 2rem), 1240px"
+      format="webp"
+      quality={88}
+      loading="lazy"
+    />
+    <figcaption>{english ? 'When automation is uncertain, decision authority and context return safely to a person.' : '자동화가 확신할 수 없을 때, 결정권과 맥락을 사람에게 안전하게 돌려줍니다.'}</figcaption>
+  </figure>
   <div class="participation-contact__intro">
     <Building2 aria-hidden="true" size={32} />
     <p class="section-kicker latin">INSTITUTIONAL READINESS</p>
     <h2 id="participation-contact-title">{content.title}</h2>
     <p>{content.description}</p>
-    <StatusBadge status={content.status} label={content.channelLabel} />
+    <StatusBadge status={content.status} label={content.channelLabel} locale={locale} />
   </div>
   <div class="participation-contact__details">
-    <p>향후 문의에 포함할 내용</p>
+    <p>{english ? 'What to include in a future inquiry' : '향후 문의에 포함할 내용'}</p>
     <ol>{content.intake.map((item, index) => <li><span class="tabular">0{index + 1}</span>{item}</li>)}</ol>
     <p class="participation-contact__privacy"><LockKeyhole aria-hidden="true" size={18} />{content.privacyNotice}</p>
-    <ButtonLink href={content.whitepaperHref} variant="secondary">웹 백서 읽기</ButtonLink>
+    <ButtonLink href={content.whitepaperHref} variant="secondary">{english ? 'Read the whitepaper' : '웹 백서 읽기'}</ButtonLink>
   </div>
 </section>

@@ -5,25 +5,34 @@ interface Props {
   chapters: WhitepaperChapter[];
   currentSlug?: string;
   label?: string;
+  mode?: 'route' | 'anchor';
+  routeBase?: string;
 }
 
-const { chapters, currentSlug, label = '백서 전체 목차' } = Astro.props;
+const { chapters, currentSlug, label = '백서 전체 목차', mode = 'route', routeBase = '/whitepaper' } = Astro.props;
 ---
 
-<nav class="whitepaper-chapter-index" aria-label={label}>
+<nav class="whitepaper-chapter-index" aria-label={label} data-whitepaper-index={mode}>
   <ol>
-    {chapters.map((chapter) => (
-      <li class:list={{ 'is-current': currentSlug === chapter.slug }}>
-        <a
-          href={`/whitepaper/${chapter.slug}`}
-          aria-current={currentSlug === chapter.slug ? 'page' : undefined}
-        >
-          <span class="whitepaper-chapter-index__number latin tabular">
-            {String(chapter.number).padStart(2, '0')}
-          </span>
-          <span>{chapter.title}</span>
-        </a>
-      </li>
-    ))}
+    {chapters.map((chapter, index) => {
+      const isCurrent = currentSlug === chapter.slug || (mode === 'anchor' && index === 0);
+      const href = mode === 'anchor'
+        ? `#chapter-${chapter.slug}`
+        : `${routeBase}/${chapter.slug}`;
+      return (
+        <li class:list={{ 'is-current': isCurrent }}>
+          <a
+            href={href}
+            aria-current={isCurrent ? (mode === 'anchor' ? 'location' : 'page') : undefined}
+            data-chapter-slug={chapter.slug}
+          >
+            <span class="whitepaper-chapter-index__number latin tabular">
+              {String(chapter.number).padStart(2, '0')}
+            </span>
+            <span>{chapter.title}</span>
+          </a>
+        </li>
+      );
+    })}
   </ol>
 </nav>

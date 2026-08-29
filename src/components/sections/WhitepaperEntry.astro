@@ -1,14 +1,18 @@
 ---
+import { Image } from 'astro:assets';
 import { ArrowRight, BookOpen, FileText } from 'lucide-astro';
+import whitepaperCover from '../../assets/home/iroa-whitepaper-cover-v1.png';
 import type { WhitepaperContent } from '../../types/home';
 import ButtonLink from '../primitives/ButtonLink.astro';
 import StatusBadge from '../primitives/StatusBadge.astro';
 
 interface Props {
   content: WhitepaperContent;
+  locale?: 'ko' | 'en';
 }
 
-const { content } = Astro.props;
+const { content, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
 <section id="whitepaper-entry" class="home-section whitepaper-entry container" aria-labelledby="whitepaper-entry-title">
@@ -21,25 +25,38 @@ const { content } = Astro.props;
     <ButtonLink href={content.primaryCta.href}>{content.primaryCta.label}<BookOpen aria-hidden="true" size={18} /></ButtonLink>
   </div>
   <dl class="whitepaper-entry__control">
-    <div><dt>버전</dt><dd class="latin tabular">v{content.version}</dd></div>
-    <div><dt>기준 언어</dt><dd>{content.language} Master</dd></div>
-    <div><dt>발행 상태</dt><dd><StatusBadge status={content.status} /></dd></div>
+    <div><dt>{english ? 'Version' : '버전'}</dt><dd class="latin tabular">v{content.version}</dd></div>
+    <div><dt>{english ? 'Controlling language' : '기준 언어'}</dt><dd>{content.language} Master</dd></div>
+    <div><dt>{english ? 'Publication status' : '발행 상태'}</dt><dd><StatusBadge status={content.status} locale={locale} /></dd></div>
   </dl>
-  <nav class="whitepaper-entry__chapters" aria-label="대표 백서 장">
+  <nav class="whitepaper-entry__chapters" aria-label={english ? 'Featured whitepaper chapters' : '대표 백서 장'}>
     <ol>
       {content.chapters.map((chapter, index) => <li><a href={chapter.href}><span class="tabular">0{index + 1}</span><strong>{chapter.label}</strong><ArrowRight aria-hidden="true" size={18} /></a></li>)}
     </ol>
   </nav>
-  <div class="whitepaper-entry__reader" aria-label="웹 백서 구성 미리보기">
+  <div class="whitepaper-entry__reader" aria-label={english ? 'Web whitepaper preview' : '웹 백서 구성 미리보기'}>
     <aside>
       <p class="latin">DOCUMENT INDEX</p>
-      <ol><li class="is-current">01 핵심 선언</li><li>02 프로토콜 구조</li><li>03 개인정보와 보안</li><li>04 네트워크 경제</li></ol>
+      <ol>{english ? <><li class="is-current">01 Core Declaration</li><li>02 Protocol Architecture</li><li>03 Privacy and Safety</li><li>04 Network Economy</li></> : <><li class="is-current">01 핵심 선언</li><li>02 프로토콜 구조</li><li>03 개인정보와 보안</li><li>04 네트워크 경제</li></>}</ol>
     </aside>
     <article>
-      <p class="whitepaper-entry__breadcrumb latin">IROA.AI / WHITEPAPER / 01</p>
-      <FileText aria-hidden="true" size={24} />
-      <h3>현실의 요청을 검증 가능한 결과로 연결합니다.</h3>
-      <p>백서는 프로토콜 아키텍처, 사용자 권한, Node와 증빙, 정산 경계, 로드맵의 근거를 하나의 읽기 흐름으로 제공합니다.</p>
+      <div class="whitepaper-entry__reader-copy">
+        <p class="whitepaper-entry__breadcrumb latin">IROA.AI / WHITEPAPER / 01</p>
+        <FileText aria-hidden="true" size={24} />
+        <h3>{english ? 'Connect real-world requests to verifiable outcomes.' : '현실의 요청을 검증 가능한 결과로 연결합니다.'}</h3>
+        <p>{english ? 'The whitepaper brings protocol architecture, user authority, Nodes and evidence, settlement boundaries, and roadmap evidence into one reading flow.' : '백서는 프로토콜 아키텍처, 사용자 권한, Node와 증빙, 정산 경계, 로드맵의 근거를 하나의 읽기 흐름으로 제공합니다.'}</p>
+      </div>
+      <figure class="whitepaper-entry__cover">
+        <Image
+          src={whitepaperCover}
+          alt={english ? 'IROA.AI Whitepaper 1.0 cover' : 'IROA.AI 한국어 백서 1.0 표지'}
+          widths={[360, 540, 720]}
+          sizes="(max-width: 767px) calc(100vw - 4rem), 30vw"
+          format="webp"
+          quality={90}
+          loading="lazy"
+        />
+      </figure>
       <div class="whitepaper-entry__mini-path" aria-hidden="true"><span>Request</span><span>Task Capsule</span><span>Node</span><span>Proof</span><span>Base</span></div>
     </article>
   </div>

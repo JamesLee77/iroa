@@ -1,6 +1,7 @@
 ---
+import { Image } from 'astro:assets';
+import secureProofVisual from '../../assets/home/iroa-secure-proof-v1.png';
 import type { NodeProofContent } from '../../types/home';
-import { PRIVACY_BOUNDARY } from '../../lib/protocol/flow';
 import PrivacyBoundary from '../patterns/PrivacyBoundary.astro';
 import ProofReceipt from '../patterns/ProofReceipt.astro';
 import VerifiedNode from '../patterns/VerifiedNode.astro';
@@ -8,22 +9,36 @@ import SectionIntro from '../primitives/SectionIntro.astro';
 
 interface Props {
   content: NodeProofContent;
+  locale?: 'ko' | 'en';
 }
 
-const { content } = Astro.props;
+const { content, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
 ---
 
 <section id="network" class="home-section network-proof container" aria-labelledby="network-proof-title">
   <SectionIntro eyebrow="NODE & PROOF" title={content.title} lead={content.description} id="network-proof-title" />
+  <figure class="network-proof__visual">
+    <Image
+      src={secureProofVisual}
+      alt={english ? 'Execution path from a user request through a secure Task Capsule and verified Node to completion evidence' : '사용자 요청이 보안 Task Capsule과 검증 Node를 거쳐 완료 증빙으로 이어지는 실행 경로'}
+      widths={[640, 960, 1280]}
+      sizes="(max-width: 1239px) calc(100vw - 2rem), 1240px"
+      format="webp"
+      quality={88}
+      loading="lazy"
+    />
+    <figcaption>{english ? 'Execution is limited to the request scope, and evidence is recorded only after the external outcome is confirmed.' : '요청 범위 안의 실행만 허용하고, 외부 결과가 확인된 뒤 증빙을 남깁니다.'}</figcaption>
+  </figure>
   <div class="network-proof__ledger">
     <div>
       <p class="network-proof__sequence latin tabular">01 / VERIFIED NODE</p>
-      <VerifiedNode {...content.node} />
+      <VerifiedNode {...content.node} locale={locale} />
     </div>
     <div>
       <p class="network-proof__sequence latin tabular">02 / PROOF RECEIPT</p>
-      <ProofReceipt {...content.proof} />
+      <ProofReceipt {...content.proof} locale={locale} />
     </div>
   </div>
-  <PrivacyBoundary boundary={PRIVACY_BOUNDARY} />
+  <PrivacyBoundary boundary={content.privacy} locale={locale} />
 </section>

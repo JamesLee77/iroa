@@ -3,22 +3,45 @@ import { ChevronDown, Menu } from 'lucide-astro';
 import wordmarkUrl from '../../docs/brand/masters/wordmark/iroa-wordmark-color.svg?url';
 import ButtonLink from './primitives/ButtonLink.astro';
 
-const navigationItems = [
-  { label: '프로토콜', href: '/#protocol' },
-  { label: '네트워크', href: '/#network' },
-  { label: '이코노미', href: '/#economy' },
-  { label: '백서', href: '/whitepaper' },
-  { label: '로드맵', href: '/#roadmap' },
-] as const;
+interface Props {
+  locale?: 'ko' | 'en';
+  currentPath?: string;
+}
+
+const { locale = 'ko', currentPath = '/' } = Astro.props;
+const english = locale === 'en';
+const root = english ? '/en/' : '/';
+const whitepaper = english ? '/en/whitepaper' : '/whitepaper';
+const navigationItems = english
+  ? [
+      { label: 'Protocol', href: '/en/#protocol' },
+      { label: 'Network', href: '/en/#network' },
+      { label: 'Economy', href: '/en/#economy' },
+      { label: 'Whitepaper', href: '/en/whitepaper' },
+      { label: 'Roadmap', href: '/en/#roadmap' },
+    ]
+  : [
+      { label: '프로토콜', href: '/#protocol' },
+      { label: '네트워크', href: '/#network' },
+      { label: '이코노미', href: '/#economy' },
+      { label: '백서', href: '/whitepaper' },
+      { label: '로드맵', href: '/#roadmap' },
+    ];
+const languageHref = english
+  ? (currentPath.startsWith('/en/whitepaper') ? currentPath.replace(/^\/en/, '') : '/')
+  : (currentPath.startsWith('/whitepaper') ? `/en${currentPath}` : '/en/');
+const copy = english
+  ? { home: 'IROA.AI home', nav: 'Primary navigation', mobileNav: 'Mobile navigation', menu: 'Menu', cta: 'Read the whitepaper', language: '한국어' }
+  : { home: 'IROA.AI 홈', nav: '주요 메뉴', mobileNav: '모바일 메뉴', menu: '메뉴', cta: '웹 백서 읽기', language: 'English' };
 ---
 
 <header class="site-header">
   <div class="site-header__inner container">
-    <a class="site-header__brand" href="/" aria-label="IROA.AI 홈">
+    <a class="site-header__brand" href={root} aria-label={copy.home}>
       <img src={wordmarkUrl} alt="" width="600" height="180" />
     </a>
 
-    <nav class="site-header__desktop-nav" aria-label="주요 메뉴">
+    <nav class="site-header__desktop-nav" aria-label={copy.nav}>
       <ul>
         {
           navigationItems.map((item) => (
@@ -29,17 +52,18 @@ const navigationItems = [
     </nav>
 
     <div class="site-header__desktop-action">
-      <ButtonLink href="/whitepaper">웹 백서 읽기</ButtonLink>
+      <a class="site-header__language" href={languageHref} hreflang={english ? 'ko' : 'en'}>{copy.language}</a>
+      <ButtonLink href={whitepaper}>{copy.cta}</ButtonLink>
     </div>
 
     <details class="site-header__mobile-menu">
       <summary>
         <Menu aria-hidden="true" size={20} strokeWidth={2} />
-        <span>메뉴</span>
+        <span>{copy.menu}</span>
         <ChevronDown class="site-header__summary-chevron" aria-hidden="true" size={18} strokeWidth={2} />
       </summary>
       <div class="site-header__mobile-panel">
-        <nav aria-label="모바일 메뉴">
+        <nav aria-label={copy.mobileNav}>
           <ul>
             {
               navigationItems.map((item) => (
@@ -48,7 +72,8 @@ const navigationItems = [
             }
           </ul>
         </nav>
-        <ButtonLink href="/whitepaper">웹 백서 읽기</ButtonLink>
+        <a class="site-header__language" href={languageHref} hreflang={english ? 'ko' : 'en'}>{copy.language}</a>
+        <ButtonLink href={whitepaper}>{copy.cta}</ButtonLink>
       </div>
     </details>
   </div>
@@ -163,6 +188,14 @@ const navigationItems = [
     background: var(--color-surface-soft);
   }
 
+  .site-header__language {
+    color: var(--color-text-muted);
+    font-family: var(--font-latin);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
   @media (min-width: 64rem) {
     .site-header__inner {
       gap: var(--space-5);
@@ -198,7 +231,9 @@ const navigationItems = [
     }
 
     .site-header__desktop-action {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
     }
 
     .site-header__mobile-menu {
