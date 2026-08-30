@@ -25,7 +25,7 @@ export const ResultReceiptSchema = ReceiptContextSchema.extend({
   outcomeCode: z.string().regex(/^[A-Z][A-Z0-9_]{0,63}$/),
   accessibilityMetricsHash: Hex32Schema,
   nodeSignature: SignatureSchema,
-}).refine((receipt) => receipt.completedAt >= receipt.startedAt, {
+}).strict().refine((receipt) => receipt.completedAt >= receipt.startedAt, {
   message: 'completedAt must be greater than or equal to startedAt',
   path: ['completedAt'],
 });
@@ -44,7 +44,7 @@ export const DeletionReceiptSchema = ReceiptContextSchema.extend({
   runtimeImageHash: Hex32Schema,
   deletionMethod: DeletionMethodSchema,
   nodeSignature: SignatureSchema,
-});
+}).strict();
 
 export type ResultReceipt = z.infer<typeof ResultReceiptSchema>;
 export type DeletionMethod = z.infer<typeof DeletionMethodSchema>;

@@ -39,16 +39,26 @@ export function canTransition(from: TaskState, to: TaskState): boolean {
 
 export const TaskTrustLevelSchema = z.enum(['N0', 'N1', 'N2', 'N3', 'N4']);
 
+const CiphertextReferenceSchema = z
+  .string()
+  .max(2_048)
+  .regex(/^iroa-blob:\/\/[A-Za-z0-9][A-Za-z0-9._~:/-]*$/, 'Expected an opaque iroa-blob reference');
+
+const ResultSchemaReferenceSchema = z
+  .string()
+  .max(2_048)
+  .regex(/^iroa-schema:\/\/[A-Za-z0-9][A-Za-z0-9._~:/-]*$/, 'Expected an iroa-schema reference');
+
 export const TaskCapsuleSchema = z.object({
   taskId: Hex32Schema,
   policyVersion: PolicyVersionSchema,
   trustLevel: TaskTrustLevelSchema,
   capabilityScope: z.array(z.string().trim().min(1).max(128)).min(1).max(32),
   expiresAt: UnixSecondsSchema,
-  inputCiphertextRef: z.string().trim().min(1).max(2_048),
-  expectedResultSchema: z.string().trim().min(1).max(2_048),
+  inputCiphertextRef: CiphertextReferenceSchema,
+  expectedResultSchema: ResultSchemaReferenceSchema,
   userApprovalHash: Hex32Schema,
-});
+}).strict();
 
 export type TaskTrustLevel = z.infer<typeof TaskTrustLevelSchema>;
 export type TaskCapsule = z.infer<typeof TaskCapsuleSchema>;

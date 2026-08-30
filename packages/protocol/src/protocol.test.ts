@@ -38,6 +38,37 @@ describe('IROA protocol contracts', () => {
     ).toBeDefined();
   });
 
+  it('rejects undeclared capsule fields', () => {
+    expect(
+      TaskCapsuleSchema.safeParse({
+        taskId: hash,
+        policyVersion: '1.0.0',
+        trustLevel: 'N2',
+        capabilityScope: ['public-information'],
+        expiresAt: 1_800_000_000,
+        inputCiphertextRef: 'iroa-blob://task/example',
+        expectedResultSchema: 'iroa-schema://public-information/v1',
+        userApprovalHash: hash,
+        rawPersonalData: 'must never enter a Task Capsule',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('rejects inline capsule payloads', () => {
+    expect(
+      TaskCapsuleSchema.safeParse({
+        taskId: hash,
+        policyVersion: '1.0.0',
+        trustLevel: 'N2',
+        capabilityScope: ['public-information'],
+        expiresAt: 1_800_000_000,
+        inputCiphertextRef: 'raw health and reservation details',
+        expectedResultSchema: 'iroa-schema://public-information/v1',
+        userApprovalHash: hash,
+      }).success,
+    ).toBe(false);
+  });
+
   it('requires chain-bound signed result and deletion receipts', () => {
     const context = {
       chainId: 84532,
@@ -72,6 +103,21 @@ describe('IROA protocol contracts', () => {
     ).toBeDefined();
   });
 
+  it('preserves uint256 reward scores without precision loss', () => {
+    expect(
+      RewardLeafSchema.safeParse({
+        epoch: 1,
+        operatorIdHash: hash,
+        nodeId: hash,
+        score: '9007199254740993',
+        rewardAmount: '1000000000000000000',
+        receiptBatchRoot: hash,
+        policyVersion: '1.0.0',
+        claimNonce: hash,
+      }).success,
+    ).toBe(true);
+  });
+
   it('rejects malformed hashes, negative timestamps and lossy reward amounts', () => {
     expect(
       TaskCapsuleSchema.safeParse({
@@ -91,7 +137,7 @@ describe('IROA protocol contracts', () => {
         epoch: 1,
         operatorIdHash: hash,
         nodeId: hash,
-        score: 10_000,
+        score: '10000',
         rewardAmount: '01',
         receiptBatchRoot: hash,
         policyVersion: '1.0.0',

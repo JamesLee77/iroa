@@ -83,7 +83,7 @@ docs/architecture/runbooks/               Sepolia, Mainnet, private validation, 
 - Produces: `TaskState`, `TaskCapsule`, `ResultReceipt`, `DeletionReceipt`, `RewardLeaf`, `PolicyVersion`, `canTransition()`
 - Consumes: 없음
 
-- [ ] **Step 1: npm workspace 설정**
+- [x] **Step 1: npm workspace 설정**
 
 루트 `package.json`에 다음 workspace와 terminal scripts를 추가한다. 기존 Astro scripts는 유지한다.
 
@@ -105,7 +105,7 @@ docs/architecture/runbooks/               Sepolia, Mainnet, private validation, 
 
 workspace test scripts는 watch가 아닌 one-shot mode를 사용한다. 세 app의 E2E script는 Task 14에서 이미 생성한 artifact를 serve하며 자체 build를 다시 호출하지 않는다.
 
-- [ ] **Step 2: 공통 상태와 상태 전이 구현**
+- [x] **Step 2: 공통 상태와 상태 전이 구현**
 
 ```ts
 export type TaskState =
@@ -118,22 +118,22 @@ export function canTransition(from: TaskState, to: TaskState): boolean;
 
 전이표는 Spec 9절만 허용한다. `cancelled`와 `rewarded`는 terminal state다.
 
-- [ ] **Step 3: Capsule과 Receipt 타입 구현**
+- [x] **Step 3: Capsule과 Receipt 타입 구현**
 
 모든 시간은 Unix seconds `number`, 모든 hash는 ``0x${string}``, 금액은 decimal string으로 직렬화한다. `ResultReceipt`와 `DeletionReceipt`에는 `chainId`, `verifyingContract`, `nonce`를 포함한다.
 
-- [ ] **Step 4: module regression source 생성**
+- [x] **Step 4: module regression source 생성**
 
 `protocol.test.ts`에 허용·금지 상태 전이, hash 형식, 음수 시간이 거부되는 Zod schema test를 작성하되 실행하지 않는다.
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add package.json tsconfig.base.json packages/protocol
 git commit -m "feat: define IROA protocol contracts"
 ```
 
-- [ ] **Step 6: 소스 검토와 REVIEW_FIX 경계**
+- [x] **Step 6: 소스 검토와 REVIEW_FIX 경계**
 
 상태 우회, 직렬화 손실, hash 길이, nonce 누락과 terminal state 재진입을 검토한다. 결함이 확인되지 않으면 test를 실행하지 않는다. 결함이 확인되면 finding 이름, test file과 단일 case를 기록한 REVIEW_FIX item을 먼저 만든다.
 
