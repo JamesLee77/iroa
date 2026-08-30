@@ -6,6 +6,10 @@ import type { AuthenticatedActor } from './auth.js';
 import type { Storage, StorageTransaction, TaskRecord } from './storage.js';
 
 const APPROVAL_SCHEMA = z.object({ approvalHash: Hex32Schema }).strict();
+const DISPUTE_SCHEMA = z.object({
+  reasonCode: z.enum(['RESULT_INCORRECT', 'RESULT_INCOMPLETE', 'ACCESSIBILITY_ISSUE', 'OTHER']),
+  evidenceHash: Hex32Schema.optional(),
+}).strict();
 
 function assertTaskOwner(task: TaskRecord, actor: AuthenticatedActor): void {
   if (actor.type !== 'user' || !actor.sessionId || task.ownerSessionId !== actor.sessionId) {
@@ -143,6 +147,63 @@ export class TaskService {
         now,
       });
       return cancelled;
+    });
+  }
+
+  async confirm(actor: AuthenticatedActor, taskIdInput: string): Promise<TaskRecord> {
+    const taskId = Hex32Schema.parse(taskIdInput);
+    const now = this.now();
+    return this.storage.transaction((transaction) => {
+      const task = transaction.getTask(taskId);
+      if (!task) throw new Error('TASK_NOT_FOUND');
+      assertTaskOwner(task, actor);
+      if (!transaction.getReceipt(taskId, 'result')) throw new Error('RESULT_RECEIPT_REQUIRED');
+      if (!transaction.getReceipt(taskId, 'deletion')) throw new Error('DELETION_RECEIPT_REQUIRED');
+      const verified = transitionTask(transaction, task, 'verified', actor, 'USER_CONFIRMED_RESULT', now);
+      const rewardPending = transitionTask(
+        transaction,
+        verified,
+        'reward_pending',
+        { type: 'system', id: 'receipt-settlement' },
+        'RECEIPTS_COMPLETE',
+        now,
+      );
+      appendAudit(transaction, {
+        action: 'TASK_RESULT_CONFIRMED',
+        actorType: 'user',
+        actorId: actor.id,
+        subjectType: 'task',
+        subjectId: taskId,
+        metadata: { policyVersion: task.policyVersion },
+        now,
+      });
+      return rewardPending;
+    });
+  }
+
+  async dispute(actor: AuthenticatedActor, taskIdInput: string, inputValue: unknown): Promise<TaskRecord> {
+    const taskId = Hex32Schema.parse(taskIdInput);
+    const input = DISPUTE_SCHEMA.parse(inputValue);
+    const now = this.now();
+    return this.storage.transaction((transaction) => {
+      const task = transaction.getTask(taskId);
+      if (!task) throw new Error('TASK_NOT_FOUND');
+      assertTaskOwner(task, actor);
+      if (!transaction.getReceipt(taskId, 'result')) throw new Error('RESULT_RECEIPT_REQUIRED');
+      const disputed = transitionTask(transaction, task, 'disputed', actor, input.reasonCode, now);
+      appendAudit(transaction, {
+        action: 'TASK_RESULT_DISPUTED',
+        actorType: 'user',
+        actorId: actor.id,
+        subjectType: 'task',
+        subjectId: taskId,
+        metadata: {
+          reasonCode: input.reasonCode,
+          hasEvidence: Boolean(input.evidenceHash),
+        },
+        now,
+      });
+      return disputed;
     });
   }
 

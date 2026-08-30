@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { DeletionReceipt, Hex32, ResultReceipt } from '@iroa/protocol';
-import { DeletionReceiptSchema, ResultReceiptSchema } from '@iroa/protocol';
+import { DeletionReceiptSchema, Hex32Schema, ResultReceiptSchema } from '@iroa/protocol';
 import { appendAudit } from './audit.js';
 import type { AuthenticatedActor } from './auth.js';
 import { requireMatchingActiveLease } from './leases.js';
@@ -143,6 +143,29 @@ export class ReceiptService {
         now,
       });
       return stored;
+    });
+  }
+
+  async getTaskStatus(taskIdInput: string): Promise<{
+    result: { status: 'verified' | 'missing'; receiptHash: Hex32 | null; createdAt: number | null };
+    deletion: { status: 'verified' | 'missing'; receiptHash: Hex32 | null; createdAt: number | null };
+  }> {
+    const taskId = Hex32Schema.parse(taskIdInput);
+    return this.storage.transaction((transaction) => {
+      const result = transaction.getReceipt(taskId, 'result');
+      const deletion = transaction.getReceipt(taskId, 'deletion');
+      return {
+        result: {
+          status: result ? 'verified' : 'missing',
+          receiptHash: result?.receiptHash ?? null,
+          createdAt: result?.createdAt ?? null,
+        },
+        deletion: {
+          status: deletion ? 'verified' : 'missing',
+          receiptHash: deletion?.receiptHash ?? null,
+          createdAt: deletion?.createdAt ?? null,
+        },
+      };
     });
   }
 

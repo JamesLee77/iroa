@@ -8,6 +8,7 @@ import { deriveNodeId, NodeService } from '../src/nodes.js';
 import { ReceiptService } from '../src/receipts.js';
 import { MemoryStorage } from '../src/storage.js';
 import { TaskService } from '../src/tasks.js';
+import { serializePublicTask } from '../src/index.js';
 
 const operatorAddress = '0x1111111111111111111111111111111111111111' as Address;
 const deviceAddress = '0x2222222222222222222222222222222222222222' as Address;
@@ -71,6 +72,21 @@ async function fixture() {
 }
 
 describe('IROA Control API task lifecycle', () => {
+  it('does not expose session ownership or lease credentials in a public task', async () => {
+    const app = await fixture();
+    const taskId = `0x${'20'.repeat(32)}` as Hex32;
+    const record = await app.tasks.create(app.user, capsule(taskId, app.clock()));
+    const publicRecord = serializePublicTask({
+      ...record,
+      assignedNodeId: app.nodeId,
+      currentLeaseNonce: `0x${'21'.repeat(32)}` as Hex32,
+    });
+
+    expect(publicRecord).not.toHaveProperty('ownerSessionId');
+    expect(publicRecord).not.toHaveProperty('assignedNodeId');
+    expect(publicRecord).not.toHaveProperty('currentLeaseNonce');
+  });
+
   it('requires CSRF proof for every cookie-authenticated state request', () => {
     const auth = new AuthService(Buffer.alloc(32, 1), () => 1_800_000_000);
     const issued = auth.issueSandboxSession();

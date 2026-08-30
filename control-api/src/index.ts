@@ -5,7 +5,7 @@ import { AuthService, type AuthenticatedActor } from './auth.js';
 import { LeaseService } from './leases.js';
 import { deriveNodeId, NodeService } from './nodes.js';
 import { ReceiptService } from './receipts.js';
-import { MemoryStorage, type Storage } from './storage.js';
+import { MemoryStorage, type Storage, type TaskRecord } from './storage.js';
 import { TaskService } from './tasks.js';
 
 interface ControlApiConfig {
@@ -58,6 +58,11 @@ function send(response: ServerResponse, status: number, payload: unknown, cookie
   response.setHeader('x-content-type-options', 'nosniff');
   if (cookie) response.setHeader('set-cookie', cookie);
   response.end(JSON.stringify(payload));
+}
+
+export function serializePublicTask(task: TaskRecord): Omit<TaskRecord, 'ownerSessionId' | 'assignedNodeId' | 'currentLeaseNonce'> {
+  const { ownerSessionId: _ownerSessionId, assignedNodeId: _assignedNodeId, currentLeaseNonce: _currentLeaseNonce, ...safe } = task;
+  return safe;
 }
 
 function errorStatus(code: string): number {
@@ -159,18 +164,33 @@ async function route(request: IncomingMessage, response: ServerResponse, service
     return;
   }
   if (method === 'POST' && url.pathname === '/v1/tasks') {
-    send(response, 201, await services.tasks.create(userActor(request, services), await readJson(request)));
+    send(response, 201, serializePublicTask(await services.tasks.create(userActor(request, services), await readJson(request))));
+    return;
+  }
+  if (method === 'GET' && parts.length === 3 && parts[0] === 'v1' && parts[1] === 'tasks') {
+    const actor = userActor(request, services);
+    const task = await services.tasks.get(actor, parts[2] ?? '');
+    const receipts = await services.receipts.getTaskStatus(task.taskId);
+    send(response, 200, { task: serializePublicTask(task), receipts });
     return;
   }
   if (method === 'POST' && parts.length === 4 && parts[0] === 'v1' && parts[1] === 'tasks') {
     const taskId = parts[2] ?? '';
     const action = parts[3];
     if (action === 'approve') {
-      send(response, 200, await services.tasks.approve(userActor(request, services), taskId, await readJson(request)));
+      send(response, 200, serializePublicTask(await services.tasks.approve(userActor(request, services), taskId, await readJson(request))));
       return;
     }
     if (action === 'cancel') {
-      send(response, 200, await services.tasks.cancel(userActor(request, services), taskId));
+      send(response, 200, serializePublicTask(await services.tasks.cancel(userActor(request, services), taskId)));
+      return;
+    }
+    if (action === 'confirm') {
+      send(response, 200, serializePublicTask(await services.tasks.confirm(userActor(request, services), taskId)));
+      return;
+    }
+    if (action === 'dispute') {
+      send(response, 200, serializePublicTask(await services.tasks.dispute(userActor(request, services), taskId, await readJson(request))));
       return;
     }
     if (action === 'claim') {
