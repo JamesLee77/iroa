@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+**/coverage
+**/.turbo
+**/.astro
+**/test-results
+**/playwright-report
+*.pem
+*.key
