@@ -1,13 +1,18 @@
 # IROA V1 final integration evidence
 
-Status: **broad rerun required before release approval**  
-Candidate source commit: `3e1438995138d7b08f7043ad0c1d0319ad80a180`  
-Recorded: 2026-08-30 KST  
+Status: **local FINAL_INTEGRATION passed; external release gates remain**
+
+Candidate source commit: `3e1438995138d7b08f7043ad0c1d0319ad80a180`
+
+Validated repository commit: `2e463d0d9efa13cb27d8d5fe2b33bbb120a6d34b`
+
+Recorded: 2026-08-30 KST
+
 Network transaction status: **no Base Sepolia or Base Mainnet transaction was sent**
 
 ## Decision
 
-The candidate has focused evidence for every defect found during the first final-integration run, deterministic local deployment evidence, no high-severity Slither result, completed browser coverage for all known failing cases, and passing brand regression. It does **not** have a successful terminal run of the broad regression, broad typecheck, broad build, or combined browser command after the repairs. Those four evidence layers remain invalid until the user explicitly authorizes one broad rerun.
+After the user explicitly authorized a broad rerun, the repaired candidate passed the full regression, full typecheck, full production build and combined browser suite. It also has deterministic local deployment evidence, no high-severity Slither result and passing brand regression. The local final-integration gate is complete for the validated commit; any source, dependency or build-configuration change invalidates the affected evidence layer.
 
 This record is not an independent smart-contract audit, a mainnet deployment approval, legal approval, or participant-distribution approval.
 
@@ -16,15 +21,15 @@ This record is not an independent smart-contract audit, a mainnet deployment app
 | Layer | Command / scope | Result | Release interpretation |
 |---|---|---|---|
 | Exact dependencies | `npm ci --ignore-scripts` | PASS | 751 packages installed from lockfile. npm reported 19 known dependency advisories: 12 low, 5 moderate, 2 high. No automatic dependency mutation was performed. |
-| Broad regression | `CODEX_VALIDATION_PHASE=FINAL_INTEGRATION npm run test:all` | FAIL | Root 70, contracts 3, crypto 7, protocol 7, control API 16, verifier 14 and admin 6 tests passed. Onchain had 43 pass / 6 fail; NODE Agent had 9 pass / 2 fail plus one handled-late timeout rejection. Broad regression remains invalid. |
+| Broad regression | authorized `npm run test:all` rerun | PASS | 183/183: root 70, contracts 3, crypto 7, protocol 7, onchain 49, control API 16, NODE Agent 11, verifier 14 and admin 6. |
 | Focused regression repairs | exact six failing onchain cases; exact three NODE Agent cases | PASS | Onchain 6/6 and NODE Agent 3/3 passed after source and fixture repair. This is focused evidence, not a replacement for the broad suite. |
-| Broad typecheck | `CODEX_VALIDATION_PHASE=FINAL_INTEGRATION npm run typecheck:all` | FAIL | Project-reference/source-path separation and several E2E fixture types failed. Broad typecheck remains invalid. |
+| Broad typecheck | authorized `npm run typecheck:all` rerun | PASS | Astro checked 65 files with 0 errors, 0 warnings and 0 hints; every workspace typecheck passed. |
 | Focused typechecks | `control-api`, `node-agent`, `verifier`, `sandbox`, `operator`, `admin` workspace typechecks | PASS | All six repaired workspaces passed their scoped typecheck. This is not a broad rerun. |
-| Broad production build | `CODEX_VALIDATION_PHASE=FINAL_INTEGRATION npm run build:all` | FAIL | The 50-page Korean/English Astro artifact and Sandbox, Operator and Admin production bundles built. Control API, NODE Agent and Verifier failed because their build configs omitted Node types. Broad build remains invalid. Operator/Admin emitted a chunk-size warning above 500 kB. |
+| Broad production build | authorized `npm run build:all` rerun | PASS | The 50-page Korean/English Astro artifact and every workspace built. Operator and Admin retained non-failing chunk-size warnings above 500 kB. |
 | Focused server builds | individual `control-api`, `node-agent`, `verifier` builds | PASS | All three repaired server packages built. This is not a broad rerun. |
 | Static analysis | `npm --workspace onchain run analyze` | PASS | Exact cached `solc 0.8.24`, Cancun EVM, 59 contracts and 101 detectors. No high-severity result. Thirty-six medium/low/informational results remain audit inputs. The only initial high classification was `monthIndex % 12`; it is a deterministic calendar index, not randomness, and is suppressed on that exact line with rationale. |
 | Deterministic deploy | `npm --workspace onchain run deploy:local:verify` | PASS | Two independent Hardhat 3 local chains produced identical contract addresses, seven allocations and runtime-bytecode hashes; both read-back reports passed. |
-| Combined browser command | `CODEX_VALIDATION_PHASE=FINAL_INTEGRATION npm run test:e2e:all` | FAIL | Homepage/whitepaper returned 42/47 before the chained command stopped. The five failures were stale accessibility-name, anchor, duplicate-link, unique-image-count and lazy-image test assumptions. Combined browser evidence remains invalid. |
+| Combined browser command | authorized `npm run test:e2e:all` rerun | PASS | 71/71: homepage/whitepaper 47, Sandbox desktop/mobile 12, Operator 7 and Admin 5. |
 | Focused homepage repairs | exact five failed homepage/whitepaper cases, followed by the remaining single case | PASS | 5/5 known failures passed after test-contract correction. |
 | Sandbox browser flow | first app run plus exact failed desktop/mobile case | PASS with focused repair | Initial 10/12; the two variants failed on an ambiguous text locator. Exact two-case rerun passed 2/2. |
 | Operator browser flow | complete Operator app suite | PASS | 7/7. Includes chain lock, enrollment retry boundary, chain-derived claim state, portal failure truthfulness, NODE status and partial 1:1 migration. |
@@ -69,7 +74,7 @@ These are local deterministic evidence values, not Base deployment addresses or 
 
 ## Known limitations and mandatory gates
 
-1. Obtain explicit authorization, then rerun the four invalid broad layers once against the unchanged candidate: regression, typecheck, production build and combined E2E.
+1. Preserve the validated commit. Any source, dependency or build-configuration change invalidates the affected evidence and requires authorization under the validation policy.
 2. Triage the 19 npm advisories without using an automatic breaking upgrade and rerun affected evidence only under the validation policy.
 3. Independently review the 36 non-high Slither results, especially arithmetic rounding, default-zero locals and trusted-token call ordering. Slither passing `--fail-high` is not an audit.
 4. Complete the Base Sepolia rehearsal, freeze its signed manifests and read-back reports, and collect explorer source-verification URLs.
