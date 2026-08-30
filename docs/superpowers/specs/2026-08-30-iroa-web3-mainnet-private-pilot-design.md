@@ -120,11 +120,13 @@ iroa/
 
 ### 6.1 `IROATokenV1`
 
-- ERC-20, Permit, Burnable, Pausable
+- ERC-20, Permit, Pausable와 migration 계약 전용 소각
 - 생성 시 100억 IROA를 Genesis Safe에 한 번만 발행
 - 일반 `mint` 함수 없음
+- 일반 사용자 `burn` 함수 없음. binding된 Migration 계약만 자신이 수령한 V1을 `burnForMigration`으로 소각
 - allowlist 정책을 통과한 지갑과 계약 사이에서만 이전
-- `MIGRATION_MODE`에서는 V1 → V2 Migration 계약으로 보내는 이전만 허용
+- `MIGRATION_ONLY`에서는 V1 → V2 Migration 계약으로 보내는 이전만 허용
+- 상태는 `NORMAL_PRIVATE`, 해제 가능한 `PAUSED`, 불변인 `MIGRATION_ONLY`를 지원한다. `NORMAL_PRIVATE` 또는 `PAUSED`에서 `MIGRATION_ONLY`로 전환할 수 있으며, 이후 일반 이전을 영구 종료하되 migration 계약으로의 이전과 전용 소각은 허용한다.
 - Base Mainnet과 Base Sepolia 이외의 배포는 별도 로컬 개발 profile만 허용
 - 이름, symbol, 버전, 공식 사이트와 V1 상태를 공개
 
@@ -146,7 +148,7 @@ Genesis Safe는 배포 직후 하나의 Safe batch로 7개 금고에 정확한 �
 
 - `IROANodeRegistry`: 운영자, 기기 키, N0–N3 자격, 승인·정지·폐기
 - `IROAReceiptRootRegistry`: epoch, Merkle root, 정책 버전, 제안·이의·확정 상태
-- `IROARewardDistributor`: 확정 root와 proof 기반 청구, 중복 청구 방지
+- `IROARewardDistributor`: 확정 root와 proof 기반 청구, 전체 leaf hash 기반 중복 청구 방지. 검증된 청구 금액만 `NodeEmissionVault`에서 직접 해제해 미사용 월 예산은 금고에 유지
 - 기능별 OpenZeppelin `AccessControl`: 계약별 운영 역할 관리. 각 `DEFAULT_ADMIN_ROLE`은 `IROATimelock`이 보유하고 배포자 EOA는 역할 이관 확인 후 모든 관리자 역할을 포기
 - `IROATimelock`: Safe 제안의 지연 실행, 긴급 정지와 정상 관리 분리
 
@@ -331,7 +333,7 @@ NODE 응답이 없으면 lease 만료 후 다른 적격 NODE에 재배정한다.
 
 ### 11.2 V1 → V2 공급 불변조건
 
-V2는 cap이 100억이고 생성 시 초기 공급량은 0이다. `IROAMigrationV1ToV2`만 V2 `MIGRATOR_ROLE`을 가지며, 다른 주소나 관리자에게 발행 권한을 부여하지 않는다. Migration은 한 transaction에서 다음 순서를 실행한다.
+V2는 cap이 100억이고 생성 시 초기 공급량은 0이다. V2의 migration 주소는 초기 공급 0 상태에서 정확히 한 번 binding하고 즉시 권한을 영구 잠근다. 이후 `IROAMigrationV1ToV2`만 V2를 발행할 수 있으며 다른 주소나 관리자에게 발행 권한을 부여하지 않는다. V2도 별도 공개 유통 설계와 승인이 있기 전까지 allowlist와 pause 정책을 유지하며 일반 burn을 제공하지 않는다. Migration은 한 transaction에서 다음 순서를 실행한다.
 
 ```text
 1. 사용자 또는 V1 금고에서 amount V1 수령
@@ -354,8 +356,9 @@ Migration 계약은 토큰 주소, 비율과 수령 규칙이 immutable이며 �
 - 이미 지급된 V1은 보유자가 직접 1:1 이전
 - 미해제 V1은 V1 금고에서 소각하고 동일 수량을 V2 금고에 발행
 - beneficiary, total allocation, start, cliff, end, released를 V2 schedule에 동일하게 복제
+- NODE·생태계·연구개발·유동성 금고는 start, 월별 누적 한도, 이미 해제·청구된 수량과 잔여량을 동일하게 복제
 - 이미 해제된 수량을 다시 vesting하지 않음
-- schedule import batch는 Migration 전용 역할과 공개 manifest로 제한
+- V1/V2 금고 pair와 schedule import batch는 Migration 전용 역할, 공개 manifest와 일회성 ID로 제한하고 V1 소각·V2 발행·schedule import를 같은 transaction에서 완료
 - V1/V2 schedule 대사표의 합계와 beneficiary별 잔여량이 일치해야 이전 완료
 
 V2 이전 종료 후 V1은 migration-only 상태를 유지하며 공식 UI와 문서는 V2를 canonical token으로 표시한다. 잔여 V1 보유자가 이전할 수 있는 조회·migration 화면은 유지한다.
