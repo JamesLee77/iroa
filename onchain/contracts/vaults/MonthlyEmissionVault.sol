@@ -11,11 +11,14 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
 
     uint64 public constant MONTH = 30 days;
     bytes32 public constant RELEASE_MANAGER_ROLE = keccak256("RELEASE_MANAGER_ROLE");
+    bytes32 public constant REWARD_DISTRIBUTOR_ROLE = keccak256("REWARD_DISTRIBUTOR_ROLE");
 
     error ZeroAddress();
     error InvalidAllocation();
     error InvalidWeights();
     error EmissionMonthInactive();
+    error RewardEpochNotClosed(uint256 epoch);
+    error InvalidEpoch(uint256 epoch);
     error MonthlyLimitExceeded(uint256 requested, uint256 available);
 
     event MonthlyEmissionReleased(
@@ -107,6 +110,27 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         token.safeTransfer(recipient, amount);
 
         emit MonthlyEmissionReleased(monthIndex, recipient, amount, releasedByMonth[monthIndex]);
+    }
+
+    function releaseReward(uint256 epoch, address recipient, uint256 amount)
+        external
+        onlyRole(REWARD_DISTRIBUTOR_ROLE)
+        nonReentrant
+    {
+        if (recipient == address(0)) revert ZeroAddress();
+        if (epoch >= scheduleMonths) revert InvalidEpoch(epoch);
+
+        uint256 epochEnd = uint256(startTimestamp) + ((epoch + 1) * MONTH);
+        if (block.timestamp < epochEnd) revert RewardEpochNotClosed(epoch);
+
+        uint256 available = monthlyBudget(epoch) - releasedByMonth[epoch];
+        if (amount == 0 || amount > available) revert MonthlyLimitExceeded(amount, available);
+
+        releasedByMonth[epoch] += amount;
+        totalReleased += amount;
+        token.safeTransfer(recipient, amount);
+
+        emit MonthlyEmissionReleased(epoch, recipient, amount, releasedByMonth[epoch]);
     }
 
     function _yearAllocation(uint256 yearIndex) private view returns (uint256) {
