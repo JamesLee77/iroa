@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "release": "v1",
+  "profile": "base-sepolia",
+  "chainId": "84532",
+  "manifestHash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "contracts": {
+    "nodeRegistry": "0x1000000000000000000000000000000000000001",
+    "rootRegistry": "0x1000000000000000000000000000000000000002",
+    "timelock": "0x1000000000000000000000000000000000000003",
+    "safe": "0x1000000000000000000000000000000000000004"
+  }
+}
