@@ -92,6 +92,8 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         if (monthIndex >= scheduleMonths) return 0;
 
         uint256 yearIndex = monthIndex / 12;
+        // Deterministic calendar indexing, not randomness or winner selection.
+        // slither-disable-next-line weak-prng
         uint256 monthInYear = monthIndex % 12;
         uint256 yearAllocation = _yearAllocation(yearIndex);
         uint256 baseMonthlyAmount = yearAllocation / 12;
