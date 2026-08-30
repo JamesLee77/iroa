@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "project": "IROA",
+  "network": "base",
+  "chainId": 8453,
+  "deploymentStatus": "planned",
+  "deploymentCommit": null,
+  "contracts": {}
+}

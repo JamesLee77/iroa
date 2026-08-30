@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "project": "IROA",
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "deploymentStatus": "planned",
+  "deploymentCommit": null,
+  "contracts": {}
+}
