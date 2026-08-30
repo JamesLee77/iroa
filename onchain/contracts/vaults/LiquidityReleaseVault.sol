@@ -4,6 +4,11 @@ pragma solidity 0.8.24;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {
+    IIROAV1MigrationBinding,
+    IIROAVaultMigration,
+    IROAMigrationTypes
+} from "../migration/IROAMigrationTypes.sol";
 
 contract LiquidityReleaseVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -16,8 +21,12 @@ contract LiquidityReleaseVault is ReentrancyGuard {
 
     error ZeroAddress();
     error NothingToRelease();
+    error UnauthorizedTreasury(address caller);
+    error InvalidMigrationContract(address supplied, address expected);
+    error MigrationBalanceMismatch(uint256 expected, uint256 actual);
 
     event LiquidityReleased(address indexed treasury, uint256 amount, uint256 totalReleased);
+    event RemainingScheduleMigrated(bytes32 indexed sourceScheduleId, bytes32 indexed sourceBatchId, uint256 amount);
 
     IERC20 public immutable token;
     address public immutable treasury;
@@ -51,5 +60,51 @@ contract LiquidityReleaseVault is ReentrancyGuard {
         released += amount;
         token.safeTransfer(treasury, amount);
         emit LiquidityReleased(treasury, amount, released);
+    }
+
+    function migrateRemaining(
+        address migration,
+        address v2Vault,
+        bytes32 sourceScheduleId,
+        bytes32 sourceBatchId
+    ) external nonReentrant {
+        if (msg.sender != treasury) revert UnauthorizedTreasury(msg.sender);
+        address expectedMigration = IIROAV1MigrationBinding(address(token)).migrationContract();
+        if (migration != expectedMigration || migration == address(0)) {
+            revert InvalidMigrationContract(migration, expectedMigration);
+        }
+
+        uint256 remaining = TOTAL_ALLOCATION - released;
+        uint256 actualBalance = token.balanceOf(address(this));
+        if (actualBalance != remaining) revert MigrationBalanceMismatch(remaining, actualBalance);
+
+        uint256[] memory cumulativeReleaseTable = new uint256[](LINEAR_MONTHS + 1);
+        for (uint256 i = 0; i <= LINEAR_MONTHS; ++i) {
+            cumulativeReleaseTable[i] = vestedAt(startTimestamp + uint64(i * MONTH));
+        }
+
+        IROAMigrationTypes.ScheduleSnapshot memory snapshot = IROAMigrationTypes.ScheduleSnapshot({
+            kind: IROAMigrationTypes.ScheduleKind.MonthlyCumulative,
+            beneficiary: treasury,
+            total: TOTAL_ALLOCATION,
+            released: released,
+            start: startTimestamp,
+            cliffMonths: 0,
+            linearDurationMonths: 0,
+            cumulativeReleaseTable: cumulativeReleaseTable,
+            sourceScheduleId: sourceScheduleId
+        });
+        IROAMigrationTypes.VaultMigrationBatch memory batch = IROAMigrationTypes.VaultMigrationBatch({
+            v2Vault: v2Vault,
+            amount: remaining,
+            scheduleSnapshotHash: IROAMigrationTypes.hashSnapshot(snapshot),
+            sourceBatchId: sourceBatchId,
+            snapshot: snapshot
+        });
+
+        token.forceApprove(migration, remaining);
+        IIROAVaultMigration(migration).migrateVault(batch);
+        token.forceApprove(migration, 0);
+        emit RemainingScheduleMigrated(sourceScheduleId, sourceBatchId, remaining);
     }
 }

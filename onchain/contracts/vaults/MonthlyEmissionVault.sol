@@ -5,6 +5,11 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {
+    IIROAV1MigrationBinding,
+    IIROAVaultMigration,
+    IROAMigrationTypes
+} from "../migration/IROAMigrationTypes.sol";
 
 contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -21,6 +26,8 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
     error InvalidEpoch(uint256 epoch);
     error RewardClaimsOnly();
     error NotRewardClaimsVault();
+    error InvalidMigrationContract(address supplied, address expected);
+    error MigrationBalanceMismatch(uint256 expected, uint256 actual);
     error MonthlyLimitExceeded(uint256 requested, uint256 available);
 
     event MonthlyEmissionReleased(
@@ -29,6 +36,7 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         uint256 amount,
         uint256 monthReleased
     );
+    event RemainingScheduleMigrated(bytes32 indexed sourceScheduleId, bytes32 indexed sourceBatchId, uint256 amount);
 
     IERC20 public immutable token;
     uint256 public immutable allocation;
@@ -141,6 +149,53 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         token.safeTransfer(recipient, amount);
 
         emit MonthlyEmissionReleased(epoch, recipient, amount, releasedByMonth[epoch]);
+    }
+
+    function migrateRemaining(
+        address migration,
+        address v2Vault,
+        bytes32 sourceScheduleId,
+        bytes32 sourceBatchId
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+        address expectedMigration = IIROAV1MigrationBinding(address(token)).migrationContract();
+        if (migration != expectedMigration || migration == address(0)) {
+            revert InvalidMigrationContract(migration, expectedMigration);
+        }
+
+        uint256 remaining = allocation - totalReleased;
+        uint256 actualBalance = token.balanceOf(address(this));
+        if (actualBalance != remaining) revert MigrationBalanceMismatch(remaining, actualBalance);
+
+        uint256[] memory cumulativeReleaseTable = new uint256[](scheduleMonths);
+        uint256 cumulative;
+        for (uint256 i = 0; i < scheduleMonths; ++i) {
+            cumulative += monthlyBudget(i);
+            cumulativeReleaseTable[i] = cumulative;
+        }
+
+        IROAMigrationTypes.ScheduleSnapshot memory snapshot = IROAMigrationTypes.ScheduleSnapshot({
+            kind: IROAMigrationTypes.ScheduleKind.MonthlyCumulative,
+            beneficiary: address(0),
+            total: allocation,
+            released: totalReleased,
+            start: startTimestamp,
+            cliffMonths: 0,
+            linearDurationMonths: 0,
+            cumulativeReleaseTable: cumulativeReleaseTable,
+            sourceScheduleId: sourceScheduleId
+        });
+        IROAMigrationTypes.VaultMigrationBatch memory batch = IROAMigrationTypes.VaultMigrationBatch({
+            v2Vault: v2Vault,
+            amount: remaining,
+            scheduleSnapshotHash: IROAMigrationTypes.hashSnapshot(snapshot),
+            sourceBatchId: sourceBatchId,
+            snapshot: snapshot
+        });
+
+        token.forceApprove(migration, remaining);
+        IIROAVaultMigration(migration).migrateVault(batch);
+        token.forceApprove(migration, 0);
+        emit RemainingScheduleMigrated(sourceScheduleId, sourceBatchId, remaining);
     }
 
     function _yearAllocation(uint256 yearIndex) private view returns (uint256) {
