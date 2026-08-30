@@ -24,13 +24,15 @@ const ALLOCATION_ABI = ["function allocation() view returns (uint256)"] as const
 const TOTAL_ABI = ["function total() view returns (uint256)"] as const;
 const LIQUIDITY_ABI = ["function TOTAL_ALLOCATION() view returns (uint256)"] as const;
 
-export async function verifyDeployment(): Promise<Record<string, unknown>> {
+type NetworkConnection = Awaited<ReturnType<typeof network.connect>>;
+
+export async function verifyDeployment(existingConnection?: NetworkConnection): Promise<Record<string, unknown>> {
   const profile = parseProfile(process.env.DEPLOYMENT_PROFILE);
   const manifestPath = process.env.DEPLOYMENT_MANIFEST ?? `deployments/${profile}/v1.json`;
   const manifest = await readJson<DeploymentManifest>(manifestPath);
   verifyManifestSignature(manifest);
 
-  const { ethers } = await network.connect();
+  const { ethers } = existingConnection ?? await network.connect();
   const chainId = (await ethers.provider.getNetwork()).chainId;
   assertProfileChain(profile, chainId);
   if (manifest.profile !== profile || manifest.chainId !== chainId.toString()) {

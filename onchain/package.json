@@ -7,7 +7,9 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "analyze": "slither . --config-file slither.config.json --fail-high",
     "compile": "hardhat compile",
+    "deploy:local:verify": "hardhat run scripts/deploy-local-verify.ts --network hardhatBase",
     "test": "hardhat test"
   },
   "devDependencies": {

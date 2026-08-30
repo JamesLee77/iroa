@@ -25,9 +25,11 @@ function requiredTimestamp(value: string | undefined): bigint {
   return timestamp;
 }
 
-export async function deployV1(): Promise<DeploymentManifest> {
+type NetworkConnection = Awaited<ReturnType<typeof network.connect>>;
+
+export async function deployV1(existingConnection?: NetworkConnection): Promise<DeploymentManifest> {
   const profile = parseProfile(process.env.DEPLOYMENT_PROFILE);
-  const connection = await network.connect();
+  const connection = existingConnection ?? await network.connect();
   const { ethers } = connection;
   const providerNetwork = await ethers.provider.getNetwork();
   assertProfileChain(profile, providerNetwork.chainId);
@@ -39,6 +41,10 @@ export async function deployV1(): Promise<DeploymentManifest> {
   const foundation = requireAddress(process.env.FOUNDATION_BENEFICIARY, "FOUNDATION_BENEFICIARY");
   const treasury = requireAddress(process.env.TREASURY, "TREASURY");
   const releaseManager = requireAddress(process.env.RELEASE_MANAGER, "RELEASE_MANAGER");
+  const complianceSafe = requireAddress(process.env.COMPLIANCE_SAFE, "COMPLIANCE_SAFE");
+  const suspenderSafe = requireAddress(process.env.SUSPENDER_SAFE, "SUSPENDER_SAFE");
+  const rootProposerSafe = requireAddress(process.env.ROOT_PROPOSER_SAFE, "ROOT_PROPOSER_SAFE");
+  const challengerSafe = requireAddress(process.env.CHALLENGER_SAFE, "CHALLENGER_SAFE");
   const start = requiredTimestamp(process.env.VESTING_START_TIMESTAMP);
   const [deployer] = await ethers.getSigners();
   const deployerAddress = await deployer.getAddress();
@@ -113,6 +119,26 @@ export async function deployV1(): Promise<DeploymentManifest> {
   const liquidity = await ethers.deployContract("LiquidityReleaseVault", [token.target, treasury, start]);
   await liquidity.waitForDeployment();
 
+  const nodeRegistry = await ethers.deployContract("IROANodeRegistry", [
+    timelock.target,
+    complianceSafe,
+    suspenderSafe,
+  ]);
+  await nodeRegistry.waitForDeployment();
+  const rootRegistry = await ethers.deployContract("IROAReceiptRootRegistry", [
+    timelock.target,
+    rootProposerSafe,
+    challengerSafe,
+  ]);
+  await rootRegistry.waitForDeployment();
+  const rewardDistributor = await ethers.deployContract("IROARewardDistributor", [
+    nodeRegistry.target,
+    rootRegistry.target,
+    token.target,
+    node.target,
+  ]);
+  await rewardDistributor.waitForDeployment();
+
   const deployedVaults = [node, ecosystem, research, teamVault, investorVault, foundationVault, liquidity];
 
   const beneficiaries: Partial<Record<string, string>> = { team, investor, foundation, liquidity: treasury };
@@ -130,11 +156,19 @@ export async function deployV1(): Promise<DeploymentManifest> {
 
   const contracts = {
     token: await token.getAddress(),
+    tokenV1: await token.getAddress(),
     timelock: await timelock.getAddress(),
+    safe: genesisSafe,
+    nodeRegistry: await nodeRegistry.getAddress(),
+    rootRegistry: await rootRegistry.getAddress(),
+    rewardDistributor: await rewardDistributor.getAddress(),
   };
   const bytecodeHashes: Record<string, string> = {
     token: await deployedBytecodeHash(ethers.provider, contracts.token),
     timelock: await deployedBytecodeHash(ethers.provider, contracts.timelock),
+    nodeRegistry: await deployedBytecodeHash(ethers.provider, contracts.nodeRegistry),
+    rootRegistry: await deployedBytecodeHash(ethers.provider, contracts.rootRegistry),
+    rewardDistributor: await deployedBytecodeHash(ethers.provider, contracts.rewardDistributor),
   };
   for (const vault of vaults) {
     bytecodeHashes[`vault:${vault.key}`] = await deployedBytecodeHash(ethers.provider, vault.address);
@@ -155,6 +189,10 @@ export async function deployV1(): Promise<DeploymentManifest> {
       allocationExecuted: false,
       rolesHandedOff: false,
       migrationModeEntered: false,
+      complianceAuthority: complianceSafe,
+      suspensionAuthority: suspenderSafe,
+      rootProposalAuthority: rootProposerSafe,
+      challengeAuthority: challengerSafe,
     },
   };
   const manifest = await signManifest(unsigned, deployer);

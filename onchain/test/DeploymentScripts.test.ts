@@ -15,6 +15,15 @@ import {
 } from "../scripts/deployment-common.js";
 
 describe("IROA deterministic deployment controls", function () {
+  it("exports the exact V1 contract aliases consumed by operator and admin builds", function () {
+    const source = readFileSync(new URL("../scripts/deploy-v1.ts", import.meta.url), "utf8");
+    expect(source).to.include("tokenV1: await token.getAddress()");
+    expect(source).to.include("safe: genesisSafe");
+    for (const key of ["nodeRegistry", "rootRegistry", "rewardDistributor"]) {
+      expect(source).to.include(`${key}: await ${key}.getAddress()`);
+    }
+  });
+
   it("waits for every V1 vault deployment receipt before submitting the next deployment", function () {
     const source = readFileSync(new URL("../scripts/deploy-v1.ts", import.meta.url), "utf8");
     const nodeReceipt = source.indexOf("await node.waitForDeployment()");
