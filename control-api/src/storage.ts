@@ -94,6 +94,7 @@ export interface StorageTransaction {
   insertLease(lease: Omit<TaskLeaseRecord, 'leaseId'>): TaskLeaseRecord;
   getLease(taskId: Hex32, nonce: Hex32): TaskLeaseRecord | undefined;
   getActiveLease(taskId: Hex32): TaskLeaseRecord | undefined;
+  listExpiredActiveLeases(now: number): readonly TaskLeaseRecord[];
   updateLease(lease: TaskLeaseRecord): void;
 
   insertReceipt(receipt: Omit<ReceiptRecord, 'receiptId'>): ReceiptRecord;
@@ -205,6 +206,12 @@ class MemoryTransaction implements StorageTransaction {
       if (lease.taskId === taskId && lease.status === 'active') return clone(lease);
     }
     return undefined;
+  }
+
+  listExpiredActiveLeases(now: number): readonly TaskLeaseRecord[] {
+    return clone(
+      [...this.state.leases.values()].filter((lease) => lease.status === 'active' && lease.expiresAt <= now),
+    );
   }
 
   updateLease(lease: TaskLeaseRecord): void {

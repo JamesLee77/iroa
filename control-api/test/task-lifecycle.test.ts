@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import type { Address, Hex32, PolicyVersion, TaskCapsule } from '@iroa/protocol';
 import { hashIdentifier } from '../src/audit.js';
-import type { AuthenticatedActor } from '../src/auth.js';
+import { AuthService, type AuthenticatedActor } from '../src/auth.js';
 import { LeaseService } from '../src/leases.js';
 import { deriveNodeId, NodeService } from '../src/nodes.js';
 import { ReceiptService } from '../src/receipts.js';
@@ -70,6 +71,31 @@ async function fixture() {
 }
 
 describe('IROA Control API task lifecycle', () => {
+  it('requires CSRF proof for every cookie-authenticated state request', () => {
+    const auth = new AuthService(Buffer.alloc(32, 1), () => 1_800_000_000);
+    const issued = auth.issueSandboxSession();
+    expect(() => auth.authenticateCookie(issued.cookie)).toThrow('INVALID_CSRF_TOKEN');
+  });
+
+  it('generates SIWE nonces using only EIP-4361 alphanumeric characters', () => {
+    const source = readFileSync(new URL('../src/auth.ts', import.meta.url), 'utf8');
+    expect(source).toContain("randomBytes(18).toString('hex')");
+  });
+
+  it('does not trust an unsigned cookie when selecting the prior session to rotate', () => {
+    const auth = new AuthService(Buffer.alloc(32, 2), () => 1_800_000_000);
+    const issued = auth.issueSandboxSession();
+    const sessionId = issued.session.sessionId;
+    expect(auth.sessionIdFromCookie(`iroa_session=${sessionId}.1800003600.invalid-mac`)).toBeNull();
+  });
+
+  it('caps outstanding public NODE challenges to prevent memory exhaustion', () => {
+    const auth = new AuthService(Buffer.alloc(32, 3), () => 1_800_000_000, 3_600, 300, 4);
+    const nodeId = `0x${'21'.repeat(32)}`;
+    for (let index = 0; index < 4; index += 1) auth.issueNodeChallenge(nodeId, deviceAddress);
+    expect(() => auth.issueNodeChallenge(nodeId, deviceAddress)).toThrow('CHALLENGE_CAPACITY_EXCEEDED');
+  });
+
   it('blocks claim before the user approval transition', async () => {
     const app = await fixture();
     const taskId = `0x${'01'.repeat(32)}` as Hex32;
@@ -132,6 +158,54 @@ describe('IROA Control API task lifecycle', () => {
         nodeSignature: signature,
       }),
     ).rejects.toThrow('RECEIPT_LEASE_MISMATCH');
+  });
+
+  it('rejects an idempotency retry after its lease has expired', async () => {
+    const app = await fixture();
+    const taskId = `0x${'14'.repeat(32)}` as Hex32;
+    const requestId = `0x${'15'.repeat(32)}`;
+    await app.tasks.create(app.user, capsule(taskId, app.clock()));
+    await app.tasks.approve(app.user, taskId, { approvalHash: `0x${'77'.repeat(32)}` });
+    const lease = await app.leases.claim(app.node, taskId, { requestId });
+    app.advance(301);
+    await app.leases.expire(taskId, lease.nonce);
+    await expect(app.leases.claim(app.node, taskId, { requestId })).rejects.toThrow('LEASE_REQUEST_ALREADY_CLOSED');
+  });
+
+  it('sweeps expired active leases back to the queued state without knowing their nonce', async () => {
+    const app = await fixture();
+    const taskId = `0x${'1a'.repeat(32)}` as Hex32;
+    await app.tasks.create(app.user, capsule(taskId, app.clock()));
+    await app.tasks.approve(app.user, taskId, { approvalHash: `0x${'77'.repeat(32)}` });
+    await app.leases.claim(app.node, taskId, { requestId: `0x${'1b'.repeat(32)}` });
+    app.advance(301);
+    await app.leases.expireDue();
+    expect((await app.tasks.get(app.user, taskId)).state).toBe('queued');
+  });
+
+  it('rejects a Result Receipt that claims execution began before the lease', async () => {
+    const app = await fixture();
+    const taskId = `0x${'16'.repeat(32)}` as Hex32;
+    await app.tasks.create(app.user, capsule(taskId, app.clock()));
+    await app.tasks.approve(app.user, taskId, { approvalHash: `0x${'77'.repeat(32)}` });
+    const lease = await app.leases.claim(app.node, taskId, { requestId: `0x${'17'.repeat(32)}` });
+    await expect(
+      app.receipts.submitResult(app.node, {
+        chainId: 31337,
+        verifyingContract,
+        policyVersion,
+        nonce: lease.nonce,
+        taskId,
+        nodeId: app.nodeId,
+        operatorIdHash: hashIdentifier(operatorAddress),
+        startedAt: lease.createdAt - 1,
+        completedAt: app.clock(),
+        resultHash: `0x${'18'.repeat(32)}`,
+        outcomeCode: 'COMPLETED',
+        accessibilityMetricsHash: `0x${'19'.repeat(32)}`,
+        nodeSignature: signature,
+      }),
+    ).rejects.toThrow('RECEIPT_TIME_OUTSIDE_LEASE');
   });
 
   it('never executes a cancelled task even when the former node submits a receipt', async () => {

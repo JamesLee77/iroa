@@ -50,6 +50,16 @@ export class LeaseService {
       const retry = transaction.getLease(taskId, nonce);
       if (retry) {
         if (retry.nodeId !== nodeId) throw new Error('LEASE_NODE_MISMATCH');
+        if (retry.status !== 'active' || retry.expiresAt <= now) throw new Error('LEASE_REQUEST_ALREADY_CLOSED');
+        const retryTask = transaction.getTask(taskId);
+        if (
+          !retryTask ||
+          retryTask.state !== 'assigned' ||
+          retryTask.assignedNodeId !== nodeId ||
+          retryTask.currentLeaseNonce !== nonce
+        ) {
+          throw new Error('LEASE_IDEMPOTENCY_STATE_MISMATCH');
+        }
         return retry;
       }
 
@@ -122,5 +132,15 @@ export class LeaseService {
       });
       return expired;
     });
+  }
+
+  async expireDue(): Promise<number> {
+    const due = await this.storage.transaction((transaction) => transaction.listExpiredActiveLeases(this.now()));
+    let expiredCount = 0;
+    for (const lease of due) {
+      const result = await this.expire(lease.taskId, lease.nonce);
+      if (result.status === 'expired') expiredCount += 1;
+    }
+    return expiredCount;
   }
 }

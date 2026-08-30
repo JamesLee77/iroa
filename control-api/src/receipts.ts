@@ -59,7 +59,16 @@ export class ReceiptService {
       }
       if (task.state !== 'assigned') throw new Error('TASK_NOT_ASSIGNED');
       if (receipt.completedAt > now + 30) throw new Error('RECEIPT_TIME_IN_FUTURE');
-      requireMatchingActiveLease(transaction, task.taskId, task.currentLeaseNonce, task.assignedNodeId, now);
+      const lease = requireMatchingActiveLease(
+        transaction,
+        task.taskId,
+        task.currentLeaseNonce,
+        task.assignedNodeId,
+        now,
+      );
+      if (receipt.startedAt < lease.createdAt || receipt.completedAt > lease.expiresAt) {
+        throw new Error('RECEIPT_TIME_OUTSIDE_LEASE');
+      }
       const running = transitionTask(transaction, task, 'running', actor, 'NODE_STARTED', receipt.startedAt);
       transitionTask(transaction, running, 'awaiting_confirmation', actor, 'RESULT_RECEIVED', receipt.completedAt);
       const stored = transaction.insertReceipt({

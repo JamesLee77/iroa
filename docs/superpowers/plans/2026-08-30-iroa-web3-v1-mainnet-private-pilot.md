@@ -437,23 +437,23 @@ chain confusion, secret exposure, nonce race, partial Safe batch와 premature re
 - Produces: `POST /v1/tasks`, `/approve`, `/cancel`, `/claim`, `/result`, `/deletion`; `POST /v1/nodes/enroll`, `/heartbeat`
 - Consumes: protocol schemas, node device signature, synthetic encrypted object reference
 
-- [ ] **Step 1: DB schema 구현**
+- [x] **Step 1: DB schema 구현**
 
 `tasks`, `task_events`, `node_devices`, `task_leases`, `receipts`, `audit_log`를 만든다. `task_events`와 `audit_log`는 update/delete API를 갖지 않는다. lease는 `(task_id, nonce)` unique다.
 
-- [ ] **Step 2: 인증과 상태 API 구현**
+- [x] **Step 2: 인증과 상태 API 구현**
 
 일반 사용자는 sandbox session cookie, 운영자는 SIWE, NODE는 challenge에 대한 device signature를 사용한다. `canTransition()`을 통하지 않는 상태 변경을 금지한다.
 
-- [ ] **Step 3: lease와 재배정 구현**
+- [x] **Step 3: lease와 재배정 구현**
 
 active NODE만 claim할 수 있고 DB transaction에서 queued → assigned와 lease 생성이 함께 성공해야 한다. 만료 lease는 nonce를 폐기하고 queued로 돌린다.
 
-- [ ] **Step 4: Receipt 수신 구현**
+- [x] **Step 4: Receipt 수신 구현**
 
 Result와 Deletion Receipt는 별도 endpoint로 받고 taskId, lease nonce, nodeId와 policyVersion 일치를 확인한다. ciphertext 원문을 audit log에 기록하지 않는다.
 
-- [ ] **Step 5: regression source 생성과 커밋**
+- [x] **Step 5: regression source 생성과 커밋**
 
 승인 우회, double lease, stale nonce, cancelled 재실행, Receipt node mismatch와 immutable audit event를 작성하되 실행하지 않는다.
 
@@ -462,7 +462,7 @@ git add control-api
 git commit -m "feat: orchestrate private IROA tasks"
 ```
 
-- [ ] **Step 6: 소스 검토**
+- [x] **Step 6: 소스 검토**
 
 인증 우회, race, idempotency, log injection, ciphertext 노출과 session fixation을 검토한다. confirmed finding에만 focused REVIEW_FIX를 적용한다.
 

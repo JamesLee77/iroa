@@ -201,12 +201,18 @@ export function createControlApi(config: ControlApiConfig) {
     leases: new LeaseService(storage, now),
     receipts: new ReceiptService(storage, chainId, verifyingContract, now),
   };
-  return createServer((request, response) => {
+  const server = createServer((request, response) => {
     void route(request, response, services).catch((error) => {
       const code = safeErrorCode(error);
       send(response, errorStatus(code), { error: code });
     });
   });
+  const leaseSweep = setInterval(() => {
+    void services.leases.expireDue().catch(() => undefined);
+  }, 10_000);
+  leaseSweep.unref();
+  server.once('close', () => clearInterval(leaseSweep));
+  return server;
 }
 
 async function main(): Promise<void> {

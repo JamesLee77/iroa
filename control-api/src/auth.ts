@@ -77,8 +77,10 @@ export class AuthService {
     private readonly now: () => number = () => Math.floor(Date.now() / 1_000),
     private readonly sessionTtlSeconds = 60 * 60,
     private readonly challengeTtlSeconds = 5 * 60,
+    private readonly maxOutstandingChallenges = 4_096,
   ) {
     if (sessionSecret.byteLength < 32) throw new Error('SESSION_SECRET_TOO_SHORT');
+    if (maxOutstandingChallenges < 1) throw new Error('INVALID_CHALLENGE_CAPACITY');
   }
 
   issueSandboxSession(): { session: SessionRecord; cookie: string } {
@@ -90,7 +92,8 @@ export class AuthService {
     const uri = new URL(input.uri).toString();
     if (!/^[A-Za-z0-9.-]+(?::\d{1,5})?$/.test(domain)) throw new Error('INVALID_SIWE_DOMAIN');
     if (new URL(uri).host !== domain) throw new Error('SIWE_DOMAIN_URI_MISMATCH');
-    const nonce = base64url(randomBytes(18));
+    this.reserveChallengeCapacity();
+    const nonce = randomBytes(18).toString('hex');
     const expiresAt = this.now() + this.challengeTtlSeconds;
     this.challenges.set(nonce, {
       nonce,
@@ -137,6 +140,7 @@ export class AuthService {
   issueNodeChallenge(nodeIdInput: string, deviceAddressInput: string): { nonce: string; expiresAt: number; message: string } {
     const nodeId = Hex32Schema.parse(nodeIdInput);
     const deviceAddress = AddressSchema.parse(deviceAddressInput);
+    this.reserveChallengeCapacity();
     const nonce = base64url(randomBytes(18));
     const expiresAt = this.now() + this.challengeTtlSeconds;
     this.challenges.set(nonce, {
@@ -174,6 +178,20 @@ export class AuthService {
   }
 
   authenticateCookie(cookieHeader: string | undefined, csrfToken?: string): AuthenticatedActor {
+    const session = this.readSession(cookieHeader);
+    if (!csrfToken || csrfToken !== session.csrfToken) throw new Error('INVALID_CSRF_TOKEN');
+    return this.actorFromSession(session);
+  }
+
+  sessionIdFromCookie(cookieHeader: string | undefined): string | null {
+    try {
+      return this.readSession(cookieHeader).sessionId;
+    } catch {
+      return null;
+    }
+  }
+
+  private readSession(cookieHeader: string | undefined): SessionRecord {
     const token = this.readCookie(cookieHeader);
     const [sessionId, expiresText, mac] = token.split('.');
     if (!sessionId || !expiresText || !mac || !/^\d+$/.test(expiresText)) throw new Error('INVALID_SESSION');
@@ -189,16 +207,7 @@ export class AuthService {
       this.sessions.delete(sessionId);
       throw new Error('SESSION_EXPIRED');
     }
-    if (csrfToken !== undefined && csrfToken !== session.csrfToken) throw new Error('INVALID_CSRF_TOKEN');
-    return this.actorFromSession(session);
-  }
-
-  sessionIdFromCookie(cookieHeader: string | undefined): string | null {
-    try {
-      return this.readCookie(cookieHeader).split('.')[0] ?? null;
-    } catch {
-      return null;
-    }
+    return session;
   }
 
   private issueSession(kind: SessionKind, subject: string): { session: SessionRecord; cookie: string } {
@@ -233,6 +242,16 @@ export class AuthService {
       throw new Error('CHALLENGE_EXPIRED_OR_USED');
     }
     return challenge;
+  }
+
+  private reserveChallengeCapacity(): void {
+    const now = this.now();
+    for (const [nonce, challenge] of this.challenges) {
+      if (challenge.expiresAt <= now) this.challenges.delete(nonce);
+    }
+    if (this.challenges.size >= this.maxOutstandingChallenges) {
+      throw new Error('CHALLENGE_CAPACITY_EXCEEDED');
+    }
   }
 
   private nodeChallengeMessage(nodeId: Hex32, nonce: string, expiresAt: number): string {
