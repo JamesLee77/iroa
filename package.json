@@ -3,6 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "packages/*",
+    "onchain",
+    "control-api",
+    "node-agent",
+    "verifier",
+    "sandbox",
+    "operator",
+    "admin"
+  ],
   "engines": {
     "node": ">=22.12.0"
   },
@@ -10,13 +20,18 @@
     "dev": "astro dev",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:all": "npm run test:run && npm run test --workspaces --if-present",
     "typecheck": "astro check",
+    "typecheck:all": "npm run typecheck && npm run typecheck --workspaces --if-present",
     "render:og": "node tools/website/render-og-image.mjs",
     "sync:whitepaper-assets": "node tools/website/sync-whitepaper-assets.mjs",
+    "build:artifact": "npm run sync:whitepaper-assets && npm run render:og && astro build",
     "build": "npm run sync:whitepaper-assets && npm run render:og && npm run typecheck && astro build",
+    "build:all": "npm run build:artifact && npm run build --workspaces --if-present",
     "preview": "astro preview",
     "pretest:e2e": "npm run build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:all": "playwright test && npm run test:e2e --workspace sandbox && npm run test:e2e --workspace operator && npm run test:e2e --workspace admin"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.4",
