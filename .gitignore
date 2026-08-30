@@ -9,6 +9,7 @@ dist/
 .astro/
 playwright-report/
 test-results/
+*.tsbuildinfo
 public/generated/
 onchain/artifacts/
 onchain/cache/

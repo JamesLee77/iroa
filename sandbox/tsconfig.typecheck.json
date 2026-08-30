@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": "..",
+    "paths": {
+      "@iroa/protocol": ["../packages/protocol/src/index.ts"]
+    }
+  },
+  "references": []
+}

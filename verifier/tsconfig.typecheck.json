@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "rootDir": "..",
+    "types": ["node"],
+    "paths": {
+      "@iroa/crypto": ["../packages/crypto/src/index.ts"],
+      "@iroa/protocol": ["../packages/protocol/src/index.ts"]
+    }
+  },
+  "references": []
+}

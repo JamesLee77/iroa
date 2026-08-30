@@ -8,7 +8,6 @@ import { deriveNodeId, getDeviceIdentity, InjectedSecretProvider } from '../src/
 import {
   boundedFetch,
   EXECUTOR_RESPONSE_LIMIT_BYTES,
-  ExecutorPolicyError,
 } from '../src/policy.js';
 import { runSyntheticTask } from '../src/runner.js';
 
@@ -73,8 +72,9 @@ describe('NODE Agent policy regressions', () => {
         init?.signal?.addEventListener('abort', () => reject(init.signal?.reason), { once: true });
       })),
     });
+    const rejection = expect(pending).rejects.toMatchObject({ code: 'EXECUTOR_TIMEOUT' });
     await vi.advanceTimersByTimeAsync(30_000);
-    await expect(pending).rejects.toMatchObject<Partial<ExecutorPolicyError>>({ code: 'EXECUTOR_TIMEOUT' });
+    await rejection;
   });
 
   it('rejects a streamed response larger than 2 MB', async () => {
@@ -84,7 +84,7 @@ describe('NODE Agent policy regressions', () => {
       url: 'https://api.open-meteo.com/v1/forecast',
       signal: new AbortController().signal,
       fetchImplementation: vi.fn(async () => new Response(oversized, { status: 200 })),
-    })).rejects.toMatchObject<Partial<ExecutorPolicyError>>({ code: 'EXECUTOR_RESPONSE_LIMIT_EXCEEDED' });
+    })).rejects.toMatchObject({ code: 'EXECUTOR_RESPONSE_LIMIT_EXCEEDED' });
   });
 
   it('rejects a stale Task Capsule before execution', async () => {

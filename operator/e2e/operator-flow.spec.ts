@@ -99,7 +99,7 @@ async function installWallet(page: Page, state: MockState) {
         if (method === 'eth_accounts' || method === 'eth_requestAccounts') return [address];
         if (method === 'eth_chainId') return chainId;
         if (method === 'wallet_switchEthereumChain') {
-          chainId = (params[0] as { chainId: string }).chainId;
+          chainId = (params[0] as { chainId: Hex }).chainId;
           for (const listener of listeners.chainChanged ?? []) listener(chainId);
           return null;
         }
@@ -123,7 +123,7 @@ async function installWallet(page: Page, state: MockState) {
             localStorage.setItem('iroa-e2e-registered-node', 'true');
           }
           (window as unknown as { __iroaTransactionCount: number }).__iroaTransactionCount = transactionCount;
-          return `0x${transactionCount.toString(16).padStart(64, '9')}`;
+          return `0x${transactionCount.toString(16).padStart(64, '9')}` as Hex;
         }
         throw new Error(`Unhandled wallet method: ${method}`);
       },
@@ -148,6 +148,7 @@ async function jsonRpc(route: Route, state: MockState) {
     const data = call.data ?? '0x';
     if (data.startsWith('0x82ad56cb')) {
       const decoded = decodeFunctionData({ abi: multicall3Abi, data: data as Hex });
+      if (decoded.functionName !== 'aggregate3') throw new Error('Unexpected multicall function');
       const calls = decoded.args[0];
       result = encodeFunctionResult({
         abi: multicall3Abi,

@@ -3,7 +3,7 @@ import { network } from "hardhat";
 
 describe("IROATimelock", function () {
   it("never permits Base governance to reduce its delay below 48 hours", async function () {
-    const { ethers, networkHelpers } = await network.connect();
+    const { ethers, networkHelpers } = await network.connect("hardhatBaseMainnet");
     const [safe] = await ethers.getSigners();
     const delay = 48 * 60 * 60;
     const timelock = await ethers.deployContract("IROATimelock", [

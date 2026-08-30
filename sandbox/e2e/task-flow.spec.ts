@@ -118,9 +118,9 @@ test('result view refreshes after a delayed deletion receipt arrives', async ({ 
 
 test('dispute sends a reason and only a hash of the private note', async ({ page }) => {
   await seedSession(page);
-  let submittedBody: Record<string, unknown> | null = null;
+  const submitted = { body: null as Record<string, unknown> | null };
   await page.route(`**/api/v1/tasks/${TASK_ID}/dispute`, async (route) => {
-    submittedBody = route.request().postDataJSON() as Record<string, unknown>;
+    submitted.body = route.request().postDataJSON() as Record<string, unknown>;
     await json(route, 200, task('disputed'));
   });
 
@@ -130,7 +130,7 @@ test('dispute sends a reason and only a hash of the private note', async ({ page
   await page.getByRole('button', { name: '담당자 검토 요청' }).click();
 
   await expect(page.getByText(/자동 보상은 중지됩니다/)).toBeVisible();
-  expect(submittedBody).toMatchObject({ reasonCode: 'RESULT_INCOMPLETE' });
-  expect(submittedBody?.evidenceHash).toMatch(/^0x[0-9a-f]{64}$/);
-  expect(JSON.stringify(submittedBody)).not.toContain('이 원문은 서버로 보내지지 않아야 합니다.');
+  expect(submitted.body).toMatchObject({ reasonCode: 'RESULT_INCOMPLETE' });
+  expect(submitted.body?.evidenceHash).toMatch(/^0x[0-9a-f]{64}$/);
+  expect(JSON.stringify(submitted.body)).not.toContain('이 원문은 서버로 보내지지 않아야 합니다.');
 });

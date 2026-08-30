@@ -51,6 +51,12 @@ export function buildVerifiedSafeProposal(input: {
     || input.transaction.artifactSha256.toLowerCase() !== settlement.artifactSha256.toLowerCase()
     || input.transaction.policyVersionHash.toLowerCase() !== policyVersionHash.toLowerCase()
   ) throw new Error('ROOT_PROPOSAL_TRANSACTION_MISMATCH');
-  const body = { chainId: profile.chainId, safe: profile.safe, manifestHash: profile.manifestHash, artifactSha256: settlement.artifactSha256, epoch: settlement.epoch, policyVersion: settlement.policyVersion, transactions: [{ to: input.transaction.to, value: input.transaction.value, data: input.transaction.data, operation: 0 as const }] };
+  const transactions: SafeProposalArtifact['transactions'] = [{
+    to: input.transaction.to,
+    value: input.transaction.value,
+    data: input.transaction.data,
+    operation: 0,
+  }];
+  const body = { chainId: profile.chainId, safe: profile.safe, manifestHash: profile.manifestHash, artifactSha256: settlement.artifactSha256, epoch: settlement.epoch, policyVersion: settlement.policyVersion, transactions };
   return { schemaVersion: 1, ...body, payloadHash: keccak256(stringToBytes(JSON.stringify(body))) };
 }

@@ -347,7 +347,7 @@ describe("IROA V1 to V2 migration invariants", function () {
     const second = { ...first, sourceBatchId: ethers.id("batch-2") };
 
     await expect(probes[0].connect(admin).migrate(migration.target, second))
-      .to.be.revertedWithCustomError(importers[0], "ScheduleAlreadyImported")
+      .to.be.revertedWithCustomError(migration, "SourceScheduleAlreadyUsed")
       .withArgs(sourceScheduleId);
     expect(await v1.balanceOf(probes[0].target)).to.equal(50n);
     expect(await v2.balanceOf(importers[0].target)).to.equal(50n);

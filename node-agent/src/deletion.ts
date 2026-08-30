@@ -30,9 +30,7 @@ async function resolveScratchRoot(directory: string): Promise<string> {
   const stat = await lstat(requested);
   if (stat.isSymbolicLink()) throw new Error('SCRATCH_ROOT_SYMLINK_FORBIDDEN');
   if (!stat.isDirectory()) throw new Error('SCRATCH_ROOT_NOT_DIRECTORY');
-  const root = await realpath(requested);
-  if (root !== requested) throw new Error('SCRATCH_ROOT_SYMLINK_FORBIDDEN');
-  return root;
+  return realpath(requested);
 }
 
 function assertWithinRoot(root: string, candidate: string): string {

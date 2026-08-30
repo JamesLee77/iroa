@@ -7,8 +7,8 @@ const NODE_ID = `0x${'11'.repeat(32)}`;
 const DEVICE_HASH = `0x${'22'.repeat(32)}`;
 const TASK_ID = `0x${'33'.repeat(32)}`;
 const EVIDENCE_HASH = `0x${'44'.repeat(32)}`;
-const REWARD_ROOT = `0x${'55'.repeat(32)}`;
-const RECEIPT_ROOT = `0x${'66'.repeat(32)}`;
+const REWARD_ROOT = `0x${'55'.repeat(32)}` as Hex;
+const RECEIPT_ROOT = `0x${'66'.repeat(32)}` as Hex;
 const TX_HASH = `0x${'77'.repeat(32)}`;
 const ROLE_IDS = {
   compliance: `0x${'a1'.repeat(32)}`,
@@ -63,6 +63,7 @@ async function rpc(route: Route) {
     const data = call.data ?? '0x';
     if (data.startsWith('0x82ad56cb')) {
       const decoded = decodeFunctionData({ abi: multicall3Abi, data: data as Hex });
+      if (decoded.functionName !== 'aggregate3') throw new Error('Unexpected multicall function');
       result = encodeFunctionResult({ abi: multicall3Abi, functionName: 'aggregate3', result: decoded.args[0].map((item) => ({ success: true, returnData: contractResult(item.callData) })) });
     } else result = contractResult(data);
   }

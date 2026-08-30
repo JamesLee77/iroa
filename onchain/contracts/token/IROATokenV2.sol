@@ -71,9 +71,9 @@ contract IROATokenV2 is ERC20, ERC20Permit, AccessControl {
     }
 
     function bindMigrationContract(address migration) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (migrationContract != address(0)) revert MigrationAlreadyBound();
         if (migration == address(0)) revert ZeroAddress();
         if (migration.code.length == 0) revert InvalidMigrationContract(migration);
-        if (migrationContract != address(0)) revert MigrationAlreadyBound();
         if (migrationAuthorityLocked) revert MigrationAuthorityLocked();
         if (totalSupply() != 0) revert MigrationAlreadyBound();
 

@@ -62,7 +62,7 @@ export function Settlement() {
             <WriteLock allowed={admin.canWrite('settlement:propose', 'rootProposer')} roleLabel="ROOT_PROPOSER_ROLE" />
             <label className="check-row"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} />표시된 epoch, 정책 버전, 두 root와 정산 파일 해시를 검토했습니다.</label>
             <button className="primary-button" type="button" disabled={!confirmed || busy || !admin.canWrite('settlement:propose', 'rootProposer')} onClick={() => void prepare()}>{busy ? '무결성 확인 중…' : '검증 후 Safe 제안 생성'}</button>
-            {error && <ErrorState error={error} />}
+            {error !== null && <ErrorState error={error} />}
             {proposal && <div className="proposal-preview" role="status"><p className="inline-success">검증 완료. 아직 어떤 트랜잭션도 전송되지 않았습니다.</p><dl className="technical-list"><div><dt>Safe</dt><dd><ShortHash value={proposal.safe} /></dd></div><div><dt>대상 계약</dt><dd><ShortHash value={proposal.transactions[0].to} /></dd></div><div><dt>값</dt><dd>0</dd></div><div><dt>제안 해시</dt><dd><ShortHash value={proposal.payloadHash} /></dd></div><div><dt>calldata</dt><dd><ShortHash value={proposal.transactions[0].data} /></dd></div></dl><button className="secondary-button" type="button" onClick={() => downloadJson(`iroa-root-proposal-epoch-${proposal.epoch}.json`, proposal)}>Safe 제안 파일 내려받기</button></div>}
           </section>
         </> : <div className="empty-state">정산 파일이 없습니다.</div>}

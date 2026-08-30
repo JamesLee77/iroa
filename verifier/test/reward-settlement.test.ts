@@ -203,7 +203,7 @@ describe('deterministic settlement', () => {
   });
 
   it('rejects multiple operator identities controlled by the same wallet', () => {
-    const sharedWallet = `0x${'34'.repeat(20)}`;
+    const sharedWallet = `0x${'34'.repeat(20)}` as const;
     const first = candidate(1, { operatorWallet: sharedWallet });
     const second = candidate(2, { operatorWallet: sharedWallet });
     const settlement = buildRoot({ epoch: 0, policyVersion: '1.0.0', monthlyBudget: '10000', candidates: [first, second] });
