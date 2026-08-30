@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iroa.ai/schemas/onchain-deployment-manifest-v1.json",
+  "title": "IROA signed deployment manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "release",
+    "profile",
+    "chainId",
+    "createdAt",
+    "deployer",
+    "contracts",
+    "vaults",
+    "bytecodeHashes",
+    "controls",
+    "manifestHash",
+    "signer",
+    "signature"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "release": { "enum": ["v1", "v2-migration"] },
+    "profile": { "enum": ["local", "base-sepolia", "base-mainnet"] },
+    "chainId": { "enum": ["31337", "84532", "8453"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "deployer": { "$ref": "#/$defs/address" },
+    "contracts": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": { "$ref": "#/$defs/address" }
+    },
+    "vaults": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/vault" }
+    },
+    "bytecodeHashes": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": { "$ref": "#/$defs/bytes32" }
+    },
+    "controls": {
+      "type": "object",
+      "minProperties": 3,
+      "additionalProperties": { "type": ["boolean", "string"] }
+    },
+    "manifestHash": { "$ref": "#/$defs/bytes32" },
+    "signer": { "$ref": "#/$defs/address" },
+    "signature": { "type": "string", "pattern": "^0x[0-9a-fA-F]{130}$" }
+  },
+  "$defs": {
+    "address": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{40}$",
+      "not": { "const": "0x0000000000000000000000000000000000000000" }
+    },
+    "bytes32": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+    "vault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "label", "kind", "address", "allocation"],
+      "properties": {
+        "key": {
+          "enum": ["node", "ecosystem", "research", "team", "investor", "foundation", "liquidity"]
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["monthly", "cliff-linear", "liquidity", "v2-importer"] },
+        "address": { "$ref": "#/$defs/address" },
+        "allocation": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "beneficiary": { "$ref": "#/$defs/address" },
+        "sourceV1Vault": { "$ref": "#/$defs/address" }
+      }
+    }
+  }
+}
