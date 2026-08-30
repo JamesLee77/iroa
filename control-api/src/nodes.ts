@@ -82,15 +82,17 @@ export class NodeService {
   }
 
   async setStatus(operator: AuthenticatedActor, nodeIdInput: string, status: NodeStatus): Promise<NodeDeviceRecord> {
-    if (operator.type !== 'operator' || !this.complianceOperators.has(operator.id.toLowerCase())) {
-      throw new Error('COMPLIANCE_AUTH_REQUIRED');
-    }
+    if (operator.type !== 'operator') throw new Error('OPERATOR_AUTH_REQUIRED');
     const nodeId = Hex32Schema.parse(nodeIdInput);
     if (!['active', 'suspended', 'revoked'].includes(status)) throw new Error('INVALID_NODE_STATUS_CHANGE');
     const now = this.now();
     return this.storage.transaction((transaction) => {
       const current = transaction.getNode(nodeId);
       if (!current) throw new Error('NODE_NOT_FOUND');
+      const isCompliance = this.complianceOperators.has(operator.id.toLowerCase());
+      const isOwnerRevocation = status === 'revoked'
+        && current.operatorAddress.toLowerCase() === operator.id.toLowerCase();
+      if (!isCompliance && !isOwnerRevocation) throw new Error('COMPLIANCE_AUTH_REQUIRED');
       if (current.status === 'revoked') throw new Error('NODE_REVOKED');
       const updated = { ...current, status, updatedAt: now };
       transaction.updateNode(updated);

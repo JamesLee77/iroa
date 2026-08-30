@@ -82,12 +82,14 @@ export interface AuditRecord {
 export interface StorageTransaction {
   insertTask(task: TaskRecord): void;
   getTask(taskId: Hex32): TaskRecord | undefined;
+  listTasks(): readonly TaskRecord[];
   updateTask(task: TaskRecord, expectedVersion: number): void;
   appendTaskEvent(event: Omit<TaskEventRecord, 'eventId'>): TaskEventRecord;
   listTaskEvents(taskId: Hex32): readonly TaskEventRecord[];
 
   insertNode(node: NodeDeviceRecord): void;
   getNode(nodeId: Hex32): NodeDeviceRecord | undefined;
+  listNodes(): readonly NodeDeviceRecord[];
   getNodeByDeviceAddress(deviceAddress: Address): NodeDeviceRecord | undefined;
   updateNode(node: NodeDeviceRecord): void;
 
@@ -142,6 +144,10 @@ class MemoryTransaction implements StorageTransaction {
     return task ? clone(task) : undefined;
   }
 
+  listTasks(): readonly TaskRecord[] {
+    return clone([...this.state.tasks.values()]);
+  }
+
   updateTask(task: TaskRecord, expectedVersion: number): void {
     const current = this.state.tasks.get(task.taskId);
     if (!current) throw new Error('TASK_NOT_FOUND');
@@ -174,6 +180,10 @@ class MemoryTransaction implements StorageTransaction {
   getNode(nodeId: Hex32): NodeDeviceRecord | undefined {
     const node = this.state.nodes.get(nodeId);
     return node ? clone(node) : undefined;
+  }
+
+  listNodes(): readonly NodeDeviceRecord[] {
+    return clone([...this.state.nodes.values()]);
   }
 
   getNodeByDeviceAddress(deviceAddress: Address): NodeDeviceRecord | undefined {

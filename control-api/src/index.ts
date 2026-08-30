@@ -4,8 +4,13 @@ import { AddressSchema, ChainIdSchema, Hex32Schema } from '@iroa/protocol';
 import { AuthService, type AuthenticatedActor } from './auth.js';
 import { LeaseService } from './leases.js';
 import { deriveNodeId, NodeService } from './nodes.js';
+import {
+  EmptyOperatorRewardProvider,
+  OperatorService,
+  type OperatorRewardProvider,
+} from './operator.js';
 import { ReceiptService } from './receipts.js';
-import { MemoryStorage, type Storage, type TaskRecord } from './storage.js';
+import { MemoryStorage, type NodeDeviceRecord, type Storage, type TaskRecord } from './storage.js';
 import { TaskService } from './tasks.js';
 
 interface ControlApiConfig {
@@ -14,6 +19,7 @@ interface ControlApiConfig {
   receiptVerifyingContract: string;
   complianceOperators: readonly string[];
   storage?: Storage;
+  rewardProvider?: OperatorRewardProvider;
   now?: () => number;
 }
 
@@ -23,6 +29,7 @@ interface Services {
   nodes: NodeService;
   leases: LeaseService;
   receipts: ReceiptService;
+  operator: OperatorService;
 }
 
 const MAX_BODY_BYTES = 64 * 1_024;
@@ -62,6 +69,22 @@ function send(response: ServerResponse, status: number, payload: unknown, cookie
 
 export function serializePublicTask(task: TaskRecord): Omit<TaskRecord, 'ownerSessionId' | 'assignedNodeId' | 'currentLeaseNonce'> {
   const { ownerSessionId: _ownerSessionId, assignedNodeId: _assignedNodeId, currentLeaseNonce: _currentLeaseNonce, ...safe } = task;
+  return safe;
+}
+
+export function serializeOperatorTask(task: TaskRecord): Pick<TaskRecord, 'taskId' | 'state' | 'policyVersion' | 'assignedNodeId' | 'createdAt' | 'updatedAt'> {
+  return {
+    taskId: task.taskId,
+    state: task.state,
+    policyVersion: task.policyVersion,
+    assignedNodeId: task.assignedNodeId,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+  };
+}
+
+export function serializeOperatorNode(node: NodeDeviceRecord): Omit<NodeDeviceRecord, 'deviceAddress' | 'operatorAddress'> {
+  const { deviceAddress: _deviceAddress, operatorAddress: _operatorAddress, ...safe } = node;
   return safe;
 }
 
@@ -120,7 +143,11 @@ async function route(request: IncomingMessage, response: ServerResponse, service
     send(
       response,
       200,
-      { actorIdHash: authenticated.actor.idHash, csrfToken: authenticated.session.csrfToken },
+      {
+        actorIdHash: authenticated.actor.idHash,
+        csrfToken: authenticated.session.csrfToken,
+        expiresAt: authenticated.session.expiresAt,
+      },
       authenticated.cookie,
     );
     return;
@@ -149,7 +176,7 @@ async function route(request: IncomingMessage, response: ServerResponse, service
       trustLevel: body.trustLevel,
       policyVersion: body.policyVersion,
     }, deviceProof);
-    send(response, 201, node);
+    send(response, 201, serializeOperatorNode(node));
     return;
   }
   if (method === 'POST' && url.pathname === '/v1/nodes/heartbeat') {
@@ -160,7 +187,19 @@ async function route(request: IncomingMessage, response: ServerResponse, service
   if (method === 'POST' && parts.length === 4 && parts[0] === 'v1' && parts[1] === 'nodes' && parts[3] === 'status') {
     const operator = userActor(request, services);
     const body = objectBody(await readJson(request));
-    send(response, 200, await services.nodes.setStatus(operator, parts[2] ?? '', String(body.status ?? '') as never));
+    send(response, 200, serializeOperatorNode(await services.nodes.setStatus(operator, parts[2] ?? '', String(body.status ?? '') as never)));
+    return;
+  }
+  if (method === 'GET' && url.pathname === '/v1/operator/nodes') {
+    send(response, 200, (await services.operator.listNodes(userActor(request, services))).map(serializeOperatorNode));
+    return;
+  }
+  if (method === 'GET' && url.pathname === '/v1/operator/tasks') {
+    send(response, 200, (await services.operator.listTasks(userActor(request, services))).map(serializeOperatorTask));
+    return;
+  }
+  if (method === 'GET' && url.pathname === '/v1/operator/rewards') {
+    send(response, 200, await services.operator.listRewards(userActor(request, services)));
     return;
   }
   if (method === 'POST' && url.pathname === '/v1/tasks') {
@@ -220,6 +259,7 @@ export function createControlApi(config: ControlApiConfig) {
     nodes: new NodeService(storage, config.complianceOperators, now),
     leases: new LeaseService(storage, now),
     receipts: new ReceiptService(storage, chainId, verifyingContract, now),
+    operator: new OperatorService(storage, config.rewardProvider ?? new EmptyOperatorRewardProvider()),
   };
   const server = createServer((request, response) => {
     void route(request, response, services).catch((error) => {
@@ -253,5 +293,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   await main();
 }
 
-export { AuthService, LeaseService, MemoryStorage, NodeService, ReceiptService, TaskService };
+export { AuthService, LeaseService, MemoryStorage, NodeService, OperatorService, ReceiptService, TaskService };
 export type { ControlApiConfig };
