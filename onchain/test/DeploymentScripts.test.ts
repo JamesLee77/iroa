@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { Wallet, parseEther } from "ethers";
+import { readFileSync } from "node:fs";
 import {
   ALLOCATIONS,
   GENESIS_SUPPLY,
@@ -14,6 +15,33 @@ import {
 } from "../scripts/deployment-common.js";
 
 describe("IROA deterministic deployment controls", function () {
+  it("waits for every V1 vault deployment receipt before submitting the next deployment", function () {
+    const source = readFileSync(new URL("../scripts/deploy-v1.ts", import.meta.url), "utf8");
+    const nodeReceipt = source.indexOf("await node.waitForDeployment()");
+    const ecosystemSubmission = source.indexOf('const ecosystem = await ethers.deployContract("MonthlyEmissionVault"');
+    const ecosystemReceipt = source.indexOf("await ecosystem.waitForDeployment()");
+    const researchSubmission = source.indexOf('const research = await ethers.deployContract("MonthlyEmissionVault"');
+    expect(nodeReceipt).to.be.greaterThan(-1).and.lessThan(ecosystemSubmission);
+    expect(ecosystemReceipt).to.be.greaterThan(-1).and.lessThan(researchSubmission);
+  });
+
+  it("requires an on-chain allowlist-manager role read-back before writing the allowlist Safe batch", function () {
+    const source = readFileSync(new URL("../scripts/allocate-genesis.ts", import.meta.url), "utf8");
+    expect(source).to.include("hasRole(ALLOWLIST_MANAGER_ROLE, safe)");
+  });
+
+  it("verifies signed manifests before role handoff or Safe batch generation", function () {
+    for (const script of ["handoff-roles.ts", "allocate-genesis.ts"]) {
+      const source = readFileSync(new URL(`../scripts/${script}`, import.meta.url), "utf8");
+      expect(source, script).to.include("verifyManifestSignature(manifest)");
+    }
+  });
+
+  it("requires every vault pair backing error to be zero instead of allowing cross-pair cancellation", function () {
+    const source = readFileSync(new URL("../scripts/reconcile-supply.ts", import.meta.url), "utf8");
+    expect(source).to.include("pairBackingErrors.every((error) => error.error === 0n)");
+  });
+
   it("rejects a deployment profile connected to the wrong chain before transactions", function () {
     expect(() => assertProfileChain("base-mainnet", 84532n)).to.throw("chain mismatch");
   });

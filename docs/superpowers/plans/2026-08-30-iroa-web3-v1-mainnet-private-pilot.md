@@ -386,27 +386,27 @@ burn/mint 원자성, allowance, pause/migration mode, schedule double import와 
 - Produces: signed deployment manifest, exact Safe batch JSON, role report, supply reconciliation report
 - Consumes: chain ID, Safe address, signer address, verified bytecode hashes
 
-- [ ] **Step 1: chain-locked deployment 구현**
+- [x] **Step 1: chain-locked deployment 구현**
 
 `deploy-v1.ts`는 `DEPLOYMENT_PROFILE=local|base-sepolia|base-mainnet`과 실제 chain ID가 일치하지 않으면 transaction 전에 종료한다. private key, RPC URL과 API key를 출력하지 않는다.
 
-- [ ] **Step 2: genesis allocation과 role handoff 구현**
+- [x] **Step 2: genesis allocation과 role handoff 구현**
 
 7개 정확한 transfer를 Safe Transaction Builder JSON으로 출력한다: NODE `2_500_000_000 ether`, ecosystem `2_300_000_000 ether`, R&D `1_500_000_000 ether`, team `1_500_000_000 ether`, investor `1_000_000_000 ether`, foundation `700_000_000 ether`, liquidity `500_000_000 ether`. 먼저 Genesis Safe와 7개 vault allowlist 등록 및 read-back batch를 만들고, 다음 batch에서 정확한 allocation을 실행한다. 역할 이관은 grant → receipt confirmation → read-back → deployer renounce 순서이며, read-back이 다르면 renounce하지 않는다.
 
-- [ ] **Step 3: 공급 대사 구현**
+- [x] **Step 3: 공급 대사 구현**
 
 report에는 V1/V2 totalSupply, 7개 vault 잔액, participant 잔액, migration burned/minted, locked/claimable과 합계 오차를 기록한다. 오차가 1 wei라도 있으면 exit code 1이다.
 
-- [ ] **Step 4: V2와 Migration 배포 순서 고정**
+- [x] **Step 4: V2와 Migration 배포 순서 고정**
 
 `deploy-v2-migration.ts`는 V2와 7개 V2 vault를 초기 공급 0으로 배포하고, V1/V2 주소를 constructor에 고정한 Migration을 배포한다. 첫 Timelock batch는 `bindMigrationContract(Migration)` → `lockMigrationAuthority()`를 원자적으로 실행한다. 두 번째 batch는 정확히 7개 vault pair 등록 → manifest read-back → `lockVaultPairs()`를 실행한다. 각 batch 전후 V2 공급이 0인지 확인한다. V1 `enterMigrationMode(Migration)`는 audit must-fix 반영·migration rehearsal·V2 운영 승인 이후 별도 irreversible Safe batch로만 제안한다.
 
-- [ ] **Step 5: regression source 생성**
+- [x] **Step 5: regression source 생성**
 
 wrong chain, zero Safe, duplicated vault address, allocation mismatch, incomplete role handoff, V2 binding 변경, lock 누락, non-zero pre-migration supply와 secret redaction을 작성하되 실행하지 않는다.
 
-- [ ] **Step 6: 커밋과 소스 검토**
+- [x] **Step 6: 커밋과 소스 검토**
 
 ```bash
 git add onchain/scripts onchain/deployments onchain/test/DeploymentScripts.test.ts

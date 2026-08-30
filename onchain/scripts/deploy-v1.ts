@@ -62,6 +62,7 @@ export async function deployV1(): Promise<DeploymentManifest> {
     deployerAddress,
     ethers.ZeroAddress,
   ]);
+  await node.waitForDeployment();
   const ecosystem = await ethers.deployContract("MonthlyEmissionVault", [
     token.target,
     allocationByKey.ecosystem,
@@ -71,6 +72,7 @@ export async function deployV1(): Promise<DeploymentManifest> {
     deployerAddress,
     releaseManager,
   ]);
+  await ecosystem.waitForDeployment();
   const research = await ethers.deployContract("MonthlyEmissionVault", [
     token.target,
     allocationByKey.research,
@@ -80,6 +82,7 @@ export async function deployV1(): Promise<DeploymentManifest> {
     deployerAddress,
     releaseManager,
   ]);
+  await research.waitForDeployment();
   const teamVault = await ethers.deployContract("CliffLinearVestingVault", [
     token.target,
     team,
@@ -88,6 +91,7 @@ export async function deployV1(): Promise<DeploymentManifest> {
     24,
     72,
   ]);
+  await teamVault.waitForDeployment();
   const investorVault = await ethers.deployContract("CliffLinearVestingVault", [
     token.target,
     investor,
@@ -96,6 +100,7 @@ export async function deployV1(): Promise<DeploymentManifest> {
     18,
     42,
   ]);
+  await investorVault.waitForDeployment();
   const foundationVault = await ethers.deployContract("CliffLinearVestingVault", [
     token.target,
     foundation,
@@ -104,10 +109,11 @@ export async function deployV1(): Promise<DeploymentManifest> {
     12,
     84,
   ]);
+  await foundationVault.waitForDeployment();
   const liquidity = await ethers.deployContract("LiquidityReleaseVault", [token.target, treasury, start]);
+  await liquidity.waitForDeployment();
 
   const deployedVaults = [node, ecosystem, research, teamVault, investorVault, foundationVault, liquidity];
-  await Promise.all(deployedVaults.map((vault) => vault.waitForDeployment()));
 
   const beneficiaries: Partial<Record<string, string>> = { team, investor, foundation, liquidity: treasury };
   const vaults: VaultManifestEntry[] = await Promise.all(

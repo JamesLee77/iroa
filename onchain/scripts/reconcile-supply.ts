@@ -154,6 +154,12 @@ export async function reconcileSupply(): Promise<Record<string, unknown>> {
   );
 
   const backingError = vaults.reduce((total, vault) => total + BigInt(vault.backingError), 0n);
+  const pairBackingByKey = new Map<string, bigint>();
+  for (const vault of vaults) {
+    pairBackingByKey.set(vault.key, (pairBackingByKey.get(vault.key) ?? 0n) + BigInt(vault.backingError));
+  }
+  const pairBackingErrors = [...pairBackingByKey.entries()].map(([key, error]) => ({ key, error }));
+  const everyVaultPairBacked = pairBackingErrors.every((error) => error.error === 0n);
   const report = {
     reconciledAt: new Date().toISOString(),
     profile,
@@ -166,9 +172,10 @@ export async function reconcileSupply(): Promise<Record<string, unknown>> {
     migrationMinted: migrationMinted.toString(),
     migrationCounterError: (migrationBurned - migrationMinted).toString(),
     vaultBackingError: backingError.toString(),
+    vaultPairBackingErrors: pairBackingErrors.map(({ key, error }) => ({ key, error: error.toString() })),
     vaults,
     participants,
-    exact: supplyError === 0n && migrationBurned === migrationMinted && backingError === 0n,
+    exact: supplyError === 0n && migrationBurned === migrationMinted && everyVaultPairBacked,
   };
   const output = process.env.RECONCILIATION_REPORT ?? `deployments/${profile}/supply-reconciliation.json`;
   await writeJsonAtomic(output, report);

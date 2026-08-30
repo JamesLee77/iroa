@@ -8,6 +8,7 @@ import {
   readJson,
   requireAddress,
   safeError,
+  verifyManifestSignature,
   writeJsonAtomic,
   type DeploymentManifest,
 } from "./deployment-common.js";
@@ -66,6 +67,7 @@ export async function handoffRoles(): Promise<RoleReceipt[]> {
   const profile = parseProfile(process.env.DEPLOYMENT_PROFILE);
   const manifestPath = process.env.DEPLOYMENT_MANIFEST ?? `deployments/${profile}/v1.json`;
   const manifest = await readJson<DeploymentManifest>(manifestPath);
+  verifyManifestSignature(manifest);
   const { ethers } = await network.connect();
   const chainId = (await ethers.provider.getNetwork()).chainId;
   assertProfileChain(profile, chainId);
