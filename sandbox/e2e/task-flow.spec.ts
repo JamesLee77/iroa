@@ -91,7 +91,7 @@ test('user confirms only when result and deletion receipts are verified', async 
   await page.goto(`/tasks/${TASK_ID}/result`);
   await expect(page.getByText('검증됨')).toHaveCount(2);
   await page.getByRole('button', { name: '결과 확정' }).click();
-  await expect(page.getByText('보상 검증 대기')).toBeVisible();
+  await expect(page.getByText('보상 검증 대기', { exact: true })).toBeVisible();
 });
 
 test('result view refreshes after a delayed deletion receipt arrives', async ({ page }) => {
