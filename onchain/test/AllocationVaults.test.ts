@@ -86,6 +86,8 @@ describe("IROA allocation vaults", function () {
       { total: "1000000000", cliff: 18, duration: 42 },
       { total: "700000000", cliff: 12, duration: 84 },
     ];
+    const deployedVaults = [];
+    let latestEnd = start;
 
     for (const schedule of schedules) {
       const total = ethers.parseEther(schedule.total);
@@ -106,8 +108,12 @@ describe("IROA allocation vaults", function () {
       expect(
         await vault.vestedAt(start + (schedule.cliff + schedule.duration) * MONTH),
       ).to.equal(total);
+      deployedVaults.push({ vault, total });
+      latestEnd = Math.max(latestEnd, start + (schedule.cliff + schedule.duration) * MONTH);
+    }
 
-      await networkHelpers.time.increaseTo(start + (schedule.cliff + schedule.duration) * MONTH);
+    await networkHelpers.time.increaseTo(latestEnd);
+    for (const { vault, total } of deployedVaults) {
       await vault.release();
       expect(await vault.released()).to.equal(total);
     }

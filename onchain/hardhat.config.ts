@@ -34,6 +34,11 @@ export default defineConfig({
       chainType: "op",
       chainId: 31337,
     },
+    hardhatBaseMainnet: {
+      type: "edr-simulated",
+      chainType: "op",
+      chainId: 8453,
+    },
     baseSepolia: {
       type: "http",
       chainType: "op",

@@ -218,11 +218,11 @@ signature replay, chain confusion, ambiguous packed encoding과 duplicate leaf�
 - Produces: `IROATokenV1`, `setAllowed(address,bool)`, `enterMigrationMode(address)`, `burnForMigration(uint256)`, `MonthlyEmissionVault.releasableAt(uint64)`, `CliffLinearVestingVault.releasable(address)`, `LiquidityReleaseVault.releasableAt(uint64)`
 - Consumes: Genesis Safe, Timelock과 7개 vault addresses
 
-- [ ] **Step 1: onchain workspace 생성**
+- [x] **Step 1: onchain workspace 생성**
 
 Solidity `0.8.24`, OpenZeppelin `5.6.1`, Hardhat `3.15.0`, `@nomicfoundation/hardhat-toolbox-mocha-ethers` `3.0.7`, ethers `6.17.0`을 exact version으로 고정한다. compiler optimizer는 `runs: 200`, metadata bytecode hash는 `ipfs`로 고정한다.
 
-- [ ] **Step 2: V1 구현**
+- [x] **Step 2: V1 구현**
 
 ```solidity
 uint256 public constant GENESIS_SUPPLY = 10_000_000_000 ether;
@@ -237,21 +237,21 @@ function migrationContract() external view returns (address);
 
 constructor가 Genesis Safe에 `GENESIS_SUPPLY`를 발행하고 public/external mint 또는 일반 사용자 burn을 노출하지 않는다. `burnForMigration`은 migration mode에서 binding된 Migration contract만 자신의 V1 잔액을 소각할 수 있다. 상태는 `NORMAL_PRIVATE`, `PAUSED`, `MIGRATION_ONLY`로 관리한다. pause는 정상 private 전송을 막고, 감사 후 실행하는 `enterMigrationMode`는 pause 여부와 관계없이 한 번만 가능하며 migration 주소를 고정한다. 불변 상태인 migration mode에서는 migration contract로의 이전과 그 계약의 전용 소각만 허용한다.
 
-- [ ] **Step 3: Vault 구현**
+- [x] **Step 3: Vault 구현**
 
 `MonthlyEmissionVault`는 immutable 월별 누적 release table을 사용한다. NODE 12년 weight는 `[15,13,12,11,10,9,8,7,5,4,3,3]`, ecosystem 10년 weight는 `[12,12,11,11,10,10,9,9,8,8]`, R&D 10년 weight는 `[12,12,12,12,12,10,10,8,6,6]`으로 고정한다. 각 연도 물량을 12개월로 동일 분할하되 해당 연도의 마지막 달이 wei 나머지를 흡수하고, 최종 누적값은 allocation과 정확히 같아야 한다. 미사용 잔액은 해당 vault에 남긴다.
 
 `CliffLinearVestingVault`는 beneficiary별 `total`, `released`, `start`, `cliff`, `linearDuration`을 저장하고 team, investor, foundation address로 각각 배포한다. cliff 동안 0이고 cliff 종료 시점부터 team 72개월, investor 42개월, foundation 84개월 동안 선형 해제하며 마지막 달이 wei 나머지를 흡수한다. `LiquidityReleaseVault`는 genesis 2억과 36개월 동안 나머지 3억만 해제한다. 해제는 private treasury 운용 한도일 뿐 DEX·공개 판매·공개 지갑 배분을 자동 실행하지 않는다.
 
-- [ ] **Step 4: Timelock 구현**
+- [x] **Step 4: Timelock 구현**
 
 Base Mainnet과 Base Sepolia에서 최소 48시간을 강제하고 local chain만 짧은 delay를 허용한다. proposer와 executor는 Safe, admin은 zero address를 기본 배포값으로 사용한다. Genesis Safe와 7개 vault는 allocation 전에 allowlist에 등록하고 read-back한 뒤에만 Safe allocation batch를 실행한다.
 
-- [ ] **Step 5: module regression source 생성**
+- [x] **Step 5: module regression source 생성**
 
 100억 one-shot supply, mint selector와 일반 burn selector 부재, allowlist 전송, migration contract 외 `burnForMigration` 거부, migration-only 전송, 7개 배분 합계, 각 cliff와 마지막 달 exact release를 test source로 작성하되 실행하지 않는다.
 
-- [ ] **Step 6: 커밋과 소스 검토**
+- [x] **Step 6: 커밋과 소스 검토**
 
 ```bash
 git add onchain

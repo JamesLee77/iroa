@@ -25,6 +25,13 @@ describe("IROATokenV1", function () {
     expect(token.interface.hasFunction("burn")).to.equal(false);
   });
 
+  it("does not grant transfer permission merely because an address administers governance", async function () {
+    const { token, genesis, admin } = await deployTokenFixture();
+
+    expect(await token.isAllowed(genesis.address)).to.equal(true);
+    expect(await token.isAllowed(admin.address)).to.equal(false);
+  });
+
   it("allows transfers only between allowlisted participants", async function () {
     const { ethers, token, genesis, admin, participant, outsider } = await deployTokenFixture();
 

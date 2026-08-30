@@ -47,11 +47,7 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
         _grantRole(PAUSER_ROLE, initialPauser);
 
         _allowedAccounts[genesisSafe] = true;
-        _allowedAccounts[initialAdmin] = true;
         emit AllowedAccountUpdated(genesisSafe, true);
-        if (initialAdmin != genesisSafe) {
-            emit AllowedAccountUpdated(initialAdmin, true);
-        }
 
         _mint(genesisSafe, GENESIS_SUPPLY);
     }

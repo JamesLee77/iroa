@@ -25,4 +25,15 @@ contract IROATimelock is TimelockController {
             revert UnsupportedChain(chainId);
         }
     }
+
+    function updateDelay(uint256 newDelay) public override {
+        if (_isProductionChain() && newDelay < MIN_PRODUCTION_DELAY) {
+            revert ProductionDelayTooShort(newDelay, MIN_PRODUCTION_DELAY);
+        }
+        super.updateDelay(newDelay);
+    }
+
+    function _isProductionChain() private view returns (bool) {
+        return block.chainid == BASE_MAINNET_CHAIN_ID || block.chainid == BASE_SEPOLIA_CHAIN_ID;
+    }
 }
