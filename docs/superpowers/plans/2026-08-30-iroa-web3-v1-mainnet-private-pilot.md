@@ -6,7 +6,7 @@
 
 **Architecture:** 기존 Astro 홈페이지는 루트에 유지하고, 독립 npm workspace로 onchain, control-api, verifier, node-agent, sandbox, operator와 admin을 추가한다. 개인정보와 Task 원문은 오프체인에 두고 EIP-712 Receipt와 월별 Merkle root만 Base에 결산한다. V1은 한 번만 100억을 발행하며, V2는 초기 공급 0에서 V1이 소각된 수량만큼만 원자적으로 발행한다.
 
-**Tech Stack:** Node.js 22.12+, TypeScript 6.0.3, Solidity 0.8.24, OpenZeppelin Contracts 5.6.1, OpenZeppelin Merkle Tree 1.0.8, Hardhat 3.15.0, Hardhat Toolbox 7.0.0, ethers 6.17.0, viem 2.56.0, Hono 4.13.5, Zod 4.5.4, Cloudflare Wrangler 4.127.1, React 19.2.8, Vite 8.2.2, wagmi 2.19.5, RainbowKit 2.2.11, Vitest 4.1.11, Playwright 1.62.1
+**Tech Stack:** Node.js 22.12+, TypeScript 6.0.3, Solidity 0.8.24, OpenZeppelin Contracts 5.6.1, OpenZeppelin Merkle Tree 1.0.8, Hardhat 3.15.0, Hardhat Ethers+Mocha Toolbox 3.0.7, ethers 6.17.0, viem 2.56.0, Hono 4.13.5, Zod 4.5.4, Cloudflare Wrangler 4.127.1, React 19.2.8, Vite 8.2.2, wagmi 2.19.5, RainbowKit 2.2.11, Vitest 4.1.11, Playwright 1.62.1
 
 **Spec:** `docs/superpowers/specs/2026-08-30-iroa-web3-mainnet-private-pilot-design.md`
 
@@ -220,7 +220,7 @@ signature replay, chain confusion, ambiguous packed encoding과 duplicate leaf�
 
 - [ ] **Step 1: onchain workspace 생성**
 
-Solidity `0.8.24`, OpenZeppelin `5.6.1`, Hardhat `3.15.0`, ethers `6.17.0`을 exact version으로 고정한다. compiler optimizer는 `runs: 200`, metadata bytecode hash는 `ipfs`로 고정한다.
+Solidity `0.8.24`, OpenZeppelin `5.6.1`, Hardhat `3.15.0`, `@nomicfoundation/hardhat-toolbox-mocha-ethers` `3.0.7`, ethers `6.17.0`을 exact version으로 고정한다. compiler optimizer는 `runs: 200`, metadata bytecode hash는 `ipfs`로 고정한다.
 
 - [ ] **Step 2: V1 구현**
 
