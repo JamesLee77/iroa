@@ -36,4 +36,28 @@ describe('IROA deployment manifests', () => {
       ),
     ).toThrow();
   });
+
+  it('rejects duplicate deployed contract addresses', () => {
+    const duplicatedAddress = `0x${'33'.repeat(20)}`;
+    const deployment = {
+      address: duplicatedAddress,
+      transactionHash: `0x${'11'.repeat(32)}`,
+      bytecodeHash: `0x${'22'.repeat(32)}`,
+    };
+
+    expect(() =>
+      assertManifestForChain(
+        {
+          ...plannedBaseManifest,
+          deploymentStatus: 'deployed',
+          deploymentCommit: 'a'.repeat(40),
+          contracts: {
+            IROATokenV1: deployment,
+            IROATimelock: deployment,
+          },
+        },
+        8453,
+      ),
+    ).toThrow(/duplicate contract address/i);
+  });
 });

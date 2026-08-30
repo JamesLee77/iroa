@@ -61,7 +61,15 @@ describe('IROA cryptography', () => {
     const domain = { chainId: 84532, verifyingContract: address, version: '1' } as const;
     const firstDigest = hashTypedData(resultReceiptTypedData(domain, resultReceipt));
     const secondDigest = hashTypedData(resultReceiptTypedData(domain, resultReceipt));
+    const mainnetReceipt = { ...resultReceipt, chainId: 8453 } satisfies ResultReceipt;
+    const mainnetDigest = hashTypedData(
+      resultReceiptTypedData(
+        { chainId: 8453, verifyingContract: address, version: '1' },
+        mainnetReceipt,
+      ),
+    );
     expect(firstDigest).toBe(secondDigest);
+    expect(mainnetDigest).not.toBe(firstDigest);
     expect(() =>
       resultReceiptTypedData(
         { chainId: 8453, verifyingContract: address, version: '1' },
@@ -71,9 +79,31 @@ describe('IROA cryptography', () => {
     expect(hashTypedData(deletionReceiptTypedData(domain, deletionReceipt))).not.toBe(firstDigest);
   });
 
+  it('rejects a domain version that differs from the receipt policy major', () => {
+    expect(() =>
+      resultReceiptTypedData(
+        { chainId: 84532, verifyingContract: address, version: '2' },
+        resultReceipt,
+      ),
+    ).toThrow(/policy major/);
+  });
+
+  it('rejects malformed receipts at the signing boundary', () => {
+    expect(() =>
+      resultReceiptTypedData(
+        { chainId: 84532, verifyingContract: address, version: '1' },
+        { ...resultReceipt, nonce: '0x1234' } as ResultReceipt,
+      ),
+    ).toThrow();
+  });
+
   it('salts operator identifiers before hashing', () => {
     expect(hashOperatorId('Operator-A', hashA)).toBe(hashOperatorId(' operator-a ', hashA));
     expect(hashOperatorId('Operator-A', hashA)).not.toBe(hashOperatorId('Operator-A', hashB));
+  });
+
+  it('normalizes equivalent operator identifiers before hashing', () => {
+    expect(hashOperatorId('Opérator-A', hashA)).toBe(hashOperatorId('Ope\u0301rator-A', hashA));
   });
 
   it('builds deterministic proofs and rejects an invalid proof', () => {

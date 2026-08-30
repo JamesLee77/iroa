@@ -36,6 +36,20 @@ export const DeploymentManifestSchema = z.object({
       context.addIssue({ code: 'custom', message: 'A deployed manifest requires contracts', path: ['contracts'] });
     }
   }
+  const contractNameByAddress = new Map<string, string>();
+  for (const [contractName, deployment] of Object.entries(manifest.contracts)) {
+    const normalizedAddress = deployment.address.toLowerCase();
+    const existingName = contractNameByAddress.get(normalizedAddress);
+    if (existingName) {
+      context.addIssue({
+        code: 'custom',
+        message: `Duplicate contract address shared by ${existingName} and ${contractName}`,
+        path: ['contracts', contractName, 'address'],
+      });
+    } else {
+      contractNameByAddress.set(normalizedAddress, contractName);
+    }
+  }
 });
 
 export type ContractDeployment = z.infer<typeof ContractDeploymentSchema>;

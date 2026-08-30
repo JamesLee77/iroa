@@ -1,4 +1,11 @@
-import type { DeletionReceipt, ResultReceipt } from '@iroa/protocol';
+import {
+  UnsignedDeletionReceiptSchema,
+  UnsignedResultReceiptSchema,
+  type DeletionReceipt,
+  type ResultReceipt,
+  type UnsignedDeletionReceipt,
+  type UnsignedResultReceipt,
+} from '@iroa/protocol';
 import type { TypedDataDefinition } from 'viem';
 
 export type ReceiptDomainInput = {
@@ -45,7 +52,7 @@ function receiptDomain(input: ReceiptDomainInput) {
 }
 
 function assertReceiptDomain(
-  receipt: Pick<ResultReceipt | DeletionReceipt, 'chainId' | 'verifyingContract'>,
+  receipt: Pick<UnsignedResultReceipt | UnsignedDeletionReceipt, 'chainId' | 'verifyingContract' | 'policyVersion'>,
   domain: ReceiptDomainInput,
 ): void {
   if (receipt.chainId !== domain.chainId) {
@@ -54,14 +61,25 @@ function assertReceiptDomain(
   if (receipt.verifyingContract.toLowerCase() !== domain.verifyingContract.toLowerCase()) {
     throw new Error('Receipt verifying contract does not match EIP-712 domain');
   }
+  if (!/^[1-9][0-9]*$/.test(domain.version)) {
+    throw new Error('Receipt domain version must be a positive policy major version');
+  }
+  const [policyMajor] = receipt.policyVersion.split('.');
+  if (policyMajor !== domain.version) {
+    throw new Error(
+      `Receipt policy major ${policyMajor ?? 'unknown'} does not match domain version ${domain.version}`,
+    );
+  }
 }
 
 export function resultReceiptTypedData(
   domain: ReceiptDomainInput,
-  receipt: ResultReceipt,
+  receipt: UnsignedResultReceipt | ResultReceipt,
 ): TypedDataDefinition {
-  assertReceiptDomain(receipt, domain);
-  const { nodeSignature: _signature, chainId: _chainId, verifyingContract: _contract, ...message } = receipt;
+  const { nodeSignature: _signature, ...unsignedReceipt } = receipt as ResultReceipt;
+  const parsedReceipt = UnsignedResultReceiptSchema.parse(unsignedReceipt);
+  assertReceiptDomain(parsedReceipt, domain);
+  const { chainId: _chainId, verifyingContract: _contract, ...message } = parsedReceipt;
 
   return {
     domain: receiptDomain(domain),
@@ -73,10 +91,12 @@ export function resultReceiptTypedData(
 
 export function deletionReceiptTypedData(
   domain: ReceiptDomainInput,
-  receipt: DeletionReceipt,
+  receipt: UnsignedDeletionReceipt | DeletionReceipt,
 ): TypedDataDefinition {
-  assertReceiptDomain(receipt, domain);
-  const { nodeSignature: _signature, chainId: _chainId, verifyingContract: _contract, ...message } = receipt;
+  const { nodeSignature: _signature, ...unsignedReceipt } = receipt as DeletionReceipt;
+  const parsedReceipt = UnsignedDeletionReceiptSchema.parse(unsignedReceipt);
+  assertReceiptDomain(parsedReceipt, domain);
+  const { chainId: _chainId, verifyingContract: _contract, ...message } = parsedReceipt;
 
   return {
     domain: receiptDomain(domain),

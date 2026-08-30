@@ -2,15 +2,18 @@ import { z } from 'zod';
 
 export const Hex32Schema = z
   .string()
-  .regex(/^0x[0-9a-fA-F]{64}$/, 'Expected a 32-byte 0x-prefixed hexadecimal value');
+  .regex(/^0x[0-9a-fA-F]{64}$/, 'Expected a 32-byte 0x-prefixed hexadecimal value')
+  .transform((value) => value as `0x${string}`);
 
 export const AddressSchema = z
   .string()
-  .regex(/^0x[0-9a-fA-F]{40}$/, 'Expected a 20-byte 0x-prefixed address');
+  .regex(/^0x[0-9a-fA-F]{40}$/, 'Expected a 20-byte 0x-prefixed address')
+  .transform((value) => value as `0x${string}`);
 
 export const SignatureSchema = z
   .string()
-  .regex(/^0x[0-9a-fA-F]{130}$/, 'Expected a 65-byte 0x-prefixed signature');
+  .regex(/^0x[0-9a-fA-F]{130}$/, 'Expected a 65-byte 0x-prefixed signature')
+  .transform((value) => value as `0x${string}`);
 
 export const UnixSecondsSchema = z.number().int().nonnegative().safe();
 

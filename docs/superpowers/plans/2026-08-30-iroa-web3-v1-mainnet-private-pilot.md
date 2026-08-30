@@ -159,7 +159,7 @@ git commit -m "feat: define IROA protocol contracts"
 - Consumes: `ResultReceipt`, `DeletionReceipt`, `RewardLeaf`
 - Produces: `resultReceiptTypedData()`, `deletionReceiptTypedData()`, `hashOperatorId()`, `buildRewardTree()`, `verifyRewardProof()`, `DeploymentManifest`
 
-- [ ] **Step 1: EIP-712 domain과 message builder 구현**
+- [x] **Step 1: EIP-712 domain과 message builder 구현**
 
 ```ts
 export type ReceiptDomainInput = {
@@ -176,19 +176,19 @@ export function resultReceiptTypedData(
 
 domain name은 `IROA Receipt`, version은 policy major version, message에는 `taskId`, `nodeId`, `policyVersion`, `nonce`, `resultHash`를 포함한다.
 
-- [ ] **Step 2: Reward leaf와 Merkle tree 구현**
+- [x] **Step 2: Reward leaf와 Merkle tree 구현**
 
 logical leaf tuple은 `(epoch, operatorIdHash, nodeId, score, rewardAmount, receiptBatchRoot, policyVersion, claimNonce)`다. leaf hash는 OpenZeppelin `StandardMerkleTree`의 표준인 `keccak256(bytes.concat(keccak256(abi.encode(...))))`로 만들고 sorted pair tree를 사용한다. offchain builder와 Solidity verifier는 같은 field type·순서·double-hash 규칙을 공유한다.
 
-- [ ] **Step 3: chain manifest 구현**
+- [x] **Step 3: chain manifest 구현**
 
 `base.json`과 `base-sepolia.json`은 빈 주소 문자열을 허용하지 않는다. `assertManifestForChain(manifest, chainId)`가 다른 체인의 manifest 사용을 거부한다.
 
-- [ ] **Step 4: module regression source 생성**
+- [x] **Step 4: module regression source 생성**
 
 동일 Receipt의 deterministic hash, chain ID 변경 시 다른 digest, 중복 leaf 거부, 잘못된 proof 거부를 작성하되 실행하지 않는다.
 
-- [ ] **Step 5: 커밋과 소스 검토**
+- [x] **Step 5: 커밋과 소스 검토**
 
 ```bash
 git add packages/crypto packages/contracts
