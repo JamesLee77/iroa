@@ -4,14 +4,14 @@ import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 
 const MONTH = 30 * 24 * 60 * 60;
 const LEAF_TYPES = [
-  "uint256",
+  "uint64",
   "bytes32",
   "bytes32",
   "uint256",
   "uint256",
   "bytes32",
+  "string",
   "bytes32",
-  "uint256",
 ];
 
 describe("IROA NODE settlement", function () {
@@ -41,8 +41,9 @@ describe("IROA NODE settlement", function () {
       allocation,
       start,
       [15, 13, 12, 11, 10, 9, 8, 7, 5, 4, 3, 3],
+      true,
       admin.address,
-      admin.address,
+      ethers.ZeroAddress,
     ]);
     const distributor = await ethers.deployContract("IROARewardDistributor", [
       nodeRegistry.target,
@@ -104,8 +105,9 @@ describe("IROA NODE settlement", function () {
     const score = 1_000n;
     const amount = (await nodeVault.monthlyBudget(epoch)) / 100n;
     const receiptBatchRoot = ethers.id("receipt-batch-0");
-    const policyVersion = ethers.id("policy-v1");
-    const claimNonce = 7n;
+    const policyVersion = "1.0.0";
+    const policyVersionHash = ethers.keccak256(ethers.toUtf8Bytes(policyVersion));
+    const claimNonce = ethers.id("claim-nonce-7");
     const leaf = [
       epoch,
       operatorIdHash,
@@ -121,12 +123,40 @@ describe("IROA NODE settlement", function () {
     await networkHelpers.time.increaseTo(start + MONTH);
     await rootRegistry
       .connect(proposer)
-      .proposeRoot(epoch, tree.root, receiptBatchRoot, policyVersion);
+      .proposeRoot(epoch, tree.root, receiptBatchRoot, policyVersionHash);
     await networkHelpers.time.increase(60);
     await rootRegistry.finalizeRoot(epoch);
 
     return { epoch, score, amount, receiptBatchRoot, policyVersion, claimNonce, tree, leaf };
   }
+
+  it("matches the canonical protocol reward leaf encoding exactly", async function () {
+    const { ethers, distributor, nodeId, operatorIdHash } = await deploySettlementFixture();
+    const values = [
+      0n,
+      operatorIdHash,
+      nodeId,
+      100n,
+      200n,
+      ethers.id("receipt-batch"),
+      "1.0.0",
+      ethers.id("claim-nonce"),
+    ];
+    const innerHash = ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(LEAF_TYPES, values),
+    );
+    const expectedLeafHash = ethers.keccak256(innerHash);
+
+    expect(await distributor.rewardLeafHash(...values)).to.equal(expectedLeafHash);
+  });
+
+  it("does not expose generic monthly release on a NODE reward vault", async function () {
+    const { ethers, nodeVault, admin, operator } = await deploySettlementFixture();
+
+    await expect(
+      nodeVault.connect(admin).releaseForCurrentMonth(operator.address, 1),
+    ).to.revert(ethers);
+  });
 
   it("never permits one device key to register a second NODE", async function () {
     const { ethers, nodeRegistry, other } = await deploySettlementFixture();
@@ -172,7 +202,12 @@ describe("IROA NODE settlement", function () {
     const { ethers, rootRegistry, proposer, other } = await deploySettlementFixture();
     await rootRegistry
       .connect(proposer)
-      .proposeRoot(0, ethers.id("reward-root"), ethers.id("receipt-root"), ethers.id("policy"));
+      .proposeRoot(
+        0,
+        ethers.id("reward-root"),
+        ethers.id("receipt-root"),
+        ethers.keccak256(ethers.toUtf8Bytes("1.0.0")),
+      );
 
     await expect(rootRegistry.connect(other).challengeRoot(0, ethers.id("evidence")))
       .to.be.revertedWithCustomError(rootRegistry, "AccessControlUnauthorizedAccount");
@@ -201,19 +236,19 @@ describe("IROA NODE settlement", function () {
       1n,
       1n,
       ethers.id("receipt-root"),
-      ethers.id("policy"),
-      1n,
+      "1.0.0",
+      ethers.id("claim-nonce"),
     ];
     const tree = rewardTree([values]);
     await rootRegistry
       .connect(proposer)
-      .proposeRoot(0, tree.root, values[5], values[6]);
+      .proposeRoot(0, tree.root, values[5], ethers.keccak256(ethers.toUtf8Bytes(values[6])));
     await rootRegistry.connect(challenger).challengeRoot(0, ethers.id("evidence"));
 
     await expect(
       distributor
         .connect(operator)
-        .claim(0, operatorIdHash, nodeId, 1, 1, values[5], values[6], 1, tree.getProof(0)),
+        .claim(0, operatorIdHash, nodeId, 1, 1, values[5], values[6], values[7], tree.getProof(0)),
     ).to.be.revertedWithCustomError(distributor, "RootNotFinalized");
   });
 
@@ -308,8 +343,9 @@ describe("IROA NODE settlement", function () {
 
     const amount = (await nodeVault.monthlyBudget(0)) / 100n;
     const receiptBatchRoot = ethers.id("receipt-batch-shared-nonce");
-    const policyVersion = ethers.id("policy-v1");
-    const sharedNonce = 9n;
+    const policyVersion = "1.0.0";
+    const policyVersionHash = ethers.keccak256(ethers.toUtf8Bytes(policyVersion));
+    const sharedNonce = ethers.id("shared-claim-nonce");
     const leaves = [
       [0n, operatorIdHash, nodeId, 100n, amount, receiptBatchRoot, policyVersion, sharedNonce],
       [
@@ -327,7 +363,7 @@ describe("IROA NODE settlement", function () {
     await networkHelpers.time.increaseTo(start + MONTH);
     await rootRegistry
       .connect(proposer)
-      .proposeRoot(0, tree.root, receiptBatchRoot, policyVersion);
+      .proposeRoot(0, tree.root, receiptBatchRoot, policyVersionHash);
     await networkHelpers.time.increase(60);
     await rootRegistry.finalizeRoot(0);
 

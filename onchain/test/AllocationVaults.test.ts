@@ -59,6 +59,7 @@ describe("IROA allocation vaults", function () {
         allocation,
         now,
         schedule.weights,
+        false,
         admin.address,
         releaseManager.address,
       ]);

@@ -276,7 +276,7 @@ git commit -m "feat: add IROA V1 token and allocation vaults"
 - Produces: `registerNode`, `approveNode`, `suspendNode`, `revokeDeviceKey`, `proposeRoot`, `challengeRoot`, `finalizeRoot`, `claim`
 - Consumes: V1 Token, NodeEmissionVault, Timelock, verifier signer
 
-- [ ] **Step 1: NODE Registry 구현**
+- [x] **Step 1: NODE Registry 구현**
 
 ```solidity
 enum NodeStatus { Pending, Active, Suspended, Revoked }
@@ -292,19 +292,19 @@ struct NodeRecord {
 
 한 device key는 하나의 active node에만 연결한다. 한 node에는 보상 청구용 `operatorWallet` 하나를 연결하고 wallet 변경은 Timelock이 아니라 운영자 서명과 compliance 승인을 모두 요구한다. N4는 사용자 승인 수준이므로 NODE trust level은 N0–N3만 허용한다.
 
-- [ ] **Step 2: Receipt root lifecycle 구현**
+- [x] **Step 2: Receipt root lifecycle 구현**
 
 root 상태는 `Proposed → Challenged | Finalized | Cancelled`다. Base profile의 challenge window는 7일, Base Sepolia는 24시간, local은 60초다. `ROOT_PROPOSER_ROLE`만 제안하고 private compliance·auditor의 `CHALLENGER_ROLE`만 challenge할 수 있다. window가 끝난 미분쟁 root의 finalize는 permissionless이고, challenged root의 cancel 또는 replacement는 Timelock만 실행한다. challenged root는 claim 대상이 아니다.
 
-- [ ] **Step 3: Reward claim 구현**
+- [x] **Step 3: Reward claim 구현**
 
 `claim(epoch, operatorIdHash, nodeId, score, amount, receiptBatchRoot, policyVersion, claimNonce, proof)`가 finalized root를 확인하고 `NodeRegistry.operatorWallet(nodeId) == msg.sender`, 저장된 operatorIdHash 일치와 operator wallet의 token allowlist 상태를 강제한다. StandardMerkleTree leaf hash 전체를 claim nullifier로 사용해 서로 다른 운영자의 같은 nonce가 충돌하지 않게 하고 동일 leaf의 중복 청구를 막는다. Distributor는 토큰을 선입금 받지 않고 유효 claim마다 `NodeEmissionVault.releaseReward(epoch, msg.sender, amount)`를 호출한다. Vault는 `claimed[epoch] + amount <= monthlyBudget(epoch)`를 강제하므로 미사용 물량은 계속 Vault에 남는다.
 
-- [ ] **Step 4: module regression source 생성**
+- [x] **Step 4: module regression source 생성**
 
 device key 중복, suspended NODE, unauthorized challenge, premature finalize, challenged root, proof 변조, 같은 nonce를 가진 서로 다른 operator의 정상 claim, duplicate leaf claim과 epoch budget overflow를 작성하되 실행하지 않는다.
 
-- [ ] **Step 5: 커밋과 소스 검토**
+- [x] **Step 5: 커밋과 소스 검토**
 
 ```bash
 git add onchain/contracts/node onchain/contracts/settlement onchain/test/NodeSettlement.test.ts

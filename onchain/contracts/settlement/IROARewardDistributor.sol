@@ -11,13 +11,13 @@ interface IIROANodeRegistry {
 }
 
 interface IIROAReceiptRootRegistry {
-    function finalizedRoot(uint256 epoch)
+    function finalizedRoot(uint64 epoch)
         external
         view
         returns (
             bytes32 rewardRoot,
             bytes32 receiptBatchRoot,
-            bytes32 policyVersion,
+            bytes32 policyVersionHash,
             uint32 revision,
             bool finalized
         );
@@ -37,6 +37,25 @@ contract IROARewardDistributor is ReentrancyGuard {
     uint256 public constant MAX_OPERATOR_REWARD_BPS = 500;
     uint8 public constant ACTIVE_NODE_STATUS = 1;
 
+    struct RewardClaimInput {
+        uint64 epoch;
+        bytes32 operatorIdHash;
+        bytes32 nodeId;
+        uint256 score;
+        uint256 amount;
+        bytes32 receiptBatchRoot;
+        string policyVersion;
+        bytes32 claimNonce;
+    }
+
+    struct FinalizedSettlement {
+        bytes32 rewardRoot;
+        bytes32 receiptBatchRoot;
+        bytes32 policyVersionHash;
+        uint32 revision;
+        bool finalized;
+    }
+
     error ZeroAddress();
     error InvalidReward();
     error RootNotFinalized(uint256 epoch);
@@ -50,7 +69,7 @@ contract IROARewardDistributor is ReentrancyGuard {
     error OperatorRewardCapExceeded(uint256 requestedTotal, uint256 maximum);
 
     event RewardClaimed(
-        uint256 indexed epoch,
+        uint64 indexed epoch,
         bytes32 indexed operatorIdHash,
         bytes32 indexed nodeId,
         address operatorWallet,
@@ -66,7 +85,7 @@ contract IROARewardDistributor is ReentrancyGuard {
     INodeEmissionVault public immutable nodeEmissionVault;
 
     mapping(bytes32 leafHash => bool claimed) public claimed;
-    mapping(uint256 epoch => mapping(bytes32 operatorIdHash => uint256 amount)) public operatorClaimed;
+    mapping(uint64 epoch => mapping(bytes32 operatorIdHash => uint256 amount)) public operatorClaimed;
 
     constructor(
         IIROANodeRegistry nodeRegistry_,
@@ -86,97 +105,126 @@ contract IROARewardDistributor is ReentrancyGuard {
     }
 
     function claim(
-        uint256 epoch,
+        uint64 epoch,
         bytes32 operatorIdHash_,
         bytes32 nodeId,
         uint256 score,
         uint256 amount,
         bytes32 receiptBatchRoot,
-        bytes32 policyVersion,
-        uint256 claimNonce,
+        string calldata policyVersion,
+        bytes32 claimNonce,
         bytes32[] calldata proof
     ) external nonReentrant {
-        if (score == 0 || amount == 0) revert InvalidReward();
+        RewardClaimInput memory input = RewardClaimInput({
+            epoch: epoch,
+            operatorIdHash: operatorIdHash_,
+            nodeId: nodeId,
+            score: score,
+            amount: amount,
+            receiptBatchRoot: receiptBatchRoot,
+            policyVersion: policyVersion,
+            claimNonce: claimNonce
+        });
+        _claim(input, proof);
+    }
 
+    function _claim(RewardClaimInput memory input, bytes32[] calldata proof) private {
+        if (input.score == 0 || input.amount == 0) revert InvalidReward();
+
+        FinalizedSettlement memory settlement;
         (
-            bytes32 rewardRoot,
-            bytes32 finalizedReceiptBatchRoot,
-            bytes32 finalizedPolicyVersion,
-            uint32 revision,
-            bool finalized
-        ) = rootRegistry.finalizedRoot(epoch);
-        if (!finalized) revert RootNotFinalized(epoch);
-        if (receiptBatchRoot != finalizedReceiptBatchRoot || policyVersion != finalizedPolicyVersion) {
+            settlement.rewardRoot,
+            settlement.receiptBatchRoot,
+            settlement.policyVersionHash,
+            settlement.revision,
+            settlement.finalized
+        ) = rootRegistry.finalizedRoot(input.epoch);
+        if (!settlement.finalized) revert RootNotFinalized(input.epoch);
+        if (
+            input.receiptBatchRoot != settlement.receiptBatchRoot
+                || keccak256(bytes(input.policyVersion)) != settlement.policyVersionHash
+        ) {
             revert SettlementContextMismatch();
         }
 
-        uint8 status = nodeRegistry.nodeStatus(nodeId);
-        if (status != ACTIVE_NODE_STATUS) revert InactiveNode(nodeId, status);
+        _validateNode(input);
 
-        address expectedWallet = nodeRegistry.operatorWallet(nodeId);
-        if (msg.sender != expectedWallet) revert OperatorWalletMismatch(msg.sender, expectedWallet);
-
-        bytes32 expectedOperatorIdHash = nodeRegistry.operatorIdHash(nodeId);
-        if (operatorIdHash_ != expectedOperatorIdHash) {
-            revert OperatorIdMismatch(operatorIdHash_, expectedOperatorIdHash);
-        }
-        if (!token.isAllowed(msg.sender)) revert OperatorWalletNotAllowed(msg.sender);
-
-        bytes32 leafHash = rewardLeafHash(
-            epoch,
-            operatorIdHash_,
-            nodeId,
-            score,
-            amount,
-            receiptBatchRoot,
-            policyVersion,
-            claimNonce
-        );
+        bytes32 leafHash = _rewardLeafHash(input);
         if (claimed[leafHash]) revert RewardAlreadyClaimed(leafHash);
-        if (!MerkleProof.verifyCalldata(proof, rewardRoot, leafHash)) revert InvalidRewardProof();
+        if (!MerkleProof.verifyCalldata(proof, settlement.rewardRoot, leafHash)) revert InvalidRewardProof();
 
-        uint256 maximum = (nodeEmissionVault.monthlyBudget(epoch) * MAX_OPERATOR_REWARD_BPS) / BASIS_POINTS;
-        uint256 requestedTotal = operatorClaimed[epoch][operatorIdHash_] + amount;
+        uint256 maximum =
+            (nodeEmissionVault.monthlyBudget(input.epoch) * MAX_OPERATOR_REWARD_BPS) / BASIS_POINTS;
+        uint256 requestedTotal = operatorClaimed[input.epoch][input.operatorIdHash] + input.amount;
         if (requestedTotal > maximum) revert OperatorRewardCapExceeded(requestedTotal, maximum);
 
         claimed[leafHash] = true;
-        operatorClaimed[epoch][operatorIdHash_] = requestedTotal;
-        nodeEmissionVault.releaseReward(epoch, msg.sender, amount);
+        operatorClaimed[input.epoch][input.operatorIdHash] = requestedTotal;
+        nodeEmissionVault.releaseReward(input.epoch, msg.sender, input.amount);
 
         emit RewardClaimed(
-            epoch,
-            operatorIdHash_,
-            nodeId,
+            input.epoch,
+            input.operatorIdHash,
+            input.nodeId,
             msg.sender,
-            score,
-            amount,
+            input.score,
+            input.amount,
             leafHash,
-            revision
+            settlement.revision
         );
     }
 
     function rewardLeafHash(
-        uint256 epoch,
+        uint64 epoch,
         bytes32 operatorIdHash_,
         bytes32 nodeId,
         uint256 score,
         uint256 amount,
         bytes32 receiptBatchRoot,
-        bytes32 policyVersion,
-        uint256 claimNonce
+        string memory policyVersion,
+        bytes32 claimNonce
     ) public pure returns (bytes32) {
+        return _rewardLeafHash(
+            RewardClaimInput({
+                epoch: epoch,
+                operatorIdHash: operatorIdHash_,
+                nodeId: nodeId,
+                score: score,
+                amount: amount,
+                receiptBatchRoot: receiptBatchRoot,
+                policyVersion: policyVersion,
+                claimNonce: claimNonce
+            })
+        );
+    }
+
+    function _validateNode(RewardClaimInput memory input) private view {
+        uint8 status = nodeRegistry.nodeStatus(input.nodeId);
+        if (status != ACTIVE_NODE_STATUS) revert InactiveNode(input.nodeId, status);
+
+        address expectedWallet = nodeRegistry.operatorWallet(input.nodeId);
+        if (msg.sender != expectedWallet) revert OperatorWalletMismatch(msg.sender, expectedWallet);
+
+        bytes32 expectedOperatorIdHash = nodeRegistry.operatorIdHash(input.nodeId);
+        if (input.operatorIdHash != expectedOperatorIdHash) {
+            revert OperatorIdMismatch(input.operatorIdHash, expectedOperatorIdHash);
+        }
+        if (!token.isAllowed(msg.sender)) revert OperatorWalletNotAllowed(msg.sender);
+    }
+
+    function _rewardLeafHash(RewardClaimInput memory input) private pure returns (bytes32) {
         return keccak256(
             bytes.concat(
                 keccak256(
                     abi.encode(
-                        epoch,
-                        operatorIdHash_,
-                        nodeId,
-                        score,
-                        amount,
-                        receiptBatchRoot,
-                        policyVersion,
-                        claimNonce
+                        input.epoch,
+                        input.operatorIdHash,
+                        input.nodeId,
+                        input.score,
+                        input.amount,
+                        input.receiptBatchRoot,
+                        input.policyVersion,
+                        input.claimNonce
                     )
                 )
             )

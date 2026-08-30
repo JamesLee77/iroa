@@ -24,7 +24,7 @@ contract IROAReceiptRootRegistry is AccessControl {
     struct RootRecord {
         bytes32 rewardRoot;
         bytes32 receiptBatchRoot;
-        bytes32 policyVersion;
+        bytes32 policyVersionHash;
         bytes32 challengeEvidenceHash;
         uint64 proposedAt;
         uint32 revision;
@@ -44,7 +44,7 @@ contract IROAReceiptRootRegistry is AccessControl {
         uint32 indexed revision,
         bytes32 indexed rewardRoot,
         bytes32 receiptBatchRoot,
-        bytes32 policyVersion,
+        bytes32 policyVersionHash,
         uint64 challengeDeadline
     );
     event RootChallenged(uint256 indexed epoch, uint32 indexed revision, bytes32 indexed evidenceHash);
@@ -52,7 +52,7 @@ contract IROAReceiptRootRegistry is AccessControl {
     event ChallengedRootCancelled(uint256 indexed epoch, uint32 indexed revision);
 
     uint64 public immutable challengeWindow;
-    mapping(uint256 epoch => RootRecord record) private _roots;
+    mapping(uint64 epoch => RootRecord record) private _roots;
 
     constructor(address admin, address rootProposer, address challenger) {
         if (admin == address(0) || rootProposer == address(0) || challenger == address(0)) {
@@ -65,12 +65,15 @@ contract IROAReceiptRootRegistry is AccessControl {
     }
 
     function proposeRoot(
-        uint256 epoch,
+        uint64 epoch,
         bytes32 rewardRoot,
         bytes32 receiptBatchRoot,
-        bytes32 policyVersion
+        bytes32 policyVersionHash
     ) external onlyRole(ROOT_PROPOSER_ROLE) {
-        if (rewardRoot == bytes32(0) || receiptBatchRoot == bytes32(0) || policyVersion == bytes32(0)) {
+        if (
+            rewardRoot == bytes32(0) || receiptBatchRoot == bytes32(0)
+                || policyVersionHash == bytes32(0)
+        ) {
             revert ZeroRoot();
         }
 
@@ -84,7 +87,7 @@ contract IROAReceiptRootRegistry is AccessControl {
         _roots[epoch] = RootRecord({
             rewardRoot: rewardRoot,
             receiptBatchRoot: receiptBatchRoot,
-            policyVersion: policyVersion,
+            policyVersionHash: policyVersionHash,
             challengeEvidenceHash: bytes32(0),
             proposedAt: proposedAt,
             revision: revision,
@@ -96,12 +99,12 @@ contract IROAReceiptRootRegistry is AccessControl {
             revision,
             rewardRoot,
             receiptBatchRoot,
-            policyVersion,
+            policyVersionHash,
             proposedAt + challengeWindow
         );
     }
 
-    function challengeRoot(uint256 epoch, bytes32 evidenceHash) external onlyRole(CHALLENGER_ROLE) {
+    function challengeRoot(uint64 epoch, bytes32 evidenceHash) external onlyRole(CHALLENGER_ROLE) {
         if (evidenceHash == bytes32(0)) revert ZeroRoot();
         RootRecord storage root = _roots[epoch];
         if (root.status != RootStatus.Proposed) revert InvalidRootStatus(epoch, root.status);
@@ -114,7 +117,7 @@ contract IROAReceiptRootRegistry is AccessControl {
         emit RootChallenged(epoch, root.revision, evidenceHash);
     }
 
-    function finalizeRoot(uint256 epoch) external {
+    function finalizeRoot(uint64 epoch) external {
         RootRecord storage root = _roots[epoch];
         if (root.status != RootStatus.Proposed) revert InvalidRootStatus(epoch, root.status);
 
@@ -125,7 +128,7 @@ contract IROAReceiptRootRegistry is AccessControl {
         emit RootFinalized(epoch, root.revision, root.rewardRoot);
     }
 
-    function cancelChallengedRoot(uint256 epoch) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function cancelChallengedRoot(uint64 epoch) external onlyRole(DEFAULT_ADMIN_ROLE) {
         RootRecord storage root = _roots[epoch];
         if (root.status != RootStatus.Challenged) revert InvalidRootStatus(epoch, root.status);
 
@@ -133,17 +136,17 @@ contract IROAReceiptRootRegistry is AccessControl {
         emit ChallengedRootCancelled(epoch, root.revision);
     }
 
-    function getRoot(uint256 epoch) external view returns (RootRecord memory) {
+    function getRoot(uint64 epoch) external view returns (RootRecord memory) {
         return _roots[epoch];
     }
 
-    function finalizedRoot(uint256 epoch)
+    function finalizedRoot(uint64 epoch)
         external
         view
         returns (
             bytes32 rewardRoot,
             bytes32 receiptBatchRoot,
-            bytes32 policyVersion,
+            bytes32 policyVersionHash,
             uint32 revision,
             bool finalized
         )
@@ -152,7 +155,7 @@ contract IROAReceiptRootRegistry is AccessControl {
         return (
             root.rewardRoot,
             root.receiptBatchRoot,
-            root.policyVersion,
+            root.policyVersionHash,
             root.revision,
             root.status == RootStatus.Finalized
         );

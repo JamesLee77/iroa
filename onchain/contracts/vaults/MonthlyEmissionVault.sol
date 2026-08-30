@@ -19,6 +19,8 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
     error EmissionMonthInactive();
     error RewardEpochNotClosed(uint256 epoch);
     error InvalidEpoch(uint256 epoch);
+    error RewardClaimsOnly();
+    error NotRewardClaimsVault();
     error MonthlyLimitExceeded(uint256 requested, uint256 available);
 
     event MonthlyEmissionReleased(
@@ -32,6 +34,7 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
     uint256 public immutable allocation;
     uint64 public immutable startTimestamp;
     uint256 public immutable scheduleMonths;
+    bool public immutable rewardClaimsOnly;
     uint256 public totalReleased;
 
     uint16[] private _annualWeights;
@@ -42,12 +45,14 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         uint256 allocation_,
         uint64 startTimestamp_,
         uint16[] memory annualWeights_,
+        bool rewardClaimsOnly_,
         address admin,
         address releaseManager
     ) {
-        if (address(token_) == address(0) || admin == address(0) || releaseManager == address(0)) {
+        if (address(token_) == address(0) || admin == address(0)) {
             revert ZeroAddress();
         }
+        if (!rewardClaimsOnly_ && releaseManager == address(0)) revert ZeroAddress();
         if (allocation_ == 0) revert InvalidAllocation();
         if (annualWeights_.length == 0 || annualWeights_.length > 12) revert InvalidWeights();
 
@@ -63,9 +68,12 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         allocation = allocation_;
         startTimestamp = startTimestamp_;
         scheduleMonths = annualWeights_.length * 12;
+        rewardClaimsOnly = rewardClaimsOnly_;
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
-        _grantRole(RELEASE_MANAGER_ROLE, releaseManager);
+        if (releaseManager != address(0)) {
+            _grantRole(RELEASE_MANAGER_ROLE, releaseManager);
+        }
     }
 
     function annualWeights() external view returns (uint16[] memory) {
@@ -97,6 +105,7 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         onlyRole(RELEASE_MANAGER_ROLE)
         nonReentrant
     {
+        if (rewardClaimsOnly) revert RewardClaimsOnly();
         if (recipient == address(0)) revert ZeroAddress();
 
         (bool active, uint256 monthIndex) = _monthAt(uint64(block.timestamp));
@@ -117,6 +126,7 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
         onlyRole(REWARD_DISTRIBUTOR_ROLE)
         nonReentrant
     {
+        if (!rewardClaimsOnly) revert NotRewardClaimsVault();
         if (recipient == address(0)) revert ZeroAddress();
         if (epoch >= scheduleMonths) revert InvalidEpoch(epoch);
 
