@@ -17,6 +17,7 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
     }
 
     error ZeroAddress();
+    error InvalidMigrationContract(address migration);
     error AccountNotAllowed(address account);
     error TransfersPaused();
     error MigrationAlreadyConfigured();
@@ -83,6 +84,7 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
 
     function enterMigrationMode(address migration) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (migration == address(0)) revert ZeroAddress();
+        if (migration.code.length == 0) revert InvalidMigrationContract(migration);
         if (migrationContract != address(0)) revert MigrationAlreadyConfigured();
 
         TransferMode previousMode = transferMode;
@@ -108,7 +110,8 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
 
         if (mode == TransferMode.MIGRATION_ONLY) {
             address migration = migrationContract;
-            bool depositToMigration = from != address(0) && to == migration && _allowedAccounts[from];
+            bool depositToMigration =
+                from != address(0) && to == migration && msg.sender == migration && _allowedAccounts[from];
             bool burnByMigration = from == migration && to == address(0);
             if (!depositToMigration && !burnByMigration) revert MigrationTransferRequired(migration);
         } else {

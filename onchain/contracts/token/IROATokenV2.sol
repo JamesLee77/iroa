@@ -11,6 +11,7 @@ contract IROATokenV2 is ERC20, ERC20Permit, AccessControl {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     error ZeroAddress();
+    error InvalidMigrationContract(address migration);
     error AccountNotAllowed(address account);
     error TransfersPaused();
     error MigrationAlreadyBound();
@@ -71,6 +72,7 @@ contract IROATokenV2 is ERC20, ERC20Permit, AccessControl {
 
     function bindMigrationContract(address migration) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (migration == address(0)) revert ZeroAddress();
+        if (migration.code.length == 0) revert InvalidMigrationContract(migration);
         if (migrationContract != address(0)) revert MigrationAlreadyBound();
         if (migrationAuthorityLocked) revert MigrationAuthorityLocked();
         if (totalSupply() != 0) revert MigrationAlreadyBound();

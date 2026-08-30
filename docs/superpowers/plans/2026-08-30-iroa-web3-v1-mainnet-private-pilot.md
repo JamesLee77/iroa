@@ -329,11 +329,11 @@ Merkle leaf collision, root replacement, cross-epoch replay, reentrancy, budget 
 - Produces: `bindMigrationContract(address)`, `lockMigrationAuthority()`, `registerVaultPair(address,address)`, `lockVaultPairs()`, `migrate(uint256)`, `migrateVault(VaultMigrationBatch)`, `importSchedule(ScheduleSnapshot)`, `migrationBurned()`, `migrationMinted()`
 - Consumes: V1, V2, V1/V2 vault mappings
 
-- [ ] **Step 1: V2 구현**
+- [x] **Step 1: V2 구현**
 
 V2 constructor는 공급을 발행하지 않으며 cap은 100억이다. V1과 같은 allowlist·pause 정책을 유지하고 일반 burn은 제공하지 않는다. 배포 순환 참조를 피하기 위해 Timelock은 공급량이 0인 상태에서 `bindMigrationContract(address)`를 정확히 한 번 호출하고 같은 batch에서 `lockMigrationAuthority()`를 실행한다. lock 이후 주소 변경과 추가 minter 등록은 영구적으로 불가능하며 `mintForMigration`은 binding된 Migration contract만, allowlist된 수령자 또는 등록 V2 vault에 대해서만 호출할 수 있다.
 
-- [ ] **Step 2: 원자적 migration 구현**
+- [x] **Step 2: 원자적 migration 구현**
 
 ```solidity
 function migrate(uint256 amount) external nonReentrant {
@@ -346,17 +346,17 @@ function migrate(uint256 amount) external nonReentrant {
 
 zero amount, fee-on-transfer token과 다른 token address를 거부한다. `migrationBurned == migrationMinted`를 transaction마다 assert한다.
 
-- [ ] **Step 3: vesting snapshot import 구현**
+- [x] **Step 3: vesting snapshot import 구현**
 
 Timelock은 정확히 7개의 V1/V2 vault pair를 공개 manifest와 대조해 등록한 뒤 `lockVaultPairs()`로 영구 고정한다. `VaultMigrationBatch`는 pair, amount, scheduleSnapshotHash와 sourceBatchId를 포함하며 등록 V1 vault만 자기 pair로 호출할 수 있다. Migration은 같은 transaction에서 V1 pull·전용 소각·V2 vault 발행·schedule import를 실행하고 어느 단계든 실패하면 전체를 되돌린다.
 
 vesting `ScheduleSnapshot`은 beneficiary, total, released, start, cliff, linearDuration, sourceScheduleId를 포함한다. NODE·ecosystem·R&D·liquidity snapshot은 start, 누적 release table, released/claimed와 remaining을 포함한다. 같은 sourceScheduleId 또는 sourceBatchId는 한 번만 import 가능하고, batch별 V2 발행량은 실제 V1 소각량 및 import된 잔여 schedule 합계와 정확히 같아야 한다. gas 한도를 위해 여러 batch로 나눌 수 있지만 각 batch 자체는 원자적이다.
 
-- [ ] **Step 4: invariant source 생성**
+- [x] **Step 4: invariant source 생성**
 
 임의 순서의 user/vault migration, partial migration, 7개 pair lock, 잘못된 pair, schedule import revert, duplicate schedule과 마지막 1 wei까지 `V1.totalSupply + V2.totalSupply == GENESIS_SUPPLY`를 검증하는 stateful test source를 작성하되 실행하지 않는다.
 
-- [ ] **Step 5: 커밋과 소스 검토**
+- [x] **Step 5: 커밋과 소스 검토**
 
 ```bash
 git add onchain/contracts/token onchain/contracts/vaults/V2ScheduleImporter.sol onchain/test/Migration.invariant.test.ts

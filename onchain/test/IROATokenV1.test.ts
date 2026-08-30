@@ -76,7 +76,8 @@ describe("IROATokenV1", function () {
 
     const amount = ethers.parseEther("10");
     const supplyBefore = await token.totalSupply();
-    await token.connect(participant).transfer(migration.address, amount);
+    await token.connect(participant).approve(migration.address, amount);
+    await token.connect(migration).transferFrom(participant.address, migration.address, amount);
     await token.connect(migration).burnForMigration(amount);
 
     expect(await token.totalSupply()).to.equal(supplyBefore - amount);

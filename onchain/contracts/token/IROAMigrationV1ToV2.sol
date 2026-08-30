@@ -24,14 +24,18 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
     uint256 public constant REQUIRED_VAULT_PAIRS = 7;
 
     error ZeroAddress();
+    error IdenticalTokenAddress(address token);
     error ZeroAmount();
     error InvalidContract(address account);
+    error InvalidV2Importer(address importer);
     error MigrationAuthorityNotLocked();
     error VaultPairsLocked();
+    error VaultPairLimitReached(uint256 maximum);
     error VaultPairsNotLocked(uint256 registered, uint256 required);
     error VaultPairAlreadyRegistered(address v1Vault, address v2Vault);
     error InvalidVaultPair(address caller, address suppliedV2Vault, address expectedV2Vault);
     error SourceBatchAlreadyUsed(bytes32 sourceBatchId);
+    error SourceScheduleAlreadyUsed(bytes32 sourceScheduleId);
     error InvalidBatchIdentifier();
     error SnapshotHashMismatch(bytes32 supplied, bytes32 actual);
     error ImportedAmountMismatch(uint256 amount, uint256 importedRemaining);
@@ -59,11 +63,13 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
     mapping(address v1Vault => address v2Vault) public v2VaultFor;
     mapping(address v2Vault => address v1Vault) public v1VaultFor;
     mapping(bytes32 sourceBatchId => bool used) public usedSourceBatch;
+    mapping(bytes32 sourceScheduleId => bool used) public usedSourceSchedule;
 
     constructor(IIROATokenV1Migration v1_, IIROATokenV2Migration v2_, address admin) {
         if (address(v1_) == address(0) || address(v2_) == address(0) || admin == address(0)) {
             revert ZeroAddress();
         }
+        if (address(v1_) == address(v2_)) revert IdenticalTokenAddress(address(v1_));
         if (address(v1_).code.length == 0) revert InvalidContract(address(v1_));
         if (address(v2_).code.length == 0) revert InvalidContract(address(v2_));
         v1 = v1_;
@@ -73,6 +79,7 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
 
     function registerVaultPair(address v1Vault, address v2Vault) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (vaultPairsLocked) revert VaultPairsLocked();
+        if (vaultPairCount >= REQUIRED_VAULT_PAIRS) revert VaultPairLimitReached(REQUIRED_VAULT_PAIRS);
         if (v1Vault == address(0) || v2Vault == address(0)) revert ZeroAddress();
         if (v1Vault.code.length == 0) revert InvalidContract(v1Vault);
         if (v2Vault.code.length == 0) revert InvalidContract(v2Vault);
@@ -80,6 +87,7 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
             revert VaultPairAlreadyRegistered(v1Vault, v2Vault);
         }
         if (!v2.migrationAuthorityLocked()) revert MigrationAuthorityNotLocked();
+        _validateV2Importer(v2Vault);
 
         v2VaultFor[v1Vault] = v2Vault;
         v1VaultFor[v2Vault] = v1Vault;
@@ -112,6 +120,9 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
             revert InvalidBatchIdentifier();
         }
         if (usedSourceBatch[batch.sourceBatchId]) revert SourceBatchAlreadyUsed(batch.sourceBatchId);
+        if (usedSourceSchedule[batch.snapshot.sourceScheduleId]) {
+            revert SourceScheduleAlreadyUsed(batch.snapshot.sourceScheduleId);
+        }
 
         bytes32 actualSnapshotHash = IROAMigrationTypes.hashSnapshot(batch.snapshot);
         if (actualSnapshotHash != batch.scheduleSnapshotHash) {
@@ -119,6 +130,7 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
         }
 
         usedSourceBatch[batch.sourceBatchId] = true;
+        usedSourceSchedule[batch.snapshot.sourceScheduleId] = true;
         _migrateTokens(msg.sender, batch.v2Vault, batch.amount);
         (uint256 importedRemaining, bytes32 importedHash) =
             V2ScheduleImporter(batch.v2Vault).importSchedule(batch.snapshot);
@@ -151,5 +163,19 @@ contract IROAMigrationV1ToV2 is AccessControl, ReentrancyGuard {
         v2.mintForMigration(recipient, amount);
         migrationMinted += amount;
         assert(migrationBurned == migrationMinted);
+    }
+
+    function _validateV2Importer(address importer) private view {
+        try V2ScheduleImporter(importer).token() returns (IERC20 importerToken) {
+            if (address(importerToken) != address(v2)) revert InvalidV2Importer(importer);
+        } catch {
+            revert InvalidV2Importer(importer);
+        }
+
+        try V2ScheduleImporter(importer).migrationContract() returns (address importerMigration) {
+            if (importerMigration != address(this)) revert InvalidV2Importer(importer);
+        } catch {
+            revert InvalidV2Importer(importer);
+        }
     }
 }

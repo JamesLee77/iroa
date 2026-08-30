@@ -153,6 +153,7 @@ describe("IROA V1 to V2 migration invariants", function () {
       await migration.connect(admin).registerVaultPair(probe.target, importer.target);
     }
     await v1.connect(genesis).transfer(probes[0].target, 100n);
+    await v1.connect(genesis).transfer(probes[1].target, 50n);
     await migration.connect(admin).lockVaultPairs();
     await v1.connect(admin).enterMigrationMode(migration.target);
     return { ...fixture, probes, importers };
@@ -178,6 +179,29 @@ describe("IROA V1 to V2 migration invariants", function () {
     );
   });
 
+  it("rejects one token address being configured as both V1 and V2", async function () {
+    const { ethers, v1, admin } = await deployMigrationCore();
+
+    await expect(
+      ethers.deployContract("IROAMigrationV1ToV2", [v1.target, v1.target, admin.address]),
+    ).to.revert(ethers);
+  });
+
+  it("rejects an EOA as either V1 or V2 migration authority", async function () {
+    const { ethers } = await network.connect();
+    const [genesis, admin, pauser, user] = await ethers.getSigners();
+    const v1 = await ethers.deployContract("IROATokenV1", [
+      genesis.address,
+      admin.address,
+      pauser.address,
+    ]);
+    const v2 = await ethers.deployContract("IROATokenV2", [admin.address, pauser.address]);
+    await Promise.all([v1.waitForDeployment(), v2.waitForDeployment()]);
+
+    await expect(v1.connect(admin).enterMigrationMode(user.address)).to.revert(ethers);
+    await expect(v2.connect(admin).bindMigrationContract(user.address)).to.revert(ethers);
+  });
+
   it("preserves supply through arbitrary partial user migrations down to the final wei", async function () {
     const { v1, v2, migration, genesis, admin, user } = await deployMigrationCore();
     const initial = 97n;
@@ -196,6 +220,29 @@ describe("IROA V1 to V2 migration invariants", function () {
     expect(await v2.balanceOf(user.address)).to.equal(initial);
   });
 
+  it("blocks direct V1 transfers that would strand tokens without a matching V2 mint", async function () {
+    const { v1, migration, genesis, admin, user } = await deployMigrationCore();
+    await v1.connect(admin).setAllowed(user.address, true);
+    await v1.connect(genesis).transfer(user.address, 10n);
+    await v1.connect(admin).enterMigrationMode(migration.target);
+
+    await expect(v1.connect(user).transfer(migration.target, 1n)).to.be.revertedWithCustomError(
+      v1,
+      "MigrationTransferRequired",
+    );
+  });
+
+  it("rejects a V2 importer bound to the wrong migration contract", async function () {
+    const { ethers, v1, v2, migration, admin, user } = await deployMigrationCore();
+    const probe = await ethers.deployContract("MigrationVaultProbe", [v1.target, admin.address]);
+    const wrongImporter = await ethers.deployContract("V2ScheduleImporter", [v2.target, user.address]);
+    await Promise.all([probe.waitForDeployment(), wrongImporter.waitForDeployment()]);
+
+    await expect(
+      migration.connect(admin).registerVaultPair(probe.target, wrongImporter.target),
+    ).to.revert(ethers);
+  });
+
   it("locks exactly seven unique V1 and V2 vault pairs", async function () {
     const { migration, vaults, importers, admin } = await deploySevenVaultFixture();
     expect(await migration.vaultPairCount()).to.equal(7n);
@@ -203,6 +250,23 @@ describe("IROA V1 to V2 migration invariants", function () {
     await expect(
       migration.connect(admin).registerVaultPair(vaults[0].target, importers[1].target),
     ).to.be.revertedWithCustomError(migration, "VaultPairsLocked");
+  });
+
+  it("rejects an eighth pair before it can make the seven-pair lock unreachable", async function () {
+    const { ethers, v1, v2, migration, admin } = await deployMigrationCore();
+    for (let i = 0; i < 7; i += 1) {
+      const probe = await ethers.deployContract("MigrationVaultProbe", [v1.target, admin.address]);
+      const importer = await ethers.deployContract("V2ScheduleImporter", [v2.target, migration.target]);
+      await Promise.all([probe.waitForDeployment(), importer.waitForDeployment()]);
+      await migration.connect(admin).registerVaultPair(probe.target, importer.target);
+    }
+    const eighthProbe = await ethers.deployContract("MigrationVaultProbe", [v1.target, admin.address]);
+    const eighthImporter = await ethers.deployContract("V2ScheduleImporter", [v2.target, migration.target]);
+    await Promise.all([eighthProbe.waitForDeployment(), eighthImporter.waitForDeployment()]);
+
+    await expect(
+      migration.connect(admin).registerVaultPair(eighthProbe.target, eighthImporter.target),
+    ).to.revert(ethers);
   });
 
   it("migrates an exact cliff snapshot atomically without re-vesting released tokens", async function () {
@@ -288,6 +352,37 @@ describe("IROA V1 to V2 migration invariants", function () {
     expect(await v1.balanceOf(probes[0].target)).to.equal(50n);
     expect(await v2.balanceOf(importers[0].target)).to.equal(50n);
     await expectSupplyInvariant(v1, v2);
+  });
+
+  it("rejects one source schedule ID reused across different V2 importers", async function () {
+    const { ethers, migration, admin, probes, importers } = await deployProbeFixture();
+    const sourceScheduleId = ethers.id("global-source-schedule");
+    const snapshot = {
+      kind: 0,
+      beneficiary: admin.address,
+      total: 50n,
+      released: 0n,
+      start: 0,
+      cliffMonths: 0,
+      linearDurationMonths: 12,
+      cumulativeReleaseTable: [],
+      sourceScheduleId,
+    };
+    const first = {
+      v2Vault: importers[0].target,
+      amount: 50n,
+      scheduleSnapshotHash: snapshotHash(ethers, snapshot),
+      sourceBatchId: ethers.id("global-batch-1"),
+      snapshot,
+    };
+    await probes[0].connect(admin).migrate(migration.target, first);
+    const second = {
+      ...first,
+      v2Vault: importers[1].target,
+      sourceBatchId: ethers.id("global-batch-2"),
+    };
+
+    await expect(probes[1].connect(admin).migrate(migration.target, second)).to.revert(ethers);
   });
 
   it("preserves cumulative monthly and liquidity schedule endpoints", async function () {
