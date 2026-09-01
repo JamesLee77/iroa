@@ -44,6 +44,7 @@ No actionable P0, P1, or P2 findings remain.
 ## Validation note
 
 - The terminal full regression and production build passed before the final browser-discovered anchor refinements.
-- The anchor refinements passed focused source tests and browser checks. The earlier broad build evidence is therefore historical for the pre-refinement source and has not been rerun without explicit authorization.
+- The anchor refinements passed focused source tests and browser checks. The earlier broad build evidence was therefore historical for the pre-refinement source until the rerun below.
+- 2026-09-01: the user explicitly authorized one full re-verification of the current source (commit `3f0e63f`, clean working tree). All layers passed: 70/70 Vitest unit tests (13 files), `astro check` on 65 files with 0 errors/warnings/hints, production `astro build` emitting 50 static pages plus `sitemap-index.xml`, and 47/47 Playwright browser checks (WCAG 2.2 AA axe scans, direct-chapter refresh, no-JS navigation, 375/768/1024/1440 px responsive reflow, 200% zoom, Korean chapter-title wrapping, sitemap parity). The suite grew from the previously reported 66 checks to 117 after the browser-suite realignment in `b4d9bdc`, and the final anchor-navigation fix is covered by this pass.
 
 final result: passed
