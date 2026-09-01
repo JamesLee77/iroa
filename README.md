@@ -14,3 +14,9 @@ IROA.AI is an inclusive real-world orchestration project for older adults, disab
 ## Document workflow
 
 This repository does not contain a custom whitepaper generator or validator. Edit the whitepaper content directly. When DOCX or PDF review copies are requested, create and visually inspect them with the available document and PDF plugins instead of maintaining repository-local generation code.
+
+## Archived working files
+
+Some working files were produced alongside this repository but never committed to it. They are backed up in the private repository [JamesLee77/iroa-archive](https://github.com/JamesLee77/iroa-archive), which is restricted to project members.
+
+Most of that archive is only of historical interest, with one exception that affects this repository: `design-qa.md` cites its evidence screenshots using repository-relative paths of the form `tmp/product-design/iroa-web-whitepaper-reference/*.png`. Those paths no longer resolve here. The files they name are in the archive under `design-qa-evidence/tmp/`.

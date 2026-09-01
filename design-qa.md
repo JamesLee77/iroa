@@ -1,5 +1,7 @@
 # IROA Web Whitepaper Design QA
 
+> The `tmp/product-design/...` screenshots cited below are no longer in this repository. They are archived in the private repository [JamesLee77/iroa-archive](https://github.com/JamesLee77/iroa-archive) under `design-qa-evidence/`, where each path resolves unchanged — `design-qa-evidence/tmp/product-design/...`.
+
 ## Comparison target
 
 - Source visual truth: `tmp/product-design/iroa-web-whitepaper-reference/11-simxtoken-live-top-matched.png` and `tmp/product-design/iroa-web-whitepaper-reference/20-simxtoken-live-reader-matched.png`
