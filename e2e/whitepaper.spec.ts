@@ -292,10 +292,12 @@ test('ships portable visual QA evidence with repository-relative image links', a
 test('loads every canonical local whitepaper image with nonzero natural width', async ({ page }) => {
   test.setTimeout(60_000);
   const imageSources = new Set<string>();
+  let imageCount = 0;
 
   for (const route of ['/whitepaper', ...chapterSlugs.map((slug) => `/whitepaper/${slug}`)]) {
     await page.goto(route);
     const images = page.locator('.whitepaper-prose img');
+    imageCount += await images.count();
     for (const image of await images.all()) {
       await image.scrollIntoViewIfNeeded();
       const source = await image.getAttribute('src');
@@ -309,6 +311,7 @@ test('loads every canonical local whitepaper image with nonzero natural width', 
   }
 
   expect(imageSources.size).toBe(11);
+  expect(imageCount).toBe(21);
 });
 
 test.describe('mobile reader without client JavaScript', () => {

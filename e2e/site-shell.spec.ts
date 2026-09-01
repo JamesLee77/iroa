@@ -21,6 +21,7 @@ test('serves the shared IROA site shell', async ({ page }) => {
     await image.scrollIntoViewIfNeeded();
     await expect.poll(
       () => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
+      { message: 'broken homepage image' },
     ).toBe(true);
   }
 
