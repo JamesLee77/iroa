@@ -70,11 +70,11 @@ test('publishes the Korean master index with document control, 22 chapters, and 
     page.getByText('발행 상태는 이 문서 판본에만 적용됩니다.', { exact: true }),
   ).toBeVisible();
 
-  const chapterNavigation = page.getByRole('navigation', { name: '백서 전체 목차' });
+  const chapterNavigation = page.getByRole('navigation', { name: '전체 목차', exact: true });
   const chapterLinks = chapterNavigation.getByRole('link');
   await expect(chapterLinks).toHaveCount(22);
-  await expect(chapterLinks.first()).toHaveAttribute('href', '/whitepaper/core-declaration');
-  await expect(chapterLinks.last()).toHaveAttribute('href', '/whitepaper/conclusion');
+  await expect(chapterLinks.first()).toHaveAttribute('href', '#chapter-core-declaration');
+  await expect(chapterLinks.last()).toHaveAttribute('href', '#chapter-conclusion');
 
   const download = control.getByRole('link', { name: /PDF 다운로드/ });
   await expect(download).toHaveAttribute('download', 'IROA_WHITEPAPER_KO.pdf');
@@ -306,7 +306,7 @@ test('loads every canonical local whitepaper image with nonzero natural width', 
     }
   }
 
-  expect(imageCount).toBe(11);
+  expect(imageCount).toBe(21);
 });
 
 test.describe('mobile reader without client JavaScript', () => {
@@ -390,7 +390,7 @@ test.describe('no-JavaScript whitepaper discovery', () => {
     await expect(
       page.getByRole('navigation', { name: '모바일 백서 전체 목차' }).getByRole('link'),
     ).toHaveCount(22);
-    await expect(page.getByRole('link', { name: /PDF 다운로드/ })).toHaveAttribute('download', 'IROA_WHITEPAPER_KO.pdf');
+    await expect(page.getByRole('link', { name: /^PDF 다운로드/ })).toHaveAttribute('download', 'IROA_WHITEPAPER_KO.pdf');
 
     await page.goto('/whitepaper/core-declaration');
     await expect(page.getByRole('article', { name: '핵심 선언' })).toBeVisible();
@@ -404,7 +404,7 @@ test.describe('keyboard-only whitepaper navigation without client JavaScript', (
   test('traverses the no-JavaScript chapter index and pager by keyboard', async ({ page }) => {
     await page.goto('/whitepaper/token-economy');
 
-    const chapterIndex = page.getByRole('navigation', { name: '백서 전체 목차' });
+    const chapterIndex = page.getByRole('navigation', { name: '전체 목차', exact: true });
     const chapterLinks = chapterIndex.getByRole('link');
     const firstChapter = chapterLinks.first();
     const secondChapter = chapterLinks.nth(1);

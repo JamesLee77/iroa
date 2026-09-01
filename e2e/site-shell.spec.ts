@@ -15,15 +15,15 @@ test('serves the shared IROA site shell', async ({ page }) => {
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('link', { name: 'IROA.AI 홈', exact: true })).toBeVisible();
 
-  const imageState = await page.locator('img').evaluateAll((images) => ({
-    total: images.length,
-    broken: images.filter(
-      (image) =>
-        !(image as HTMLImageElement).complete || (image as HTMLImageElement).naturalWidth === 0,
-    ).length,
-  }));
-  expect(imageState.total).toBeGreaterThan(0);
-  expect(imageState.broken).toBe(0);
+  const images = page.locator('img');
+  expect(await images.count()).toBeGreaterThan(0);
+  for (const image of await images.all()) {
+    await image.scrollIntoViewIfNeeded();
+    await expect.poll(
+      () => image.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0),
+      { message: 'broken homepage image' },
+    ).toBe(true);
+  }
 
   const primaryNavigation = page.getByRole('navigation', { name: '주요 메뉴' });
   await expect(primaryNavigation).toBeVisible();
