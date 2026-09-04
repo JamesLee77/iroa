@@ -1116,13 +1116,13 @@ class BrandContractTest(unittest.TestCase):
                 converted,
                 root / "authoritative-parity",
             )
-            self.assertEqual(len(metrics), 15)
+            self.assertEqual(len(metrics), 16)
             self.assertTrue(all(metric["difference_bbox"] is None for metric in metrics))
             self.assertTrue(all(metric["nonzero_pixel_count"] == 0 for metric in metrics))
 
             altered = root / "graphics-only-page-8-app-icon-removed.pdf"
             _create_graphics_only_pdf_mutation(committed, altered)
-            self.assertEqual(_pdf_info(altered)["Pages"], "15")
+            self.assertEqual(_pdf_info(altered)["Pages"], "16")
             self.assertEqual(_pdf_page_texts(altered), _pdf_page_texts(committed))
             self.assertEqual(_pdf_page_geometries(altered), _pdf_page_geometries(committed))
 
@@ -1187,7 +1187,7 @@ class BrandContractTest(unittest.TestCase):
                 rendered,
                 root / "packaged-compatibility-parity",
             )
-            self.assertEqual(len(metrics), 15)
+            self.assertEqual(len(metrics), 16)
 
     def test_guide_pdf_has_no_blank_or_nearly_empty_interior_page(self):
         path = Path("docs/brand/IROA_BI_GUIDE_KO.pdf")

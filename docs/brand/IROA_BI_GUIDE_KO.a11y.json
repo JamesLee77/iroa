@@ -11,7 +11,7 @@
     "/private/tmp/iroa-guide-a11y-report.json"
   ],
   "source": "docs/brand/IROA_BI_GUIDE_KO.docx",
-  "source_sha256": "25714a94eddd7b9da190143e2ee2820d1c1c8859c5f4e118fa91150f268ecebf",
+  "source_sha256": "f66e78c1c88b227b32daca5f87becb59b7de9bea7cbca9da01b5342a6460c836",
   "counts": {
     "high": 0,
     "medium": 0,

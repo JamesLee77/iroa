@@ -34,22 +34,22 @@ try {
         <meta charset="utf-8" />
         <style>
           @font-face { font-family: IROA; src: url('${fontUrl}') format('opentype'); font-weight: 700; }
-          :root { --color-settlement: #246fd4; }
+          :root { --color-settlement: #1d4ed8; }
           * { box-sizing: border-box; }
           html, body { width: 1200px; height: 630px; margin: 0; overflow: hidden; }
-          body { background: #f9fafb; color: #16263d; font-family: IROA, Arial, sans-serif; }
+          body { background: #f7f9fb; color: #232e3c; font-family: IROA, Arial, sans-serif; }
           main { display: grid; width: 100%; height: 100%; grid-template-columns: 0.82fr 1.18fr; gap: 46px; padding: 48px 58px; }
           .brand { width: 154px; height: auto; margin-bottom: 54px; }
-          .kicker { margin: 0 0 18px; color: #3d8b83; font: 700 13px Arial, sans-serif; letter-spacing: 0.15em; }
+          .kicker { margin: 0 0 18px; color: #0f766e; font: 700 13px Arial, sans-serif; letter-spacing: 0.15em; }
           h1 { max-width: 520px; margin: 0 0 26px; font-size: 56px; line-height: 1.08; letter-spacing: -0.055em; }
-          .copy { max-width: 450px; margin: 0; color: #526174; font: 700 18px/1.75 IROA, Arial, sans-serif; }
-          .facts { display: flex; gap: 12px; margin-top: 34px; color: #16263d; font: 700 12px Arial, sans-serif; }
-          .facts span { padding: 10px 13px; border: 1px solid #d9dee5; border-radius: 999px; background: #fff; }
-          .atlas { position: relative; overflow: hidden; border: 1px solid #d9dee5; border-radius: 28px; background: #fff; box-shadow: 0 24px 64px rgba(22,38,61,.09); }
+          .copy { max-width: 450px; margin: 0; color: #55606e; font: 700 18px/1.75 IROA, Arial, sans-serif; }
+          .facts { display: flex; gap: 12px; margin-top: 34px; color: #232e3c; font: 700 12px Arial, sans-serif; }
+          .facts span { padding: 10px 13px; border: 1px solid #dbe2ea; border-radius: 6px; background: #fff; }
+          .atlas { position: relative; overflow: hidden; border: 1px solid #dbe2ea; border-radius: 14px; background: #fff; }
           .atlas::before, .atlas::after { position: absolute; border: 1px solid rgba(61,139,131,.25); border-radius: 50%; content: ''; }
           .atlas::before { inset: 46px 70px 42px 38px; }
           .atlas::after { inset: 118px 170px 20px 18px; }
-          .atlas-label { position: absolute; top: 26px; left: 30px; margin: 0; color: #3d8b83; font: 700 11px Arial, sans-serif; letter-spacing: .16em; }
+          .atlas-label { position: absolute; top: 26px; left: 30px; margin: 0; color: #0f766e; font: 700 11px Arial, sans-serif; letter-spacing: .16em; }
           ol { padding: 0; margin: 0; list-style: none; }
           .path { position: absolute; z-index: 2; inset: 72px 176px 42px 34px; display: grid; align-content: space-between; }
           .path li { position: relative; display: flex; align-items: center; gap: 10px; }
@@ -57,19 +57,19 @@ try {
           .path li:nth-child(3) { margin-left: 48%; }
           .path li:nth-child(4) { margin-left: 34%; }
           .path li:nth-child(5) { margin-left: 12%; }
-          .path li:not(:last-child)::after { position: absolute; z-index: -1; top: 54px; left: 26px; width: 1px; height: 57px; transform: rotate(-31deg); transform-origin: top; border-left: 4px solid #f06d5e; content: ''; }
+          .path li:not(:last-child)::after { position: absolute; z-index: -1; top: 54px; left: 26px; width: 1px; height: 57px; transform: rotate(-31deg); transform-origin: top; border-left: 4px solid #0e7490; content: ''; }
           .path li:nth-child(2)::after { transform: rotate(-24deg); }
           .path li:nth-child(3)::after { transform: rotate(17deg); }
           .path li:nth-child(4)::after { transform: rotate(31deg); }
-          .index { color: #526174; font: 700 10px Arial, sans-serif; }
-          .node { display: flex; min-height: 52px; align-items: center; gap: 10px; padding: 0 18px; border: 1px solid #d9dee5; border-radius: 999px; background: #fff; box-shadow: 0 12px 28px rgba(22,38,61,.1); font: 700 13px Arial, sans-serif; white-space: nowrap; }
-          .node::before { width: 10px; height: 10px; border: 2px solid #3d8b83; border-radius: 50%; content: ''; }
-          .path li:first-child .node::before, .path li:nth-child(4) .node::before { border-color: #f06d5e; }
+          .index { color: #55606e; font: 700 10px Arial, sans-serif; }
+          .node { display: flex; min-height: 52px; align-items: center; gap: 10px; padding: 0 18px; border: 1px solid #dbe2ea; border-radius: 6px; background: #fff; font: 700 13px Arial, sans-serif; white-space: nowrap; }
+          .node::before { width: 10px; height: 10px; border: 2px solid #0f766e; border-radius: 50%; content: ''; }
+          .path li:first-child .node::before, .path li:nth-child(4) .node::before { border-color: #0e7490; }
           .path li:last-child .node::before { border-color: var(--color-settlement); background: var(--color-settlement); }
-          .node small { color: #526174; font-size: 10px; }
+          .node small { color: #55606e; font-size: 10px; }
           .planes { position: absolute; z-index: 3; top: 78px; right: 22px; bottom: 42px; display: flex; width: 142px; flex-direction: column; justify-content: space-between; }
           .planes li { display: grid; grid-template-columns: 20px 1fr; gap: 6px; font: 700 9px/1.35 Arial, sans-serif; text-transform: uppercase; }
-          .planes b { color: #3d8b83; }
+          .planes b { color: #0f766e; }
           .settlement { color: var(--color-settlement); }
         </style>
       </head>
