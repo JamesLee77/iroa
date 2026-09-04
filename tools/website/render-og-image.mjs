@@ -11,14 +11,17 @@ const wordmarkPath = path.join(
   projectRoot,
   'docs/brand/masters/wordmark/iroa-wordmark-color.svg',
 );
-const koreanFontPath = path.join(projectRoot, 'docs/brand/assets/fonts/NotoSansKR-Bold.otf');
-
-const [wordmark, koreanFont] = await Promise.all([
+// The share image sets the same face the site does, so a link preview and the
+// page it opens are not two different typefaces.
+const fontDir = path.join(projectRoot, 'node_modules/pretendard/dist/web/static/woff2');
+const [wordmark, fontBold, fontRegular] = await Promise.all([
   readFile(wordmarkPath),
-  readFile(koreanFontPath),
+  readFile(path.join(fontDir, 'Pretendard-Bold.woff2')),
+  readFile(path.join(fontDir, 'Pretendard-Regular.woff2')),
 ]);
 const wordmarkUrl = `data:image/svg+xml;base64,${wordmark.toString('base64')}`;
-const fontUrl = `data:font/otf;base64,${koreanFont.toString('base64')}`;
+const fontBoldUrl = `data:font/woff2;base64,${fontBold.toString('base64')}`;
+const fontRegularUrl = `data:font/woff2;base64,${fontRegular.toString('base64')}`;
 
 await mkdir(path.dirname(outputPath), { recursive: true });
 
@@ -33,44 +36,54 @@ try {
       <head>
         <meta charset="utf-8" />
         <style>
-          @font-face { font-family: IROA; src: url('${fontUrl}') format('opentype'); font-weight: 700; }
-          :root { --color-settlement: #1d4ed8; }
+          @font-face { font-family: IROA; src: url('${fontBoldUrl}') format('woff2'); font-weight: 700; }
+          @font-face { font-family: IROA; src: url('${fontRegularUrl}') format('woff2'); font-weight: 400; }
+          :root { --ink: #232e3c; --quiet: #55606e; --line: #dbe2ea; --action: #0e7490; --verified: #0f766e; --settlement: #1d4ed8; }
           * { box-sizing: border-box; }
           html, body { width: 1200px; height: 630px; margin: 0; overflow: hidden; }
-          body { background: #f7f9fb; color: #232e3c; font-family: IROA, Arial, sans-serif; }
-          main { display: grid; width: 100%; height: 100%; grid-template-columns: 0.82fr 1.18fr; gap: 46px; padding: 48px 58px; }
-          .brand { width: 154px; height: auto; margin-bottom: 54px; }
-          .kicker { margin: 0 0 18px; color: #0f766e; font: 700 13px Arial, sans-serif; letter-spacing: 0.15em; }
-          h1 { max-width: 520px; margin: 0 0 26px; font-size: 56px; line-height: 1.08; letter-spacing: -0.055em; }
-          .copy { max-width: 450px; margin: 0; color: #55606e; font: 700 18px/1.75 IROA, Arial, sans-serif; }
-          .facts { display: flex; gap: 12px; margin-top: 34px; color: #232e3c; font: 700 12px Arial, sans-serif; }
-          .facts span { padding: 10px 13px; border: 1px solid #dbe2ea; border-radius: 6px; background: #fff; }
-          .atlas { position: relative; overflow: hidden; border: 1px solid #dbe2ea; border-radius: 14px; background: #fff; }
-          .atlas::before, .atlas::after { position: absolute; border: 1px solid rgba(61,139,131,.25); border-radius: 50%; content: ''; }
-          .atlas::before { inset: 46px 70px 42px 38px; }
-          .atlas::after { inset: 118px 170px 20px 18px; }
-          .atlas-label { position: absolute; top: 26px; left: 30px; margin: 0; color: #0f766e; font: 700 11px Arial, sans-serif; letter-spacing: .16em; }
-          ol { padding: 0; margin: 0; list-style: none; }
-          .path { position: absolute; z-index: 2; inset: 72px 176px 42px 34px; display: grid; align-content: space-between; }
-          .path li { position: relative; display: flex; align-items: center; gap: 10px; }
-          .path li:nth-child(2) { margin-left: 26%; }
-          .path li:nth-child(3) { margin-left: 48%; }
-          .path li:nth-child(4) { margin-left: 34%; }
-          .path li:nth-child(5) { margin-left: 12%; }
-          .path li:not(:last-child)::after { position: absolute; z-index: -1; top: 54px; left: 26px; width: 1px; height: 57px; transform: rotate(-31deg); transform-origin: top; border-left: 4px solid #0e7490; content: ''; }
-          .path li:nth-child(2)::after { transform: rotate(-24deg); }
-          .path li:nth-child(3)::after { transform: rotate(17deg); }
-          .path li:nth-child(4)::after { transform: rotate(31deg); }
-          .index { color: #55606e; font: 700 10px Arial, sans-serif; }
-          .node { display: flex; min-height: 52px; align-items: center; gap: 10px; padding: 0 18px; border: 1px solid #dbe2ea; border-radius: 6px; background: #fff; font: 700 13px Arial, sans-serif; white-space: nowrap; }
-          .node::before { width: 10px; height: 10px; border: 2px solid #0f766e; border-radius: 50%; content: ''; }
-          .path li:first-child .node::before, .path li:nth-child(4) .node::before { border-color: #0e7490; }
-          .path li:last-child .node::before { border-color: var(--color-settlement); background: var(--color-settlement); }
-          .node small { color: #55606e; font-size: 10px; }
-          .planes { position: absolute; z-index: 3; top: 78px; right: 22px; bottom: 42px; display: flex; width: 142px; flex-direction: column; justify-content: space-between; }
-          .planes li { display: grid; grid-template-columns: 20px 1fr; gap: 6px; font: 700 9px/1.35 Arial, sans-serif; text-transform: uppercase; }
-          .planes b { color: #0f766e; }
-          .settlement { color: var(--color-settlement); }
+          /* The same pastel wash the hero opens with, so a shared link and the
+             page it lands on read as one surface. */
+          body {
+            position: relative;
+            background:
+              radial-gradient(52% 60% at 12% 14%, #cfe8fb 0%, rgb(207 232 251 / 0%) 62%),
+              radial-gradient(44% 52% at 88% 8%, #d6f0e8 0%, rgb(214 240 232 / 0%) 60%),
+              radial-gradient(58% 62% at 74% 84%, #dde7fa 0%, rgb(221 231 250 / 0%) 64%),
+              radial-gradient(34% 36% at 20% 78%, #f6efe3 0%, rgb(246 239 227 / 0%) 56%),
+              #f7f9fb;
+            color: var(--ink);
+            font-family: IROA, Arial, sans-serif;
+          }
+          main { display: grid; width: 100%; height: 100%; grid-template-columns: 1fr 1fr; gap: 52px; padding: 54px 60px; }
+          section { min-width: 0; }
+          .brand { width: 150px; height: auto; margin-bottom: 44px; }
+          .kicker { margin: 0 0 16px; color: var(--verified); font: 700 13px IROA, Arial, sans-serif; letter-spacing: .16em; }
+          h1 { margin: 0 0 22px; font: 700 54px/1.14 IROA, Arial, sans-serif; letter-spacing: -.035em; word-break: keep-all; }
+          .copy { max-width: 440px; margin: 0; color: var(--quiet); font: 400 17px/1.6 IROA, Arial, sans-serif; word-break: keep-all; }
+          .facts { display: flex; gap: 10px; margin-top: 30px; font: 700 12px IROA, Arial, sans-serif; }
+          .facts span { padding: 9px 13px; border: 1px solid var(--line); border-radius: 6px; background: rgb(255 255 255 / 76%); }
+
+          /* Stages are told apart by three things at once: a numbered rail, a
+             filled marker that carries the stage's own colour, and a card that
+             sits on white against the wash. One cue alone was not enough to
+             separate them at preview scale. */
+          .atlas { display: flex; flex-direction: column; justify-content: center; padding: 32px 30px; border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / 82%); }
+          .atlas-label { margin: 0 0 22px; color: var(--verified); font: 700 12px IROA, Arial, sans-serif; letter-spacing: .16em; }
+          .path { display: grid; gap: 0; padding: 0; margin: 0; list-style: none; }
+          .path li { position: relative; display: grid; align-items: baseline; padding: 13px 0 13px 40px; grid-template-columns: 34px 1fr; }
+          .path li + li { border-top: 1px solid var(--line); }
+          .path li::before { position: absolute; top: 20px; left: 6px; width: 11px; height: 11px; border-radius: 50%; background: var(--verified); content: ''; }
+          .path li::after { position: absolute; top: 31px; bottom: -13px; left: 11px; width: 1px; background: var(--line); content: ''; }
+          .path li:last-child::after { display: none; }
+          .path li:first-child::before { background: var(--action); }
+          .path li:last-child::before { background: var(--settlement); }
+          .index { color: var(--quiet); font: 700 12px IROA, Arial, sans-serif; }
+          .node { font: 700 18px IROA, Arial, sans-serif; }
+          .node small { display: block; margin-top: 3px; color: var(--quiet); font: 400 12px IROA, Arial, sans-serif; }
+          .settlement { color: var(--settlement); }
+          .planes { display: grid; gap: 8px 18px; padding: 20px 0 0; margin: 22px 0 0; border-top: 1px solid var(--line); grid-template-columns: 1fr 1fr; list-style: none; }
+          .planes li { display: flex; gap: 8px; color: var(--quiet); font: 700 11px IROA, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+          .planes b { color: var(--verified); }
         </style>
       </head>
       <body>
