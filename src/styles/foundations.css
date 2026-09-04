@@ -1,20 +1,7 @@
-@import '@fontsource-variable/inter/index.css';
-
-@font-face {
-  font-family: 'IROA Noto Sans KR';
-  src: url('../../docs/brand/assets/fonts/NotoSansKR-Medium.otf') format('opentype');
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IROA Noto Sans KR';
-  src: url('../../docs/brand/assets/fonts/NotoSansKR-Bold.otf') format('opentype');
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
+/* Pretendard Variable, loaded as unicode-range subsets so a Korean page pulls
+   only the ranges it renders instead of the whole 2 MB face. Replaces the two
+   Noto Sans KR OTFs, which shipped 9.4 MB to every visitor. */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
 *,
 *::before,
@@ -27,6 +14,11 @@ html {
   color: var(--color-text);
   font-family: var(--font-sans);
   font-size: 100%;
+  /* Korean sets no spaces inside a word, so the default break-anywhere
+     behaviour splits 서비스 into 서비/스. keep-all breaks at word
+     boundaries; break-word still rescues a string with no boundary at all. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
   scroll-behavior: smooth;
   text-size-adjust: 100%;
 }

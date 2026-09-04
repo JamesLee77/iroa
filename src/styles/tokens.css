@@ -41,14 +41,23 @@
   --motion-base: 240ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --font-sans: 'Inter Variable', 'IROA Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic',
+  --font-sans: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic',
     sans-serif;
-  --font-latin: 'Inter Variable', Inter, Arial, sans-serif;
+  --font-latin: 'Pretendard Variable', Pretendard, Arial, sans-serif;
+  /* Field values and identifiers read as data, not prose. */
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, 'Roboto Mono', monospace;
   --font-size-body: 1rem;
   --line-height-body: 1.65;
   --measure-article: 68ch;
-  --radius-sm: 0.75rem;
-  --radius-md: 1rem;
+  /* Corners are cut back from the fully-rounded 2021 look: controls read as
+     controls, surfaces as surfaces, and the pill is kept only for the small
+     status chips where a capsule still carries meaning. */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
   --radius-pill: 999px;
-  --shadow-soft: 0 1.25rem 4rem rgb(22 38 61 / 10%);
+  /* One tight shadow for lifted surfaces; hover states use a border shift
+     rather than a bloom. */
+  --shadow-soft: 0 1px 2px rgb(22 38 61 / 6%), 0 8px 24px rgb(22 38 61 / 8%);
+  --shadow-none: none;
 }

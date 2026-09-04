@@ -40,7 +40,7 @@ const { href, variant = 'primary', external = false, fileMeta } = Astro.props;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-5);
     border: 1px solid transparent;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     color: var(--color-text);
     font-weight: 700;
     line-height: 1.35;
@@ -68,7 +68,12 @@ const { href, variant = 'primary', external = false, fileMeta } = Astro.props;
   }
 
   .button-link:hover {
-    box-shadow: var(--shadow-soft);
+    border-color: var(--color-text);
+  }
+
+  .button-link--primary:hover {
+    border-color: var(--color-text);
+    background: color-mix(in srgb, var(--color-action) 88%, var(--color-text));
   }
 
   .button-link--quiet:hover {
@@ -77,6 +82,12 @@ const { href, variant = 'primary', external = false, fileMeta } = Astro.props;
   }
 
   .button-link__label {
+    /* The slot carries the label text and, in most call sites, a trailing
+       icon. A global svg { display: block } pushed that icon onto its own
+       line, so the label lays itself out as a row instead. */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     white-space: nowrap;
   }
 
