@@ -256,7 +256,7 @@
 .settlement-overview__record .protocol-pattern { padding: 0 0 var(--space-6); margin: 0; border: 0; background: transparent; }
 .settlement-overview__record > ul { display: grid; gap: var(--space-3); padding: var(--space-5) 0 0 var(--space-5); margin: 0; border-block-start: 1px solid var(--color-border); color: var(--color-text-muted); }
 
-.economy-status { padding-block: var(--page-section-space); background: var(--color-dark-bg); color: var(--color-on-dark); }
+.economy-status { padding-block: var(--page-section-space); background: var(--color-dark-bg); color: var(--color-on-dark); --status-badge-color: var(--color-on-dark); }
 #economy .section-intro h2,
 #economy .section-intro__lead { color: var(--color-on-dark); }
 #economy .section-intro__eyebrow { color: var(--brand-light-teal); }

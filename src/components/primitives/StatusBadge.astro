@@ -21,7 +21,9 @@ const { status, locale = 'ko', label = getStatusLabel(status, locale) } = Astro.
     min-block-size: var(--control-min);
     align-items: center;
     gap: var(--space-2);
-    color: var(--color-text);
+    /* Dark surfaces set --status-badge-color so the label and the
+       currentColor mark stay readable against them. */
+    color: var(--status-badge-color, var(--color-text));
     font-weight: 700;
   }
 
