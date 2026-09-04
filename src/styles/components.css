@@ -89,7 +89,7 @@
 .homepage-pattern-sample > h1 {
   max-inline-size: 17ch;
   margin-block-end: clamp(var(--space-12), 7vw, 6rem);
-  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-size: var(--display-xl);
   letter-spacing: -0.05em;
 }
 
@@ -116,7 +116,7 @@
 .protocol-path__sequence {
   margin-block-end: var(--space-2);
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   line-height: 1.4;
@@ -126,7 +126,7 @@
 .protocol-path__intro h2,
 .privacy-boundary__intro h2 {
   margin-block-end: var(--space-4);
-  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-size: var(--display-md);
   letter-spacing: -0.035em;
 }
 
@@ -134,7 +134,7 @@
 .privacy-boundary__statement {
   margin-block-end: 0;
   color: var(--color-text-muted);
-  font-size: 1.125rem;
+  font-size: var(--text-md);
 }
 
 .protocol-path__stages {
@@ -190,7 +190,7 @@
   min-block-size: 2.5em;
   margin-block-end: var(--space-3);
   font-family: var(--font-latin);
-  font-size: 1.125rem;
+  font-size: var(--text-md);
   letter-spacing: -0.02em;
 }
 
@@ -266,7 +266,7 @@
 .protocol-definition-list dt {
   margin-block-end: var(--space-1);
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 

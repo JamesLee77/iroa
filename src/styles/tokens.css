@@ -66,8 +66,36 @@
   --font-latin: 'Pretendard Variable', Pretendard, Arial, sans-serif;
   /* Field values and identifiers read as data, not prose. */
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, 'Roboto Mono', monospace;
-  --font-size-body: 1rem;
-  --line-height-body: 1.65;
+  /* Type scale. Sixty-four one-off sizes had accumulated, six of them inside a
+     single 0.1rem band, and the floor had fallen to 10px — too small for a
+     product whose readers are older adults and their carers. These nine steps
+     replace them, and the floor is 12px. */
+  --text-2xs: 0.75rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: clamp(1.5rem, 2.5vw, 1.75rem);
+  --text-2xl: clamp(1.75rem, 3.5vw, 2.25rem);
+  --text-3xl: clamp(2rem, 5vw, 3.5rem);
+  --text-4xl: clamp(2.5rem, 5.5vw, 4.5rem);
+
+  /* Display層. Mastheads and chapter openers are an editorial voice, not UI
+     text, so they get their own four steps instead of being flattened into
+     the scale above. */
+  --display-sm: clamp(1.75rem, 4vw, 3rem);
+  --display-md: clamp(2rem, 5vw, 3.5rem);
+  --display-lg: clamp(2.5rem, 6vw, 4.5rem);
+  --display-xl: clamp(3rem, 7vw, 5.75rem);
+
+  /* Line height tightens as type grows. */
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-body: 1.65;
+
+  --font-size-body: var(--text-base);
+  --line-height-body: var(--leading-body);
   --measure-article: 68ch;
   /* Corners are cut back from the fully-rounded 2021 look: controls read as
      controls, surfaces as surfaces, and the pill is kept only for the small
