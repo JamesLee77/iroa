@@ -7,6 +7,7 @@ import PrivacyBoundary from '../components/patterns/PrivacyBoundary.astro';
 import ProtocolPath from '../components/patterns/ProtocolPath.astro';
 import ButtonLink from '../components/primitives/ButtonLink.astro';
 import SectionIntro from '../components/primitives/SectionIntro.astro';
+import { DESIGN_SYSTEM_SECTION_SPACING, DESIGN_SYSTEM_SPACING_SCALE } from '../lib/design-system/spacing-scale';
 import { DESIGN_SYSTEM_DISPLAY_SCALE, DESIGN_SYSTEM_TYPE_SCALE } from '../lib/design-system/type-scale';
 import StatusBadge from '../components/primitives/StatusBadge.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
@@ -41,7 +42,7 @@ const iconSamples = [
     </header>
 
     <section class="design-system-section container" aria-labelledby="foundations-title">
-      <SectionIntro eyebrow="01 · SYSTEM LAYER" title="Foundations" lead="브랜드 원본, 의미 색상, 타이포그래피와 4/8px 간격 리듬을 고정합니다." id="foundations-title" />
+      <SectionIntro eyebrow="01 · SYSTEM LAYER" title="Foundations" lead="브랜드 원본, 의미 색상, 타입·행간 스케일, 그리고 컴포넌트와 섹션 두 층의 간격 리듬을 고정합니다. 모든 값은 토큰에서 직접 읽어 표시합니다." id="foundations-title" />
       <ul class="design-system-colors" aria-label="의미 색상과 대비">
         {DESIGN_SYSTEM_COLOR_ROLES.map((color) => (
           <li>
@@ -78,9 +79,19 @@ const iconSamples = [
         </section>
         <section aria-labelledby="spacing-scale-title">
           <h3 id="spacing-scale-title">Spacing scale</h3>
+          <p>컴포넌트 내부는 4px 리듬을 따릅니다. 아래 막대는 토큰의 실제 길이입니다.</p>
           <ol class="design-system-spacing">
-            {[4, 8, 16, 24, 32, 48].map((size) => <li><span style={`inline-size:${size}px`}></span><code>{size}px</code></li>)}
+            {DESIGN_SYSTEM_SPACING_SCALE.map((step) => (
+              <li><span style={`inline-size: var(${step.token})`}></span><code>{step.token}</code><small class="tabular">{step.px}px</small></li>
+            ))}
           </ol>
+          <h3 id="section-spacing-title">Section rhythm</h3>
+          <p>섹션 사이 간격과 스티키 헤더 오프셋은 컴포넌트 리듬 밖의 별도 토큰입니다.</p>
+          <dl class="design-system-section-space">
+            {DESIGN_SYSTEM_SECTION_SPACING.map((step) => (
+              <div><dt><code>{step.token}</code></dt><dd><span>{step.role}</span><small class="tabular">최소 {step.px}px</small></dd></div>
+            ))}
+          </dl>
         </section>
       </div>
     </section>

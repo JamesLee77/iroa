@@ -726,3 +726,12 @@
 .design-system-type dd code { color: var(--color-text); font-family: var(--font-mono); font-size: var(--text-xs); }
 .design-system-type dd span { color: var(--color-text-muted); font-size: var(--text-xs); }
 .design-system-type dd small { color: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--text-2xs); }
+.design-system-spacing li { display: flex; gap: var(--space-3); align-items: center; }
+.design-system-spacing li span { block-size: var(--space-3); flex: 0 0 auto; border-radius: 2px; background: var(--color-verified); }
+.design-system-spacing li code { font-family: var(--font-mono); font-size: var(--text-xs); }
+.design-system-spacing li small { color: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--text-2xs); }
+.design-system-section-space { display: grid; gap: var(--space-3); margin-block: var(--space-4) 0; }
+.design-system-section-space > div { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: baseline; }
+.design-system-section-space dt code { font-family: var(--font-mono); font-size: var(--text-xs); }
+.design-system-section-space dd { display: flex; gap: var(--space-3); align-items: baseline; margin: 0; color: var(--color-text-muted); font-size: var(--text-xs); }
+.design-system-section-space dd small { font-family: var(--font-mono); font-size: var(--text-2xs); }
