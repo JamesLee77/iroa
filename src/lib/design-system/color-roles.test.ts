@@ -10,13 +10,13 @@ describe('design-system color-role evidence', () => {
         name: 'Background',
         token: '--color-bg',
         value: '#F7F9FB',
-        contrast: 'Text / Background · 18.42:1',
+        contrast: 'Text / Background · 13.03:1',
       },
       {
         name: 'Surface',
         token: '--color-surface',
         value: '#FFFFFF',
-        contrast: 'Text / Surface · 19.43:1',
+        contrast: 'Text / Surface · 13.75:1',
       },
       {
         name: 'Action',

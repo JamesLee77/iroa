@@ -16,7 +16,10 @@
      carry a white label, and the ground is a cool paper instead of a warm
      ivory. The economy section keeps the ink ground so the page still has one
      moment that goes quiet. */
-  --console-ink: #0b0d12;
+  /* Not near-black. A pure black ink reads hard and cheap on screen; this is
+     the brand navy softened, which is what carries the weight in the reference
+     work this palette was measured against. */
+  --console-ink: #232e3c;
   --console-paper: #f7f9fb;
   --console-raise: #ffffff;
   --console-inset: #eef2f6;

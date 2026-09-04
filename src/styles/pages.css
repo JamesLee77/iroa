@@ -16,14 +16,43 @@
   text-transform: uppercase;
 }
 
+/* The hero opens as one quiet field: a soft pastel wash, the claim, and a way
+   down. Everything that argues — the badge, the reader link, the render, the
+   status lists — waits in the proof block below it. */
 .home-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(32rem, 1.05fr);
-  gap: clamp(var(--space-8), 5vw, 5rem);
-  padding-block: clamp(4.5rem, 8vw, 7.5rem) var(--space-10);
+  position: relative;
+  isolation: isolate;
+  padding-block-end: var(--space-section);
 }
 
-.home-hero__copy { grid-column: 1; grid-row: 1; align-self: center; }
+.home-hero::before {
+  position: absolute;
+  z-index: -1;
+  inset-block: calc(-1 * var(--scroll-offset)) 0;
+  inset-inline: 50%;
+  inline-size: 100vw;
+  translate: -50% 0;
+  /* The wash covers the whole hero, render included, and dissolves at the
+     bottom edge. Capping it at a fixed height left the render sitting on bare
+     background, which is what made it read as a separate block. */
+  mask-image: linear-gradient(to bottom, #000 0%, #000 72%, rgb(0 0 0 / 0%) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 72%, rgb(0 0 0 / 0%) 100%);
+  background:
+    radial-gradient(58% 52% at 16% 16%, #cfe8fb 0%, rgb(207 232 251 / 0%) 62%),
+    radial-gradient(46% 46% at 82% 10%, #d6f0e8 0%, rgb(214 240 232 / 0%) 60%),
+    radial-gradient(66% 58% at 64% 62%, #dde7fa 0%, rgb(221 231 250 / 0%) 64%),
+    radial-gradient(42% 40% at 26% 74%, #f4ecdd 0%, rgb(244 236 221 / 0%) 58%);
+  content: '';
+  pointer-events: none;
+}
+
+.home-hero__stage {
+  display: grid;
+  min-block-size: min(64vh, 30rem);
+  align-content: center;
+  justify-items: start;
+  padding-block: var(--space-12) var(--space-10);
+}
 
 .home-hero__eyebrow {
   margin-block-end: var(--space-5);
@@ -31,61 +60,110 @@
   font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.home-hero__validation { margin-block-end: var(--space-6); }
+.home-hero__stage h1 {
+  max-inline-size: 19ch;
+  margin-block-end: var(--space-6);
+  font-size: var(--display-lg);
+  letter-spacing: -0.045em;
+  line-height: var(--leading-flat);
+}
+
+.home-hero__description {
+  max-inline-size: 46ch;
+  margin-block-end: var(--space-8);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+}
+
+.home-hero__cue {
+  display: inline-flex;
+  min-block-size: var(--control-min);
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-hero__cue:hover span { text-decoration: underline; }
+.home-hero__cue svg { animation: home-hero-cue 2.4s var(--ease-out) infinite; }
+
+@keyframes home-hero-cue {
+  0%, 62%, 100% { translate: 0 0; }
+  30% { translate: 0 0.28rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__cue svg { animation: none; }
+}
+
+.home-hero__proof {
+  margin-block-start: calc(-1 * var(--space-6));
+  /* One column at every width. A two-column arrangement left the shorter
+     status lists stranded beside a tall render, and stacking keeps the order
+     the mobile honesty check depends on: status qualifiers before the atlas. */
+  display: grid;
+  gap: var(--space-8);
+}
+
+.network-atlas__path,
+.network-atlas__planes,
+.home-hero__facts { padding: 0; margin: 0; list-style: none; }
+
+.home-hero__lead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+  align-items: center;
+  justify-content: space-between;
+  padding-block-end: var(--space-4);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.home-hero__status { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6); align-items: center; }
+
 .home-hero__validation .status-badge {
   min-block-size: 2.25rem;
   padding-inline: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-
-  font-family: var(--font-latin);
-  font-size: var(--text-2xs);
-}
-
-.home-hero h1 {
-  max-inline-size: 8.6em;
-  margin-block-end: var(--space-7);
-  font-size: var(--text-4xl);
-  letter-spacing: -0.06em;
-  line-height: var(--leading-flat);
-  word-break: keep-all;
-}
-
-.home-hero__description {
-  max-inline-size: 35rem;
-  margin-block-end: var(--space-7);
-  color: var(--color-text-muted);
-  font-size: var(--text-md);
-  line-height: var(--leading-loose);
 }
 
 .home-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
-.home-hero__settlement-plan { display: none; }
-.home-hero__trust,
-.home-hero__settlement-plan,
-.home-hero__facts,
-.network-atlas__path,
-.network-atlas__planes { padding: 0; margin: 0; list-style: none; }
+
+.home-hero__settlement-plan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.home-hero__settlement-plan li { display: flex; gap: var(--space-2); align-items: baseline; color: var(--color-text-muted); font-size: var(--text-xs); }
+.home-hero__settlement-plan strong { color: var(--color-text); }
 
 .home-hero__trust {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3) var(--space-5);
-  margin-block-start: var(--space-8);
+  gap: var(--space-3) var(--space-8);
+  padding: 0;
+  margin: 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
+  list-style: none;
 }
 
-.home-hero__trust li { display: flex; align-items: center; gap: var(--space-2); }
+.home-hero__trust li { display: flex; gap: var(--space-2); align-items: center; }
 .home-hero__trust svg { color: var(--color-verified); }
 
 .home-hero__visual {
   position: relative;
-  grid-column: 2;
-  grid-row: 1;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   margin: 0;
@@ -184,8 +262,6 @@
 .network-atlas__planes li span:first-child { color: var(--color-verified-text); font-family: var(--font-mono); }
 
 .home-hero__facts {
-  grid-column: 1 / -1;
-  grid-row: 2;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-block-start: var(--space-6);
@@ -478,7 +554,7 @@
   .home-hero { grid-template-columns: 1fr; }
   .home-hero__copy,
   .home-hero__facts,
-  .home-hero__visual { grid-column: 1; grid-row: auto; }
+
   .home-hero__visual,
   .home-hero__visual img { min-block-size: 0; }
   .home-hero__visual img { block-size: auto; object-position: center; }

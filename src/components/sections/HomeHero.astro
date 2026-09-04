@@ -29,58 +29,69 @@ const mobileSettlementFacts = content.facts
   }));
 ---
 
-<section id="top" class="home-hero container" aria-labelledby="home-hero-title">
-  <div class="home-hero__copy">
+<section id="top" class="home-hero" aria-labelledby="home-hero-title">
+  <div class="home-hero__stage container">
     <p class="home-hero__eyebrow latin">{content.eyebrow}</p>
-    <div class="home-hero__validation">
-      <StatusBadge status="validation" label="IROA Rewards · Validation Stage" locale={locale} />
-    </div>
     <h1 id="home-hero-title">{content.title}</h1>
     <p class="home-hero__description">{content.description}</p>
-    <div class="home-hero__actions">
-      <ButtonLink href={content.primaryCta.href}>{content.primaryCta.label}<ArrowDown aria-hidden="true" size={18} /></ButtonLink>
-      <ButtonLink href={content.secondaryCta.href} variant="secondary">{content.secondaryCta.label}<BookOpen aria-hidden="true" size={18} /></ButtonLink>
-    </div>
-    <ul class="home-hero__settlement-plan" aria-label={english ? 'Mobile settlement plan' : '모바일 결제 계획'}>
+    <a class="home-hero__cue" href={content.primaryCta.href}>
+      <span>{content.primaryCta.label}</span>
+      <ArrowDown aria-hidden="true" size={18} />
+    </a>
+  </div>
+
+  <div class="home-hero__proof container">
+    <div class="home-hero__lead">
+      <div class="home-hero__status">
+        <div class="home-hero__validation">
+          <StatusBadge status="validation" label="IROA Rewards · Validation Stage" locale={locale} />
+        </div>
+        <ul class="home-hero__settlement-plan" aria-label={english ? 'Mobile settlement plan' : '모바일 결제 계획'}>
       {mobileSettlementFacts.map((fact) => <li><span class="latin">{fact.label}</span><span aria-hidden="true">·</span><strong>{fact.status}</strong></li>)}
-    </ul>
+        </ul>
+      </div>
+      <div class="home-hero__actions">
+        <ButtonLink href={content.secondaryCta.href} variant="secondary">{content.secondaryCta.label}<BookOpen aria-hidden="true" size={18} /></ButtonLink>
+      </div>
+    </div>
+
+
+    <section class="home-hero__visual network-atlas" aria-label={english ? 'Network Atlas execution path' : 'Network Atlas 실행 경로'}>
+      <Image
+        src={heroVisual}
+        alt={english ? 'IROA ecosystem connecting a voice request with a watch, hospital, mobility, store, verified capsule, and human support' : '음성으로 요청하는 고령자와 워치·병원·이동·상점·검증 캡슐·사람 지원이 하나의 실행 경로로 연결된 IROA 생태계'}
+        widths={[560, 760, 960, 1280]}
+        sizes="(max-width: 1023px) calc(100vw - 2rem), 60vw"
+        format="webp"
+        quality={90}
+        loading="eager"
+        fetchpriority="high"
+      />
+      <div class="network-atlas__summary">
+        <ol class="network-atlas__path" aria-label={english ? 'Execution path stages' : '실행 경로 단계'}>
+          {
+            stages.map((stage, index) => (
+              <li data-stage={stage.id}>
+                <span class="network-atlas__index tabular">{String(index + 1).padStart(2, '0')}</span>
+                <span class="network-atlas__node">
+                  <strong class="latin">{stage.id === 'request' ? 'Voice Request' : stage.label}</strong>
+                  {stageQualifier[stage.id] && <small class="latin">{stageQualifier[stage.id]}</small>}
+                </span>
+              </li>
+            ))
+          }
+        </ol>
+        <ol class="network-atlas__planes" aria-label={english ? 'Protocol planes' : '프로토콜 영역'}>
+          {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
+        </ol>
+      </div>
+    </section>
+
     <ul class="home-hero__trust" aria-label={english ? 'IROA trust principles' : 'IROA 신뢰 원칙'}>
       {content.trust.map((item) => <li><ShieldCheck aria-hidden="true" size={18} />{item}</li>)}
     </ul>
+    <ul class="home-hero__facts" aria-label={english ? 'Key public status' : '핵심 공개 상태'}>
+      {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} locale={locale} />{fact.status === 'planned' && <span class="home-hero__fact-status">{getStatusLabel(fact.status, locale)}</span>}</li>)}
+    </ul>
   </div>
-
-  <section class="home-hero__visual network-atlas" aria-label={english ? 'Network Atlas execution path' : 'Network Atlas 실행 경로'}>
-    <Image
-      src={heroVisual}
-      alt={english ? 'IROA ecosystem connecting a voice request with a watch, hospital, mobility, store, verified capsule, and human support' : '음성으로 요청하는 고령자와 워치·병원·이동·상점·검증 캡슐·사람 지원이 하나의 실행 경로로 연결된 IROA 생태계'}
-      widths={[560, 760, 960, 1280]}
-      sizes="(max-width: 1023px) calc(100vw - 2rem), 52vw"
-      format="webp"
-      quality={90}
-      loading="eager"
-      fetchpriority="high"
-    />
-    <div class="network-atlas__summary">
-      <ol class="network-atlas__path" aria-label={english ? 'Execution path stages' : '실행 경로 단계'}>
-        {
-          stages.map((stage, index) => (
-            <li data-stage={stage.id}>
-              <span class="network-atlas__index tabular">{String(index + 1).padStart(2, '0')}</span>
-              <span class="network-atlas__node">
-                <strong class="latin">{stage.id === 'request' ? 'Voice Request' : stage.label}</strong>
-                {stageQualifier[stage.id] && <small class="latin">{stageQualifier[stage.id]}</small>}
-              </span>
-            </li>
-          ))
-        }
-      </ol>
-      <ol class="network-atlas__planes" aria-label={english ? 'Protocol planes' : '프로토콜 영역'}>
-        {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
-      </ol>
-    </div>
-  </section>
-
-  <ul class="home-hero__facts" aria-label={english ? 'Key public status' : '핵심 공개 상태'}>
-    {content.facts.map((fact) => <li><StatusBadge status={fact.status} label={fact.label} locale={locale} />{fact.status === 'planned' && <span class="home-hero__fact-status">{getStatusLabel(fact.status, locale)}</span>}</li>)}
-  </ul>
 </section>
