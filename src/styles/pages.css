@@ -100,7 +100,18 @@
 .home-hero__visual picture,
 .home-hero__visual img { inline-size: 100%; block-size: 100%; }
 
-.home-hero__visual img { min-block-size: 24rem; object-fit: cover; object-position: 54% center; }
+.home-hero__visual img {
+  min-block-size: 24rem;
+  object-fit: cover;
+  object-position: 54% center;
+  /* The render carries its own near-white studio floor. On the console ground
+     that met the summary strip as a hard bright edge, so the base of the image
+     dissolves into the card and the whole frame is pulled a step darker to sit
+     inside the palette rather than glare out of it. */
+  filter: brightness(0.94) contrast(1.04);
+  mask-image: linear-gradient(to bottom, #000 72%, rgb(0 0 0 / 0%) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 72%, rgb(0 0 0 / 0%) 100%);
+}
 
 .network-atlas__summary {
   position: relative;
@@ -362,8 +373,8 @@
 .whitepaper-document-control dt { margin-block-end: var(--space-1); color: var(--color-text-muted); font-size: 0.72rem; font-weight: 700; }
 .whitepaper-document-control dd { margin: 0; font-weight: 700; }
 .whitepaper-document-control__authority { padding: var(--space-4) var(--space-5); margin: 0; color: var(--color-text-muted); font-size: 0.82rem; }
-.whitepaper-pdf-link { display: inline-flex; min-block-size: var(--control-min); align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-5); background: var(--color-text); color: var(--color-on-dark); font-size: 0.82rem; font-weight: 700; text-decoration: none; }
-.whitepaper-pdf-link:hover { background: var(--color-dark-bg); }
+.whitepaper-pdf-link { display: inline-flex; min-block-size: var(--control-min); align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-5); background: var(--color-text); color: var(--color-bg); font-size: 0.82rem; font-weight: 700; text-decoration: none; }
+.whitepaper-pdf-link:hover { background: color-mix(in srgb, var(--color-text) 84%, var(--color-bg)); }
 .whitepaper-pdf-link > svg { flex: 0 0 auto; }
 .whitepaper-document-control--inline { inline-size: min(100%, 48rem); justify-items: center; overflow: visible; border: 0; background: transparent; }
 .whitepaper-document-control--inline .whitepaper-document-control__heading { display: none; }
@@ -449,7 +460,7 @@
 .not-found > p:not(.section-kicker) { max-inline-size: 40rem; color: var(--color-text-muted); }
 .not-found__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-block-start: var(--space-6); }
 .not-found__actions a { display: inline-flex; min-block-size: var(--control-min); align-items: center; gap: var(--space-2); padding-inline: var(--space-5); border: 1px solid var(--color-text); border-radius: var(--radius-sm); font-weight: 700; text-decoration: none; }
-.not-found__actions a:first-child { background: var(--color-text); color: var(--color-on-dark); }
+.not-found__actions a:first-child { background: var(--color-text); color: var(--color-bg); }
 .not-found__actions a:hover { transform: translateY(-1px); }
 .not-found__whitepaper { display: grid; grid-template-columns: minmax(14rem, 0.75fr) minmax(18rem, 1.25fr); gap: clamp(var(--space-8), 6vw, 5rem); padding-block-start: clamp(var(--space-10), 8vw, 6rem); margin-block-start: clamp(var(--space-10), 8vw, 6rem); border-block-start: 1px solid var(--color-border); }
 .not-found__whitepaper h2 { margin-block-end: var(--space-4); font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -0.04em; }

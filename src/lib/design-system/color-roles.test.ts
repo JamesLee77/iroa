@@ -9,33 +9,40 @@ describe('design-system color-role evidence', () => {
       {
         name: 'Background',
         token: '--color-bg',
-        value: '#F7F3EA',
-        contrast: 'Navy / Background · 13.75:1',
+        value: '#0B0D12',
+        contrast: 'Text / Background · 17.65:1',
       },
       {
         name: 'Surface',
         token: '--color-surface',
-        value: '#FFFFFF',
-        contrast: 'Navy / White · 15.23:1',
+        value: '#141821',
+        contrast: 'Text / Surface · 16.13:1',
       },
       {
         name: 'Action',
         token: '--color-action',
-        value: '#F06D5E',
-        contrast: 'Navy / Coral · 5.12:1',
+        value: '#6EE7F9',
+        contrast: 'Label / Action · 13.04:1',
       },
       {
         name: 'Verified',
         token: '--color-verified',
-        value: '#3D8B83',
-        contrast: 'Teal / White · 4.02:1 · large text/UI only',
+        value: '#34D399',
+        contrast: 'Verified / Surface · 9.24:1 · large text/UI only',
       },
       {
         name: 'Settlement',
         token: '--color-settlement',
-        value: '#246FD4',
-        contrast: 'White / Settlement · 4.88:1',
+        value: '#60A5FA',
+        contrast: 'Settlement / Surface · 6.99:1 · large text/UI only',
       },
     ]);
+  });
+
+  it('keeps every published role at or above the AA body-text threshold', () => {
+    for (const role of DESIGN_SYSTEM_COLOR_ROLES) {
+      const ratio = Number.parseFloat(role.contrast.split('·')[1]);
+      expect(ratio, role.name).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });

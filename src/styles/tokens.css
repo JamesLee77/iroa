@@ -11,21 +11,36 @@
      surface. The site had drifted to a cold #f9fafb ground, which is what made
      the warm Coral action read as a mismatch rather than an accent. Neutrals
      are mixed from Navy and Ivory so nothing sits outside the palette. */
-  --color-bg: var(--brand-ivory);
-  --color-surface: var(--brand-white);
-  --color-surface-soft: color-mix(in srgb, var(--brand-navy) 5%, var(--brand-ivory));
-  --color-text: var(--brand-navy);
-  --color-text-muted: color-mix(in srgb, var(--brand-navy) 72%, var(--brand-ivory));
-  --color-action: var(--brand-coral);
-  --color-on-action: var(--brand-navy);
-  --color-verified: var(--brand-teal);
-  --color-verified-text: #2d6f69;
-  --color-settlement: #246fd4;
-  --color-border: color-mix(in srgb, var(--brand-navy) 18%, var(--brand-ivory));
-  --color-focus: var(--brand-navy);
-  /* The guide assigns Navy to dark backgrounds; #0d1726 was a colder invention. */
-  --color-dark-bg: var(--brand-navy);
-  --color-on-dark: var(--brand-white);
+  /* Night Console. The page is a dark ground so the ecosystem render reads as
+     lit rather than pasted on, and so the surface matches what IROA claims to
+     be: a network you watch execute, not a brochure. Brand hues above stay
+     defined for print and the wordmark; the screen palette is declared here. */
+  --console-ink: #0b0d12;
+  --console-raise: #141821;
+  --console-inset: #1b2029;
+  --console-line: #2a303c;
+  --console-paper: #f2f4f8;
+  --console-quiet: #9aa5b6;
+  --console-live: #6ee7f9;
+  --console-verified: #34d399;
+  --console-settle: #60a5fa;
+
+  --color-bg: var(--console-ink);
+  --color-surface: var(--console-raise);
+  --color-surface-soft: var(--console-inset);
+  --color-text: var(--console-paper);
+  --color-text-muted: var(--console-quiet);
+  --color-action: var(--console-live);
+  /* Cyan is bright, so the label on it is ink rather than paper. */
+  --color-on-action: #06121a;
+  --color-verified: var(--console-verified);
+  --color-verified-text: var(--console-verified);
+  --color-settlement: var(--console-settle);
+  --color-border: var(--console-line);
+  --color-focus: var(--console-live);
+  /* The economy section still steps away from the page, one shade deeper. */
+  --color-dark-bg: #070910;
+  --color-on-dark: var(--console-paper);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
