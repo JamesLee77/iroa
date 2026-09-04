@@ -7,19 +7,24 @@
   --brand-ink: #19222e;
   --brand-white: #ffffff;
 
-  --color-bg: #f9fafb;
+  /* The BI guide names Ivory the resting background and White the information
+     surface. The site had drifted to a cold #f9fafb ground, which is what made
+     the warm Coral action read as a mismatch rather than an accent. Neutrals
+     are mixed from Navy and Ivory so nothing sits outside the palette. */
+  --color-bg: var(--brand-ivory);
   --color-surface: var(--brand-white);
-  --color-surface-soft: var(--brand-ivory);
+  --color-surface-soft: color-mix(in srgb, var(--brand-navy) 5%, var(--brand-ivory));
   --color-text: var(--brand-navy);
-  --color-text-muted: #526174;
+  --color-text-muted: color-mix(in srgb, var(--brand-navy) 72%, var(--brand-ivory));
   --color-action: var(--brand-coral);
   --color-on-action: var(--brand-navy);
   --color-verified: var(--brand-teal);
   --color-verified-text: #2d6f69;
   --color-settlement: #246fd4;
-  --color-border: #d9dee5;
+  --color-border: color-mix(in srgb, var(--brand-navy) 18%, var(--brand-ivory));
   --color-focus: var(--brand-navy);
-  --color-dark-bg: #0d1726;
+  /* The guide assigns Navy to dark backgrounds; #0d1726 was a colder invention. */
+  --color-dark-bg: var(--brand-navy);
   --color-on-dark: var(--brand-white);
 
   --space-1: 0.25rem;

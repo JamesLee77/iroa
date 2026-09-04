@@ -1,5 +1,7 @@
 ---
+import { Image } from 'astro:assets';
 import { ArrowDown, BookOpen, ShieldCheck } from 'lucide-astro';
+import heroVisual from '../../assets/home/iroa-ecosystem-hero-v1.png';
 import { getStatusLabel } from '../../lib/content/status';
 import { PROTOCOL_STAGES, PROTOCOL_STAGES_EN } from '../../lib/protocol/flow';
 import type { HeroContent } from '../../types/home';
@@ -48,27 +50,34 @@ const mobileSettlementFacts = content.facts
   </div>
 
   <section class="home-hero__visual network-atlas" aria-label={english ? 'Network Atlas execution path' : 'Network Atlas 실행 경로'}>
-    <header class="network-atlas__head">
-      <p class="network-atlas__title latin">Network Atlas</p>
-      <p class="network-atlas__caption">{english ? 'One approved request, end to end' : '승인된 요청 하나가 결과에 이르기까지'}</p>
-    </header>
-    <ol class="network-atlas__path" aria-label={english ? 'Execution path stages' : '실행 경로 단계'}>
-      {
-        stages.map((stage, index) => (
-          <li data-stage={stage.id}>
-            <span class="network-atlas__index tabular">{String(index + 1).padStart(2, '0')}</span>
-            <span class="network-atlas__node">
-              <strong class="latin">{stage.id === 'request' ? 'Voice Request' : stage.label}</strong>
-              {stageQualifier[stage.id] && <small class="latin">{stageQualifier[stage.id]}</small>}
-            </span>
-            <p class="network-atlas__detail">{stage.summary}</p>
-          </li>
-        ))
-      }
-    </ol>
-    <ol class="network-atlas__planes" aria-label={english ? 'Protocol planes' : '프로토콜 영역'}>
-      {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
-    </ol>
+    <Image
+      src={heroVisual}
+      alt={english ? 'IROA ecosystem connecting a voice request with a watch, hospital, mobility, store, verified capsule, and human support' : '음성으로 요청하는 고령자와 워치·병원·이동·상점·검증 캡슐·사람 지원이 하나의 실행 경로로 연결된 IROA 생태계'}
+      widths={[560, 760, 960, 1280]}
+      sizes="(max-width: 1023px) calc(100vw - 2rem), 52vw"
+      format="webp"
+      quality={90}
+      loading="eager"
+      fetchpriority="high"
+    />
+    <div class="network-atlas__summary">
+      <ol class="network-atlas__path" aria-label={english ? 'Execution path stages' : '실행 경로 단계'}>
+        {
+          stages.map((stage, index) => (
+            <li data-stage={stage.id}>
+              <span class="network-atlas__index tabular">{String(index + 1).padStart(2, '0')}</span>
+              <span class="network-atlas__node">
+                <strong class="latin">{stage.id === 'request' ? 'Voice Request' : stage.label}</strong>
+                {stageQualifier[stage.id] && <small class="latin">{stageQualifier[stage.id]}</small>}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+      <ol class="network-atlas__planes" aria-label={english ? 'Protocol planes' : '프로토콜 영역'}>
+        {planeLabels.map((plane, index) => <li><span class="tabular">0{index + 1}</span><span class="latin">{plane} Plane</span></li>)}
+      </ol>
+    </div>
   </section>
 
   <ul class="home-hero__facts" aria-label={english ? 'Key public status' : '핵심 공개 상태'}>

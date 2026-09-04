@@ -9,8 +9,8 @@ describe('design-system color-role evidence', () => {
       {
         name: 'Background',
         token: '--color-bg',
-        value: '#F9FAFB',
-        contrast: 'Navy / Background · 14.57:1',
+        value: '#F7F3EA',
+        contrast: 'Navy / Background · 13.75:1',
       },
       {
         name: 'Surface',
