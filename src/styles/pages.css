@@ -104,13 +104,10 @@
   min-block-size: 24rem;
   object-fit: cover;
   object-position: 54% center;
-  /* The render carries its own near-white studio floor. On the console ground
-     that met the summary strip as a hard bright edge, so the base of the image
-     dissolves into the card and the whole frame is pulled a step darker to sit
-     inside the palette rather than glare out of it. */
-  filter: brightness(0.94) contrast(1.04);
-  mask-image: linear-gradient(to bottom, #000 72%, rgb(0 0 0 / 0%) 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 72%, rgb(0 0 0 / 0%) 100%);
+  /* The render's studio floor meets the summary strip as a hard line, so its
+     base dissolves into the card surface. */
+  mask-image: linear-gradient(to bottom, #000 84%, rgb(0 0 0 / 0%) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 84%, rgb(0 0 0 / 0%) 100%);
 }
 
 .network-atlas__summary {

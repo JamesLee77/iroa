@@ -9,32 +9,32 @@ describe('design-system color-role evidence', () => {
       {
         name: 'Background',
         token: '--color-bg',
-        value: '#0B0D12',
-        contrast: 'Text / Background · 17.65:1',
+        value: '#F7F9FB',
+        contrast: 'Text / Background · 18.42:1',
       },
       {
         name: 'Surface',
         token: '--color-surface',
-        value: '#141821',
-        contrast: 'Text / Surface · 16.13:1',
+        value: '#FFFFFF',
+        contrast: 'Text / Surface · 19.43:1',
       },
       {
         name: 'Action',
         token: '--color-action',
-        value: '#6EE7F9',
-        contrast: 'Label / Action · 13.04:1',
+        value: '#0E7490',
+        contrast: 'Label / Action · 5.36:1',
       },
       {
         name: 'Verified',
         token: '--color-verified',
-        value: '#34D399',
-        contrast: 'Verified / Surface · 9.24:1 · large text/UI only',
+        value: '#0F766E',
+        contrast: 'Verified / Surface · 5.47:1 · large text/UI only',
       },
       {
         name: 'Settlement',
         token: '--color-settlement',
-        value: '#60A5FA',
-        contrast: 'Settlement / Surface · 6.99:1 · large text/UI only',
+        value: '#1D4ED8',
+        contrast: 'Settlement / Surface · 6.70:1 · large text/UI only',
       },
     ]);
   });
