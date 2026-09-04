@@ -54,6 +54,14 @@
   --space-10: 2.5rem;
   --space-11: 2.75rem;
   --space-12: 3rem;
+  /* Section rhythm. --space-1..12 tops out at 3rem, so the gaps between whole
+     sections had been written inline: three near-identical clamps and a 6rem
+     scroll offset repeated per page. */
+  --space-section: clamp(5.5rem, 9vw, 9rem);
+  --space-section-compact: clamp(4.5rem, 18vw, 6rem);
+  /* Anchored targets clear the sticky header by this much. */
+  --scroll-offset: 6rem;
+
   --container: 77.5rem;
   --gutter: clamp(1rem, 4vw, 2.5rem);
   --control-min: 2.75rem;
@@ -89,10 +97,14 @@
   --display-lg: clamp(2.5rem, 6vw, 4.5rem);
   --display-xl: clamp(3rem, 7vw, 5.75rem);
 
-  /* Line height tightens as type grows. */
-  --leading-tight: 1.15;
-  --leading-snug: 1.35;
+  /* Line height tightens as type grows. Hangul sets taller glyphs than Latin,
+     so a value that falls between two steps rounds to the looser one. */
+  --leading-flat: 1.05;
+  --leading-tight: 1.2;
+  --leading-snug: 1.4;
+  --leading-normal: 1.5;
   --leading-body: 1.65;
+  --leading-loose: 1.8;
 
   --font-size-body: var(--text-base);
   --line-height-body: var(--leading-body);

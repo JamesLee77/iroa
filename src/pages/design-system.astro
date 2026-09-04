@@ -132,12 +132,12 @@ const iconSamples = [
 </SiteLayout>
 
 <style>
-  .design-system-page { --design-system-section-space: clamp(5rem, 9vw, 8rem); }
-  .design-system-hero { padding-block: clamp(4rem, 10vw, 8rem); }
+  
+  .design-system-hero { padding-block: var(--space-section); }
   .design-system-hero img { inline-size: min(11rem, 44vw); block-size: auto; margin-block-end: var(--space-10); }
   .design-system-hero h1 { max-inline-size: 12ch; margin-block-end: var(--space-6); font-size: var(--display-xl); letter-spacing: -0.06em; word-break: keep-all; }
   .design-system-hero > p:last-child { max-inline-size: 46rem; margin: 0; color: var(--color-text-muted); font-size: var(--text-md); }
-  .design-system-section { padding-block: var(--design-system-section-space); }
+  .design-system-section { padding-block: var(--space-section); }
   .design-system-section > :global(.section-intro), .design-system-section > .container > :global(.section-intro) { margin-block-end: var(--space-10); }
   .design-system-section--soft { background: var(--color-surface-soft); }
   .design-system-section--dark { background: var(--color-dark-bg); }
@@ -151,7 +151,7 @@ const iconSamples = [
   .design-system-swatch { display: block; inline-size: 100%; block-size: 4rem; margin-block-end: var(--space-3); border: 1px solid var(--color-border); border-radius: calc(var(--radius-sm) / 2); background: var(--swatch); }
   .design-system-foundation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6); margin-block-start: var(--space-8); }
   .design-system-foundation-grid > section { padding: var(--space-6); border-block-start: 2px solid var(--color-text); background: var(--color-surface); }
-  .design-system-display { margin-block: var(--space-6) var(--space-3); font-size: var(--display-lg); font-weight: 700; letter-spacing: -0.05em; line-height: 1.1; }
+  .design-system-display { margin-block: var(--space-6) var(--space-3); font-size: var(--display-lg); font-weight: 700; letter-spacing: -0.05em; line-height: var(--leading-tight); }
   .design-system-heading { font-family: var(--font-latin); font-size: var(--text-2xl); font-weight: 700; }
   .design-system-spacing { display: grid; gap: var(--space-3); margin-block-start: var(--space-6); }
   .design-system-spacing li { display: grid; grid-template-columns: minmax(3rem, 1fr) auto; align-items: center; gap: var(--space-4); }

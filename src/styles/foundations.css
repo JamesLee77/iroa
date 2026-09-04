@@ -62,7 +62,7 @@ svg {
 }
 
 :where(h1, h2, h3, h4) {
-  line-height: 1.15;
+  line-height: var(--leading-tight);
   text-wrap: balance;
 }
 

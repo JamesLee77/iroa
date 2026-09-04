@@ -10,7 +10,7 @@ import {
 } from './type-scale';
 
 /** Stylesheets that paint the published pages. tokens.css declares the scale
- *  itself, and global.css is imported by no layout. */
+ *  itself and sets no font-size of its own. */
 const liveStylesheets = ['src/styles/foundations.css', 'src/styles/components.css', 'src/styles/pages.css'];
 
 /** Print rules set physical point sizes and are outside the screen scale. */
