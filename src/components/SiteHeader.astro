@@ -18,6 +18,7 @@ const navigationItems = english
       { label: 'Network', href: '/en/#network' },
       { label: 'Economy', href: '/en/#economy' },
       { label: 'Whitepaper', href: '/en/whitepaper' },
+      { label: 'Q&A', href: '/en/faq' },
       { label: 'Roadmap', href: '/en/#roadmap' },
     ]
   : [
@@ -25,11 +26,14 @@ const navigationItems = english
       { label: '네트워크', href: '/#network' },
       { label: '이코노미', href: '/#economy' },
       { label: '백서', href: '/whitepaper' },
+      { label: 'Q&A', href: '/faq' },
       { label: '로드맵', href: '/#roadmap' },
     ];
+const translatable = ['/whitepaper', '/faq'];
+const hasTranslation = (path: string) => translatable.some((base) => path === base || path.startsWith(`${base}/`));
 const languageHref = english
-  ? (currentPath.startsWith('/en/whitepaper') ? currentPath.replace(/^\/en/, '') : '/')
-  : (currentPath.startsWith('/whitepaper') ? `/en${currentPath}` : '/en/');
+  ? (hasTranslation(currentPath.replace(/^\/en/, '')) ? currentPath.replace(/^\/en/, '') : '/')
+  : (hasTranslation(currentPath) ? `/en${currentPath}` : '/en/');
 const copy = english
   ? { home: 'IROA.AI home', nav: 'Primary navigation', mobileNav: 'Mobile navigation', menu: 'Menu', cta: 'Read the whitepaper', language: '한국어' }
   : { home: 'IROA.AI 홈', nav: '주요 메뉴', mobileNav: '모바일 메뉴', menu: '메뉴', cta: '웹 백서 읽기', language: 'English' };

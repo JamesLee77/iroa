@@ -1,0 +1,78 @@
+---
+import type { FaqPageContent } from '../../types/faq';
+import StatusBadge from '../primitives/StatusBadge.astro';
+
+interface Props {
+  content: FaqPageContent;
+  locale?: 'ko' | 'en';
+}
+
+const { content, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
+const ordered = content.groups.flatMap((group) => group.entries);
+const numberOf = new Map(ordered.map((entry, index) => [entry.id, index + 1]));
+---
+
+<section class="home-section faq container" aria-labelledby="faq-title">
+  <div class="faq__intro">
+    <p class="faq__eyebrow">{content.eyebrow}</p>
+    <h1 id="faq-title">{content.title}</h1>
+    <p class="faq__lead">{content.lead}</p>
+  </div>
+
+  <p class="faq__notice" role="note">{content.notice}</p>
+
+  <nav class="faq__contents" aria-label={content.contentsLabel}>
+    <ol>
+      {
+        ordered.map((entry) => (
+          <li>
+            <a href={`#${entry.id}`}>
+              <span class="tabular" aria-hidden="true">Q{numberOf.get(entry.id)}</span>
+              <span>{entry.question}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+
+  {
+    content.groups.map((group) => (
+      <div class="faq__group" role="group" aria-labelledby={`${group.id}-title`}>
+        <h2 class="faq__group-title" id={`${group.id}-title`}>{group.title}</h2>
+        <dl class="faq__entries">
+          {group.entries.map((entry) => (
+            <div class="faq__entry" id={entry.id}>
+              <dt>
+                <span class="faq__mark tabular" aria-hidden="true">Q{numberOf.get(entry.id)}</span>
+                <span class="faq__question">{entry.question}</span>
+                {entry.status && <StatusBadge status={entry.status} locale={locale} />}
+              </dt>
+              <dd>
+                {entry.answer.map((paragraph) => <p>{paragraph}</p>)}
+                {entry.points && (
+                  <ul>
+                    {entry.points.map((point) => <li>{point}</li>)}
+                  </ul>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    ))
+  }
+
+  <div class="faq__closing">
+    <h2>{content.closing.title}</h2>
+    <blockquote><p>{content.closing.message}</p></blockquote>
+    <a class="faq__cta" href={content.whitepaperCta.href}>{content.whitepaperCta.label}</a>
+  </div>
+
+  <p class="faq__foot">
+    {english
+      ? 'Every answer describes the project’s intent as of this page’s publication and is not a service guarantee.'
+      : '모든 답변은 이 페이지 게시 시점의 프로젝트 방향을 설명하며, 서비스 제공을 보장하지 않습니다.'}
+  </p>
+</section>

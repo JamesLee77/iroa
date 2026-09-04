@@ -1,0 +1,17 @@
+---
+import FaqDirectory from '../../components/sections/FaqDirectory.astro';
+import { faqEn } from '../../content/faq.en';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  title="IROA.AI | Core questions and answers"
+  description="Twenty-two questions covering IROA’s purpose, users, service direction, data principles, and phased plan."
+  canonicalPath="/en/faq"
+  alternatePath="/faq"
+  locale="en"
+>
+  <div class="page--faq">
+    <FaqDirectory content={faqEn} locale="en" />
+  </div>
+</SiteLayout>

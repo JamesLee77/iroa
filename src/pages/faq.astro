@@ -1,0 +1,16 @@
+---
+import FaqDirectory from '../components/sections/FaqDirectory.astro';
+import { faqKo } from '../content/faq.ko';
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  title="IROA.AI | 핵심 질문과 답변"
+  description="이로아 프로젝트의 목적, 이용자, 서비스 방향, 개인정보 원칙, 추진계획을 22개 질문으로 정리했습니다."
+  canonicalPath="/faq"
+  alternatePath="/en/faq"
+>
+  <div class="page--faq">
+    <FaqDirectory content={faqKo} locale="ko" />
+  </div>
+</SiteLayout>
