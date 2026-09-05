@@ -28,6 +28,25 @@ class WhitepaperPdfKoreanTextTest(unittest.TestCase):
             "PDF must embed a Korean Noto Sans font so Hangul renders visibly.",
         )
 
+    def test_cover_describes_the_illustration_it_actually_prints(self) -> None:
+        """The cover once carried a caption for a photograph that had been
+        replaced by the ecosystem illustration, so a reader was told about an
+        image the page no longer showed. The caption was dropped rather than
+        rewritten: the export is a headless-Chrome print whose glyphs are Type 3
+        drawing procedures, so replacement wording has no glyphs to set."""
+        cover = subprocess.check_output(
+            ["pdftotext", "-f", "1", "-l", "1", str(PDF_PATH), "-"],
+            text=True,
+        )
+        self.assertNotIn("차를 마시며", cover)
+        self.assertNotIn("두 명의 고령자", cover)
+        for line in (
+            "IROA.AI 백서",
+            "일상을 이롭게. 필요한 일을 끝까지.",
+            "노인과 장애인의 일상을 끝까지 돕는 AI 지원망",
+        ):
+            self.assertIn(line, cover)
+
     def test_pdf_keeps_original_page_layout_and_exact_image_slots(self) -> None:
         info = subprocess.check_output(["pdfinfo", str(PDF_PATH)], text=True)
         self.assertRegex(info, r"(?m)^Pages:\s+52$")
