@@ -10,8 +10,9 @@ const sepolia = {
   chainId: '84532',
   createdAt: '2026-09-10T00:00:00Z',
   contracts: {
+    token: address('9'),
     nodeRegistry: address('a'),
-    receiptRootRegistry: address('b'),
+    rootRegistry: address('b'),
     rewardDistributor: address('c'),
   },
 };
@@ -21,14 +22,15 @@ const mainnet = { ...sepolia, profile: 'base-mainnet', chainId: '8453' };
 describe('public network source', () => {
   it('shows nothing when only the schema exists, so an undeployed network never renders as live', () => {
     expect(selectNetworkSource({ 'schema.json': { title: 'schema' } })).toEqual({ kind: 'none' });
+    expect(selectNetworkSource({ 'base-sepolia.json': sepolia })).toEqual({ kind: 'none' });
   });
 
   it('never publishes the local profile', () => {
-    expect(selectNetworkSource({ 'local.json': { ...sepolia, profile: 'local', chainId: '31337' } })).toEqual({ kind: 'none' });
+    expect(selectNetworkSource({ 'local/v1.json': { ...sepolia, profile: 'local', chainId: '31337' } })).toEqual({ kind: 'none' });
   });
 
   it('shows Base Sepolia as the validation network when mainnet is not deployed', () => {
-    const source = selectNetworkSource({ 'base-sepolia.json': sepolia });
+    const source = selectNetworkSource({ 'base-sepolia/v1.json': sepolia });
     expect(source.kind).toBe('deployment');
     if (source.kind !== 'deployment') return;
     expect(source.deployment.profile).toBe('base-sepolia');
@@ -37,7 +39,7 @@ describe('public network source', () => {
   });
 
   it('prefers the mainnet manifest once it exists', () => {
-    const source = selectNetworkSource({ 'base-sepolia.json': sepolia, 'base-mainnet.json': mainnet });
+    const source = selectNetworkSource({ 'base-sepolia/v1.json': sepolia, 'base-mainnet/v1.json': mainnet });
     expect(source.kind === 'deployment' && source.deployment.profile).toBe('base-mainnet');
   });
 
@@ -60,5 +62,12 @@ describe('public network source', () => {
   it('rejects a manifest that lacks one of the three contracts the page describes', () => {
     const { rewardDistributor: _omitted, ...partial } = sepolia.contracts;
     expect(() => readPublicDeployment('base-sepolia', { ...sepolia, contracts: partial })).toThrow(/rewardDistributor/);
+  });
+
+  it('reads the root registry under the deploy script name and the contract name alike', () => {
+    expect(readPublicDeployment('base-sepolia', sepolia).contracts.receiptRootRegistry).toBe(address('b'));
+    const { rootRegistry, ...rest } = sepolia.contracts;
+    const renamed = { ...sepolia, contracts: { ...rest, receiptRootRegistry: rootRegistry } };
+    expect(readPublicDeployment('base-sepolia', renamed).contracts.receiptRootRegistry).toBe(address('b'));
   });
 });
