@@ -37,7 +37,7 @@ contract V2ScheduleImporter {
     uint256 public totalImportedRemaining;
 
     mapping(bytes32 sourceScheduleId => bool imported) public importedSourceSchedule;
-    mapping(bytes32 sourceScheduleId => ImportedSchedule schedule) private _schedules;
+    mapping(bytes32 sourceScheduleId => ImportedSchedule schedule) internal _schedules;
     mapping(bytes32 sourceScheduleId => mapping(uint256 pointIndex => uint256 cumulativeAmount))
         public cumulativeReleasePoint;
 
@@ -49,6 +49,14 @@ contract V2ScheduleImporter {
 
     function importSchedule(IROAMigrationTypes.ScheduleSnapshot calldata snapshot)
         external
+        virtual
+        returns (uint256 remaining, bytes32 snapshotHash)
+    {
+        return _importSchedule(snapshot);
+    }
+
+    function _importSchedule(IROAMigrationTypes.ScheduleSnapshot calldata snapshot)
+        internal
         returns (uint256 remaining, bytes32 snapshotHash)
     {
         if (msg.sender != migrationContract) revert OnlyMigrationContract(msg.sender);

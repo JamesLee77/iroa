@@ -67,7 +67,7 @@
           "enum": ["node", "ecosystem", "research", "team", "investor", "foundation", "liquidity"]
         },
         "label": { "type": "string", "minLength": 1 },
-        "kind": { "enum": ["monthly", "cliff-linear", "liquidity", "v2-importer"] },
+        "kind": { "enum": ["monthly", "cliff-linear", "liquidity", "v2-vault"] },
         "address": { "$ref": "#/$defs/address" },
         "allocation": { "type": "string", "pattern": "^[1-9][0-9]*$" },
         "beneficiary": { "$ref": "#/$defs/address" },

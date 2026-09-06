@@ -1,5 +1,5 @@
 import { pathToFileURL } from "node:url";
-import { Contract, Interface, ZeroHash, id } from "ethers";
+import { Contract, Interface, ZeroAddress, ZeroHash, id } from "ethers";
 import { network } from "hardhat";
 import {
   ALLOCATIONS,
@@ -126,18 +126,30 @@ async function deployPhase(
   ]);
   await migration.waitForDeployment();
 
-  const importers = [];
-  for (const sourceVault of v1Manifest.vaults) {
-    const importer = await ethers.deployContract("V2ScheduleImporter", [v2.target, migration.target]);
-    await importer.waitForDeployment();
-    importers.push(importer);
+  // One V2ScheduleVault per V1 vault. The vault keeps the migrated schedule and pays it out
+  // with the V1 calendar: managed emission (ecosystem, research) through the release
+  // manager, the NODE emission through the reward distributor, everything else to its
+  // beneficiary. The Timelock administers every vault.
+  const releaseManager = requireAddress(process.env.RELEASE_MANAGER, "RELEASE_MANAGER");
+  const v2Vaults: Array<{ getAddress(): Promise<string> }> = [];
+  for (const allocation of ALLOCATIONS) {
+    const managed = allocation.kind === "monthly" && allocation.key !== "node";
+    const vault = await ethers.deployContract("V2ScheduleVault", [
+      v2.target,
+      migration.target,
+      timelockAddress,
+      managed ? releaseManager : ZeroAddress,
+      allocation.key === "node",
+    ]);
+    await vault.waitForDeployment();
+    v2Vaults.push(vault);
   }
   const vaults: VaultManifestEntry[] = await Promise.all(
     ALLOCATIONS.map(async (allocation, index) => ({
       key: allocation.key,
       label: allocation.label,
-      kind: "v2-importer" as const,
-      address: await importers[index].getAddress(),
+      kind: "v2-vault" as const,
+      address: await v2Vaults[index].getAddress(),
       allocation: allocation.amount.toString(),
       sourceV1Vault: v1Manifest.vaults[index].address,
     })),
