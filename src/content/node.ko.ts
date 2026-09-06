@@ -106,13 +106,37 @@ export const nodeKo: NodePageContent = {
     },
     metrics: [
       { id: 'active-nodes', label: '활성 NODE', description: '승인(Active) 상태만 셉니다. 승인 대기는 포함하지 않습니다.' },
-      { id: 'trust-mix', label: '신뢰 수준 분포', description: '활성 NODE의 N0–N4 구성' },
+      { id: 'trust-mix', label: '신뢰 수준 분포', description: '활성 NODE의 N0–N3 구성. N4는 개인 기기라 등록 대상이 아닙니다.' },
       { id: 'finalized-epochs', label: '확정 에폭', description: '이의 창을 지나 확정된 월별 결산 루트 수' },
       { id: 'last-root', label: '마지막 결산 확정', description: '가장 최근 RootFinalized 블록 시각' },
       { id: 'claims', label: '보상 청구', description: '건수만 셉니다. 금액은 합산해 표시하지 않습니다.' },
     ],
     placeholder: '—',
     profileLabels: { network: '네트워크', release: '릴리스', contracts: '계약', explorer: 'BaseScan에서 보기' },
+    scope: {
+      full: '배포 블록부터의 전체 이력입니다.',
+      window: '최근 {blocks}블록 창의 이력입니다. manifest에 배포 블록이 없어 그 이전은 읽지 않습니다.',
+    },
+    updated: {
+      label: '{time} 갱신 · 30초마다 다시 읽습니다.',
+      failed: '갱신 실패 · {time} · 마지막으로 읽은 값을 그대로 둡니다.',
+      loading: '체인에서 읽는 중입니다.',
+    },
+    activity: {
+      title: '활동 기록',
+      empty: '아직 기록된 활동이 없습니다.',
+      templates: {
+        registered: '{level} NODE {id} 등록 · 승인 대기',
+        approved: 'NODE {id} 승인',
+        suspended: 'NODE {id} 정지',
+        revoked: 'NODE {id} 폐기',
+        reinstated: 'NODE {id} 재개',
+        rootProposed: '{epoch} 에폭 결산 루트 제안 · 이의 창 열림',
+        rootFinalized: '{epoch} 에폭 결산 확정',
+        rewardClaimed: '{epoch} 에폭 보상 청구 1건',
+      },
+    },
+    viz: { label: '신뢰 수준별 활성 NODE와 확정 에폭', hub: '확정 에폭' },
   },
   pilot: {
     title: '파일럿 단계',

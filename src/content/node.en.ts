@@ -106,13 +106,37 @@ export const nodeEn: NodePageContent = {
     },
     metrics: [
       { id: 'active-nodes', label: 'Active NODEs', description: 'Counts Active status only; pending registrations are excluded.' },
-      { id: 'trust-mix', label: 'Trust-level mix', description: 'N0–N4 composition of active NODEs' },
+      { id: 'trust-mix', label: 'Trust-level mix', description: 'N0–N3 composition of active NODEs. N4 is a personal device and is never registered.' },
       { id: 'finalized-epochs', label: 'Finalized epochs', description: 'Monthly settlement roots finalized after the challenge window' },
       { id: 'last-root', label: 'Last settlement finalized', description: 'Block time of the most recent RootFinalized' },
       { id: 'claims', label: 'Reward claims', description: 'Count only; amounts are never summed on this page.' },
     ],
     placeholder: '—',
     profileLabels: { network: 'Network', release: 'Release', contracts: 'Contracts', explorer: 'View on BaseScan' },
+    scope: {
+      full: 'Full history from the deployment block.',
+      window: 'History of the most recent {blocks} blocks; the manifest names no deployment block, so nothing earlier is read.',
+    },
+    updated: {
+      label: 'Updated {time} · re-read every 30 seconds.',
+      failed: 'Update failed · {time} · the last values read are kept.',
+      loading: 'Reading from the chain.',
+    },
+    activity: {
+      title: 'Activity',
+      empty: 'No activity recorded yet.',
+      templates: {
+        registered: '{level} NODE {id} registered · pending approval',
+        approved: 'NODE {id} approved',
+        suspended: 'NODE {id} suspended',
+        revoked: 'NODE {id} revoked',
+        reinstated: 'NODE {id} reinstated',
+        rootProposed: 'Epoch {epoch} settlement root proposed · challenge window open',
+        rootFinalized: 'Epoch {epoch} settlement finalized',
+        rewardClaimed: '1 reward claim · epoch {epoch}',
+      },
+    },
+    viz: { label: 'Active NODEs per trust level and finalized epochs', hub: 'Epochs' },
   },
   pilot: {
     title: 'Pilot stages',

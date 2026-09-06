@@ -81,6 +81,18 @@ describe('published NODE page content', () => {
     });
   }
 
+  it('keeps every substitution token the activity sentences depend on', () => {
+    for (const content of [nodeKo, nodeEn]) {
+      const { templates } = content.networkState.activity;
+      expect(templates.registered).toContain('{level}');
+      for (const key of ['registered', 'approved', 'suspended', 'revoked', 'reinstated'] as const) expect(templates[key]).toContain('{id}');
+      for (const key of ['rootProposed', 'rootFinalized', 'rewardClaimed'] as const) expect(templates[key]).toContain('{epoch}');
+      expect(content.networkState.updated.label).toContain('{time}');
+      expect(content.networkState.updated.failed).toContain('{time}');
+      expect(content.networkState.scope.window).toContain('{blocks}');
+    }
+  });
+
   it('keeps both locales in step so the language switch never drops a block', () => {
     const shape = (content: NodePageContent) => ({
       metrics: content.networkState.metrics.map((metric) => metric.id),
@@ -94,6 +106,7 @@ describe('published NODE page content', () => {
         content.networkState.status,
         content.participation.status,
       ],
+      templates: Object.keys(content.networkState.activity.templates).sort(),
       counts: [
         content.definition.capsule.length,
         content.operator.steps.length,
