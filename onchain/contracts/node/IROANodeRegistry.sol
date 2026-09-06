@@ -48,6 +48,7 @@ contract IROANodeRegistry is AccessControl, EIP712 {
     );
     event NodeStatusChanged(bytes32 indexed nodeId, NodeStatus indexed previousStatus, NodeStatus indexed newStatus);
     event DeviceKeyRevoked(bytes32 indexed nodeId, bytes32 indexed deviceKeyHash);
+    event NodeRejected(bytes32 indexed nodeId, bytes32 indexed deviceKeyHash);
     event OperatorWalletChanged(
         bytes32 indexed nodeId,
         address indexed previousWallet,
@@ -106,6 +107,19 @@ contract IROANodeRegistry is AccessControl, EIP712 {
         _setStatus(nodeId, node, NodeStatus.Active);
     }
 
+    /// @notice Closes a registration that was never approved and frees its device key.
+    /// Registration is open, so anyone could register a real operator's device-key hash first
+    /// and lock them out; rejection returns the key. A key that was ever live stays bound
+    /// through `revokeDeviceKey` because it may have been compromised.
+    function rejectNode(bytes32 nodeId) external onlyRole(COMPLIANCE_ROLE) {
+        NodeRecord storage node = _requireNode(nodeId);
+        if (node.status != NodeStatus.Pending) revert InvalidNodeStatus(nodeId, node.status);
+
+        delete deviceKeyNode[node.deviceKeyHash];
+        _setStatus(nodeId, node, NodeStatus.Revoked);
+        emit NodeRejected(nodeId, node.deviceKeyHash);
+    }
+
     function suspendNode(bytes32 nodeId) external onlyRole(SUSPENDER_ROLE) {
         NodeRecord storage node = _requireNode(nodeId);
         if (node.status != NodeStatus.Active) revert InvalidNodeStatus(nodeId, node.status);
@@ -154,23 +168,18 @@ contract IROANodeRegistry is AccessControl, EIP712 {
     }
 
     function operatorWallet(bytes32 nodeId) external view returns (address) {
-        return _requireNodeView(nodeId).operatorWallet;
+        return _requireNode(nodeId).operatorWallet;
     }
 
     function operatorIdHash(bytes32 nodeId) external view returns (bytes32) {
-        return _requireNodeView(nodeId).operatorIdHash;
+        return _requireNode(nodeId).operatorIdHash;
     }
 
     function nodeStatus(bytes32 nodeId) external view returns (NodeStatus) {
-        return _requireNodeView(nodeId).status;
+        return _requireNode(nodeId).status;
     }
 
     function _requireNode(bytes32 nodeId) private view returns (NodeRecord storage node) {
-        if (!_registered[nodeId]) revert NodeNotRegistered(nodeId);
-        node = _nodes[nodeId];
-    }
-
-    function _requireNodeView(bytes32 nodeId) private view returns (NodeRecord storage node) {
         if (!_registered[nodeId]) revert NodeNotRegistered(nodeId);
         node = _nodes[nodeId];
     }

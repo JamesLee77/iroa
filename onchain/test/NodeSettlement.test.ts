@@ -168,6 +168,48 @@ describe("IROA NODE settlement", function () {
     ).to.be.revertedWithCustomError(nodeRegistry, "DeviceKeyAlreadyRegistered");
   });
 
+  it("frees a squatted device key when compliance rejects the pending registration", async function () {
+    const { ethers, nodeRegistry, compliance, operator, other } = await deploySettlementFixture();
+    const deviceKeyHash = ethers.id("device-key-real");
+    const squattedNodeId = ethers.id("squatter-node");
+    const realNodeId = ethers.id("real-node");
+
+    await nodeRegistry.connect(other).registerNode(squattedNodeId, ethers.id("squatter"), deviceKeyHash, 1);
+    await expect(
+      nodeRegistry.connect(operator).registerNode(realNodeId, ethers.id("operator-1"), deviceKeyHash, 2),
+    ).to.be.revertedWithCustomError(nodeRegistry, "DeviceKeyAlreadyRegistered");
+
+    await expect(nodeRegistry.connect(compliance).rejectNode(squattedNodeId))
+      .to.emit(nodeRegistry, "NodeRejected")
+      .withArgs(squattedNodeId, deviceKeyHash);
+    expect(await nodeRegistry.nodeStatus(squattedNodeId)).to.equal(3n);
+    expect(await nodeRegistry.deviceKeyNode(deviceKeyHash)).to.equal(ethers.ZeroHash);
+
+    await nodeRegistry.connect(operator).registerNode(realNodeId, ethers.id("operator-1"), deviceKeyHash, 2);
+    expect(await nodeRegistry.deviceKeyNode(deviceKeyHash)).to.equal(realNodeId);
+    // The rejected registration is closed for good.
+    await expect(nodeRegistry.connect(compliance).approveNode(squattedNodeId)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "InvalidNodeStatus",
+    );
+  });
+
+  it("never rejects a NODE that was already approved, and keeps a revoked key bound", async function () {
+    const { ethers, nodeRegistry, compliance, operator, nodeId } = await deploySettlementFixture();
+
+    await expect(nodeRegistry.connect(compliance).rejectNode(nodeId)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "InvalidNodeStatus",
+    );
+    await expect(nodeRegistry.connect(operator).rejectNode(nodeId)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "AccessControlUnauthorizedAccount",
+    );
+
+    await nodeRegistry.connect(operator).revokeDeviceKey(nodeId);
+    expect(await nodeRegistry.deviceKeyNode(ethers.id("device-key-1"))).to.equal(nodeId);
+  });
+
   it("requires both current-operator EIP-712 authorization and compliance execution for wallet changes", async function () {
     const { ethers, networkHelpers, nodeRegistry, compliance, operator, other, nodeId } =
       await deploySettlementFixture();
