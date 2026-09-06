@@ -15,3 +15,8 @@ public/generated/
 onchain/artifacts/
 onchain/cache/
 onchain/types/
+
+# Local secrets and deployment inputs (names live in onchain/.env.example)
+.env
+.env.*
+!.env.example

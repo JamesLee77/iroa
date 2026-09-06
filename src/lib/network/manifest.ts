@@ -69,11 +69,12 @@ export function readPublicDeployment(profile: PublicProfile, manifest: unknown):
   }
   const contracts = manifest.contracts;
   if (!isRecord(contracts)) throw new Error(`deployment manifest for ${profile} lacks contracts`);
-  for (const name of ['nodeRegistry', 'receiptRootRegistry', 'rewardDistributor'] as const) {
-    if (!isAddress(contracts[name])) {
-      throw new Error(`deployment manifest for ${profile} lacks a ${name} address`);
-    }
-  }
+  // The deploy script names the receipt-root registry `rootRegistry`; older drafts used the
+  // contract's full name. Either spelling is accepted, the first one found wins.
+  const receiptRootRegistry = contracts.rootRegistry ?? contracts.receiptRootRegistry;
+  if (!isAddress(contracts.nodeRegistry)) throw new Error(`deployment manifest for ${profile} lacks a nodeRegistry address`);
+  if (!isAddress(receiptRootRegistry)) throw new Error(`deployment manifest for ${profile} lacks a rootRegistry address`);
+  if (!isAddress(contracts.rewardDistributor)) throw new Error(`deployment manifest for ${profile} lacks a rewardDistributor address`);
   const controls = isRecord(manifest.controls) ? manifest.controls : {};
   const deploymentBlockText = controls.deploymentBlock;
   if (deploymentBlockText !== undefined && !(typeof deploymentBlockText === 'string' && /^\d+$/.test(deploymentBlockText))) {
@@ -85,9 +86,9 @@ export function readPublicDeployment(profile: PublicProfile, manifest: unknown):
     release: manifest.release,
     createdAt: manifest.createdAt,
     contracts: {
-      nodeRegistry: contracts.nodeRegistry as string,
-      receiptRootRegistry: contracts.receiptRootRegistry as string,
-      rewardDistributor: contracts.rewardDistributor as string,
+      nodeRegistry: contracts.nodeRegistry,
+      receiptRootRegistry,
+      rewardDistributor: contracts.rewardDistributor,
     },
     explorer: EXPLORERS[profile],
     rpcUrl: RPC_URLS[profile],
@@ -97,21 +98,23 @@ export function readPublicDeployment(profile: PublicProfile, manifest: unknown):
 
 /**
  * Picks the manifest the site publishes from the files under
- * `onchain/deployments/`, keyed by file name.
+ * `onchain/deployments/`, keyed by the path the deploy scripts write:
+ * `<profile>/v1.json` for the V1 release. A V2 migration manifest does not
+ * replace it — the node registry and root registry are the same contracts.
  */
 export function selectNetworkSource(manifests: Readonly<Record<string, unknown>>): NetworkSource {
   for (const profile of ['base-mainnet', 'base-sepolia'] as const) {
-    const manifest = manifests[`${profile}.json`];
+    const manifest = manifests[`${profile}/v1.json`];
     if (manifest !== undefined) return { kind: 'deployment', deployment: readPublicDeployment(profile, manifest) };
   }
   return { kind: 'none' };
 }
 
-const manifestFiles = import.meta.glob('../../../onchain/deployments/*.json', { eager: true, import: 'default' });
+const manifestFiles = import.meta.glob('../../../onchain/deployments/*/v1.json', { eager: true, import: 'default' });
 
 /** The network source resolved at build time from the repository's manifests. */
 export const NETWORK_SOURCE: NetworkSource = selectNetworkSource(
   Object.fromEntries(
-    Object.entries(manifestFiles).map(([path, manifest]) => [path.slice(path.lastIndexOf('/') + 1), manifest]),
+    Object.entries(manifestFiles).map(([path, manifest]) => [path.split('/').slice(-2).join('/'), manifest]),
   ),
 );

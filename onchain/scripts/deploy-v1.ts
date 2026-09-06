@@ -57,6 +57,11 @@ export async function deployV1(existingConnection?: NetworkConnection): Promise<
 
   const token = await ethers.deployContract("IROATokenV1", [genesisSafe, deployerAddress, pauserSafe]);
   await token.waitForDeployment();
+  // The public site scans events from here; the block of the first contract is the floor
+  // for every contract in this manifest.
+  const timelockReceipt = await timelock.deploymentTransaction()?.wait();
+  const deploymentBlock = timelockReceipt?.blockNumber;
+  if (deploymentBlock === undefined || deploymentBlock === null) throw new Error("timelock deployment block unavailable");
 
   const allocationByKey = Object.fromEntries(ALLOCATIONS.map((entry) => [entry.key, entry.amount]));
   const node = await ethers.deployContract("MonthlyEmissionVault", [
@@ -185,6 +190,7 @@ export async function deployV1(existingConnection?: NetworkConnection): Promise<
     vaults,
     bytecodeHashes,
     controls: {
+      deploymentBlock: String(deploymentBlock),
       genesisSupplyRecipient: genesisSafe,
       allocationExecuted: false,
       rolesHandedOff: false,
