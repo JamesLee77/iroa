@@ -22,6 +22,10 @@ export interface PublicDeployment {
     rewardDistributor: string;
   };
   explorer: string;
+  /** Public JSON-RPC endpoint the page polls (owner decision Q3: the Base public RPC). */
+  rpcUrl: string;
+  /** Block the contracts were deployed at, when the manifest's `controls` record it. */
+  deploymentBlock?: bigint;
 }
 
 export type NetworkSource = { kind: 'none' } | { kind: 'deployment'; deployment: PublicDeployment };
@@ -29,6 +33,11 @@ export type NetworkSource = { kind: 'none' } | { kind: 'deployment'; deployment:
 const EXPLORERS: Record<PublicProfile, string> = {
   'base-sepolia': 'https://sepolia.basescan.org',
   'base-mainnet': 'https://basescan.org',
+};
+
+const RPC_URLS: Record<PublicProfile, string> = {
+  'base-sepolia': 'https://sepolia.base.org',
+  'base-mainnet': 'https://mainnet.base.org',
 };
 
 const CHAIN_IDS: Record<PublicProfile, 84532 | 8453> = {
@@ -65,6 +74,11 @@ export function readPublicDeployment(profile: PublicProfile, manifest: unknown):
       throw new Error(`deployment manifest for ${profile} lacks a ${name} address`);
     }
   }
+  const controls = isRecord(manifest.controls) ? manifest.controls : {};
+  const deploymentBlockText = controls.deploymentBlock;
+  if (deploymentBlockText !== undefined && !(typeof deploymentBlockText === 'string' && /^\d+$/.test(deploymentBlockText))) {
+    throw new Error(`deployment manifest for ${profile} carries a non-numeric deploymentBlock`);
+  }
   return {
     profile,
     chainId: CHAIN_IDS[profile],
@@ -76,6 +90,8 @@ export function readPublicDeployment(profile: PublicProfile, manifest: unknown):
       rewardDistributor: contracts.rewardDistributor as string,
     },
     explorer: EXPLORERS[profile],
+    rpcUrl: RPC_URLS[profile],
+    ...(deploymentBlockText === undefined ? {} : { deploymentBlock: BigInt(deploymentBlockText) }),
   };
 }
 

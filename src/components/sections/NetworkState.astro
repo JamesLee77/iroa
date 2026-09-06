@@ -3,6 +3,7 @@ import type { PublicStatus } from '../../lib/content/status';
 import { NETWORK_SOURCE } from '../../lib/network/manifest';
 import type { NodePageContent } from '../../types/node';
 import StatusBadge from '../primitives/StatusBadge.astro';
+import NetworkStateLive from './NetworkStateLive.astro';
 
 interface Props {
   content: NodePageContent['networkState'];
@@ -21,16 +22,6 @@ const source = NETWORK_SOURCE;
  */
 const status: PublicStatus =
   source.kind === 'none' ? content.status : source.deployment.profile === 'base-mainnet' ? 'current' : 'validation';
-const networkName =
-  source.kind === 'deployment' && source.deployment.profile === 'base-mainnet' ? 'Base' : 'Base Sepolia';
-const contractRows =
-  source.kind === 'deployment'
-    ? [
-        ['IROANodeRegistry', source.deployment.contracts.nodeRegistry],
-        ['IROAReceiptRootRegistry', source.deployment.contracts.receiptRootRegistry],
-        ['IROARewardDistributor', source.deployment.contracts.rewardDistributor],
-      ]
-    : [];
 ---
 
 <section class="node-block network-state" id="network-state" aria-labelledby="network-state-title">
@@ -41,43 +32,23 @@ const contractRows =
   </div>
   <p class="node-block__lead">{content.lead}</p>
 
-  {source.kind === 'none' && (
-    <div class="network-state__source network-state__source--predeploy" role="note">
-      <strong>{content.predeploy.title}</strong>
-      <p>{content.predeploy.description}</p>
-    </div>
-  )}
-
-  {source.kind === 'deployment' && (
-    <dl class="network-state__source">
-      <div><dt>{content.profileLabels.network}</dt><dd class="latin">{networkName}</dd></div>
-      <div><dt>{content.profileLabels.release}</dt><dd class="latin tabular">{source.deployment.release}</dd></div>
-      <div>
-        <dt>{content.profileLabels.contracts}</dt>
-        <dd>
-          <ul>
-            {contractRows.map(([name, address]) => (
-              <li>
-                <span class="latin">{name}</span>
-                <a class="latin tabular" href={`${source.deployment.explorer}/address/${address}`} rel="noreferrer" target="_blank">
-                  {address.slice(0, 10)}…{address.slice(-6)}
-                  <span class="sr-only">{content.profileLabels.explorer}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </dd>
+  {source.kind === 'none' ? (
+    <>
+      <div class="network-state__source network-state__source--predeploy" role="note">
+        <strong>{content.predeploy.title}</strong>
+        <p>{content.predeploy.description}</p>
       </div>
-    </dl>
+      <ul class="network-state__metrics" aria-label={english ? 'Network metrics' : '네트워크 지표'}>
+        {content.metrics.map((metric) => (
+          <li data-metric={metric.id}>
+            <span class="network-state__label">{metric.label}</span>
+            <strong class="network-state__value tabular" data-value="pending">{content.placeholder}</strong>
+            <span class="network-state__description">{metric.description}</span>
+          </li>
+        ))}
+      </ul>
+    </>
+  ) : (
+    <NetworkStateLive content={content} deployment={source.deployment} locale={locale} />
   )}
-
-  <ul class="network-state__metrics" aria-label={english ? 'Network metrics' : '네트워크 지표'}>
-    {content.metrics.map((metric) => (
-      <li data-metric={metric.id}>
-        <span class="network-state__label">{metric.label}</span>
-        <strong class="network-state__value tabular" data-value="pending">{content.placeholder}</strong>
-        <span class="network-state__description">{metric.description}</span>
-      </li>
-    ))}
-  </ul>
 </section>

@@ -41,6 +41,17 @@ describe('public network source', () => {
     expect(source.kind === 'deployment' && source.deployment.profile).toBe('base-mainnet');
   });
 
+  it('reads the deployment block from controls when present and rejects a malformed one', () => {
+    expect(readPublicDeployment('base-sepolia', sepolia).deploymentBlock).toBeUndefined();
+    expect(readPublicDeployment('base-sepolia', { ...sepolia, controls: { deploymentBlock: '123456' } }).deploymentBlock).toBe(123456n);
+    expect(() => readPublicDeployment('base-sepolia', { ...sepolia, controls: { deploymentBlock: 'soon' } })).toThrow(/deploymentBlock/);
+  });
+
+  it('pairs each profile with its public RPC and explorer', () => {
+    expect(readPublicDeployment('base-sepolia', sepolia).rpcUrl).toBe('https://sepolia.base.org');
+    expect(readPublicDeployment('base-mainnet', mainnet).rpcUrl).toBe('https://mainnet.base.org');
+  });
+
   it('rejects a manifest whose profile or chain does not match its file name', () => {
     expect(() => readPublicDeployment('base-sepolia', mainnet)).toThrow(/declares profile base-mainnet/);
     expect(() => readPublicDeployment('base-sepolia', { ...sepolia, chainId: '8453' })).toThrow(/declares chainId 8453/);

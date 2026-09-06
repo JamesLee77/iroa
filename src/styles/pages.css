@@ -844,3 +844,51 @@ dl.network-state__source { display: grid; gap: var(--space-4); margin-block-star
   .network-state__metrics li + li { border-block-start: 1px solid var(--color-border); }
   .node-weights li { grid-template-columns: minmax(0, 6rem) minmax(0, 1fr) 3rem; }
 }
+
+/* ── NODE network · live state ─────────────────────────────────────────── */
+.network-live__board { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-5); align-items: start; }
+.network-live__board .network-state__metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.network-live__board .network-state__metrics li:nth-child(n + 4) { border-block-start: 1px solid var(--color-border); }
+.network-live__board .network-state__metrics li:nth-child(4) { border-inline-start: 0; }
+.network-state__value[data-value='live'] { color: var(--color-text); }
+[data-metric='trust-mix'] .network-state__value { font-size: var(--text-md); line-height: var(--leading-snug); }
+.network-viz { display: grid; justify-items: center; gap: var(--space-3); margin: 0; padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.network-viz svg { max-inline-size: 100%; block-size: auto; overflow: visible; }
+.network-viz figcaption { color: var(--color-text-muted); font-size: var(--text-2xs); text-align: center; }
+.network-viz__orbit { fill: none; stroke: var(--color-border); stroke-width: 1; stroke-dasharray: 2 6; }
+.network-viz__spoke { stroke: var(--color-border); stroke-width: 1; }
+.network-viz__node { fill: var(--color-surface); stroke: var(--color-action); stroke-width: 2; transition: r var(--motion-fast) var(--ease-out); }
+.network-viz__level { fill: var(--color-text-muted); font-family: var(--font-mono); font-size: var(--text-2xs); font-weight: 700; }
+.network-viz__count { fill: var(--color-text); font-family: var(--font-mono); font-size: var(--text-2xs); font-weight: 700; }
+.network-viz__hub { fill: var(--color-dark-bg); stroke: var(--color-verified); stroke-width: 2; }
+.network-viz__hub-label { fill: var(--brand-light-teal); font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: 0.04em; }
+.network-viz__hub-value { fill: var(--color-on-dark); font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 700; }
+.network-live__updated { margin-block: var(--space-4) 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+.network-live__updated[data-updated='failed'] { color: var(--brand-coral); font-weight: 700; }
+.network-live__scope { margin-block: var(--space-1) 0; color: var(--color-text-muted); font-size: var(--text-2xs); }
+.network-live__scope:empty { display: none; }
+.network-activity { margin-block-start: var(--space-7); }
+.network-activity h3 { margin-block-end: var(--space-4); font-size: var(--text-lg); }
+.network-activity__list { display: grid; gap: 0; margin: 0; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); list-style: none; }
+.network-activity__list li { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); align-items: baseline; justify-content: space-between; padding: var(--space-3) var(--space-5); }
+.network-activity__list li + li { border-block-start: 1px solid var(--color-border); }
+.network-activity__list a { font-weight: 700; }
+.network-activity__list time { color: var(--color-text-muted); font-family: var(--font-latin); font-size: var(--text-2xs); }
+.network-activity__empty { color: var(--color-text-muted); }
+
+@media (max-width: 63.99rem) {
+  .network-live__board { grid-template-columns: 1fr; }
+  .network-viz { justify-self: center; }
+  .network-live__board .network-state__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .network-live__board .network-state__metrics li:nth-child(4) { border-inline-start: 1px solid var(--color-border); }
+  .network-live__board .network-state__metrics li:nth-child(n + 3) { border-block-start: 1px solid var(--color-border); }
+}
+
+@media (max-width: 47.99rem) {
+  .network-live__board .network-state__metrics { grid-template-columns: 1fr; }
+  .network-live__board .network-state__metrics li:nth-child(4) { border-inline-start: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-viz__node { transition: none; }
+}

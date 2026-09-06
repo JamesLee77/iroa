@@ -1,0 +1,160 @@
+---
+import type { PublicDeployment } from '../../lib/network/manifest';
+import { RECENT_WINDOW_BLOCKS } from '../../lib/network/snapshot';
+import type { NodePageContent } from '../../types/node';
+
+interface Props {
+  content: NodePageContent['networkState'];
+  deployment: PublicDeployment;
+  locale: 'ko' | 'en';
+}
+
+const { content, deployment, locale } = Astro.props;
+const english = locale === 'en';
+const networkName = deployment.profile === 'base-mainnet' ? 'Base' : 'Base Sepolia';
+const contractRows = [
+  ['IROANodeRegistry', deployment.contracts.nodeRegistry],
+  ['IROAReceiptRootRegistry', deployment.contracts.receiptRootRegistry],
+  ['IROARewardDistributor', deployment.contracts.rewardDistributor],
+] as const;
+
+/* Everything the client script needs travels as data attributes: the page
+   stays a plain document until the script runs, and the script carries no
+   address of its own. */
+const config = JSON.stringify({
+  chainId: deployment.chainId,
+  rpcUrl: deployment.rpcUrl,
+  explorer: deployment.explorer,
+  nodeRegistry: deployment.contracts.nodeRegistry,
+  receiptRootRegistry: deployment.contracts.receiptRootRegistry,
+  rewardDistributor: deployment.contracts.rewardDistributor,
+  deploymentBlock: deployment.deploymentBlock?.toString() ?? null,
+});
+const copy = JSON.stringify({
+  locale,
+  placeholder: content.placeholder,
+  updated: content.updated,
+  activity: content.activity,
+  scope: {
+    full: content.scope.full,
+    window: content.scope.window.replace('{blocks}', RECENT_WINDOW_BLOCKS.toLocaleString(english ? 'en-US' : 'ko-KR')),
+  },
+});
+const levels = [0, 1, 2, 3] as const;
+const RADIUS = 88;
+---
+
+<div class="network-live" data-network-live data-config={config} data-copy={copy}>
+  <dl class="network-state__source">
+    <div><dt>{content.profileLabels.network}</dt><dd class="latin">{networkName}</dd></div>
+    <div><dt>{content.profileLabels.release}</dt><dd class="latin tabular">{deployment.release}</dd></div>
+    <div>
+      <dt>{content.profileLabels.contracts}</dt>
+      <dd>
+        <ul>
+          {contractRows.map(([name, address]) => (
+            <li>
+              <span class="latin">{name}</span>
+              <a class="latin tabular" href={`${deployment.explorer}/address/${address}`} rel="noreferrer" target="_blank">
+                {address.slice(0, 10)}…{address.slice(-6)}
+                <span class="sr-only">{content.profileLabels.explorer}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </dd>
+    </div>
+  </dl>
+
+  <div class="network-live__board">
+    <ul class="network-state__metrics" aria-label={english ? 'Network metrics' : '네트워크 지표'}>
+      {content.metrics.map((metric) => (
+        <li data-metric={metric.id}>
+          <span class="network-state__label">{metric.label}</span>
+          <strong class="network-state__value tabular" data-value="pending">{content.placeholder}</strong>
+          <span class="network-state__description">{metric.description}</span>
+        </li>
+      ))}
+    </ul>
+
+    <figure class="network-viz" aria-label={content.viz.label}>
+      <svg viewBox="-130 -130 260 260" width="260" height="260" role="img" aria-hidden="true" focusable="false">
+        <circle cx="0" cy="0" r={RADIUS} class="network-viz__orbit" />
+        {levels.map((level) => {
+          const angle = (level / levels.length) * Math.PI * 2 - Math.PI / 2;
+          const x = Math.cos(angle) * RADIUS;
+          const y = Math.sin(angle) * RADIUS;
+          return (
+            <g data-viz={`N${level}`} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}>
+              <line x1={(-x).toFixed(1)} y1={(-y).toFixed(1)} x2="0" y2="0" class="network-viz__spoke" />
+              <circle cx="0" cy="0" r="6" class="network-viz__node" />
+              <text x="0" y="-24" text-anchor="middle" class="network-viz__level">N{level}</text>
+              <text x="0" y="32" text-anchor="middle" class="network-viz__count" data-count>0</text>
+            </g>
+          );
+        })}
+        <circle cx="0" cy="0" r="44" class="network-viz__hub" />
+        <text x="0" y="-6" text-anchor="middle" class="network-viz__hub-label">{content.viz.hub}</text>
+        <text x="0" y="18" text-anchor="middle" class="network-viz__hub-value" data-viz="hub">0</text>
+      </svg>
+      <figcaption>{content.viz.label}</figcaption>
+    </figure>
+  </div>
+
+  <p class="network-live__updated" data-updated="loading" aria-live="polite">{content.updated.loading}</p>
+  <p class="network-live__scope" data-scope></p>
+
+  <div class="network-activity">
+    <h3>{content.activity.title}</h3>
+    <ol class="network-activity__list" data-activity>
+      <li class="network-activity__empty">{content.updated.loading}</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+  import { activityLines } from '../../lib/network/activity';
+  import { createNetworkReader } from '../../lib/network/client';
+  import { startNetworkState } from '../../lib/network/hydrate';
+  import { readSnapshot, storageCheckpointStore } from '../../lib/network/snapshot';
+
+  const root = document.querySelector<HTMLElement>('[data-network-live]');
+  if (root?.dataset.config && root.dataset.copy) {
+    const config = JSON.parse(root.dataset.config) as {
+      chainId: 84532 | 8453;
+      rpcUrl: string;
+      explorer: string;
+      nodeRegistry: `0x${string}`;
+      receiptRootRegistry: `0x${string}`;
+      rewardDistributor: `0x${string}`;
+      deploymentBlock: string | null;
+    };
+    const copy = JSON.parse(root.dataset.copy) as Parameters<typeof startNetworkState>[0]['copy'] & {
+      activity: { templates: Parameters<typeof activityLines>[1] };
+    };
+    const reader = createNetworkReader(config);
+    let storage: Storage | undefined;
+    try {
+      storage = window.localStorage;
+    } catch {
+      storage = undefined;
+    }
+    const store = storageCheckpointStore(storage);
+    const key = `iroa-network:${config.chainId}:${config.nodeRegistry.toLowerCase()}`;
+    const deploymentBlock = config.deploymentBlock === null ? undefined : BigInt(config.deploymentBlock);
+
+    startNetworkState({
+      root,
+      document,
+      copy,
+      read: async () => {
+        const snapshot = await readSnapshot({ reader, store, key, deploymentBlock });
+        return {
+          metrics: snapshot.metrics,
+          lines: activityLines(snapshot.events, copy.activity.templates, config.explorer),
+          scope: snapshot.scope,
+        };
+      },
+    });
+  }
+</script>

@@ -97,6 +97,26 @@ export interface NodePageContent {
     metrics: NodeMetric[];
     placeholder: string;
     profileLabels: { network: string; release: string; contracts: string; explorer: string };
+    /** How much history the figures cover; `{blocks}` is substituted. */
+    scope: { full: string; window: string };
+    /** Freshness line under the figures; `{time}` is substituted. */
+    updated: { label: string; failed: string; loading: string };
+    activity: {
+      title: string;
+      empty: string;
+      /** One sentence per event kind; `{level}`, `{id}`, `{epoch}` are substituted. */
+      templates: {
+        registered: string;
+        approved: string;
+        suspended: string;
+        revoked: string;
+        reinstated: string;
+        rootProposed: string;
+        rootFinalized: string;
+        rewardClaimed: string;
+      };
+    };
+    viz: { label: string; hub: string };
   };
   pilot: {
     title: string;
