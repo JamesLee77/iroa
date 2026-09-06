@@ -12,7 +12,7 @@ import {
 import { encodeAbiParameters, keccak256, parseAbiParameters } from 'viem';
 import { z } from 'zod';
 import { DisputeRecordSchema, disputeExclusion, type DisputeRecord } from './disputes.js';
-import { settleEpochBudget, type EpochBudgetSettlement } from './epoch-budget.js';
+import { settleEpochBudget, type EpochBudgetSettlement, type OperatorAdjustment } from './epoch-budget.js';
 import {
   FraudFactsSchema,
   duplicateTaskFingerprints,
@@ -88,6 +88,8 @@ export function buildRoot(input: {
   readonly epoch: number;
   readonly policyVersion: string;
   readonly monthlyBudget: string;
+  /** Penalties and credits carried into this epoch from earlier findings. */
+  readonly adjustments?: readonly OperatorAdjustment[];
   readonly candidates: readonly SettlementCandidate[];
 }): RewardSettlement {
   const epoch = UnixSecondsSchema.parse(input.epoch);
@@ -141,7 +143,7 @@ export function buildRoot(input: {
   }
 
   if (included.length === 0) {
-    const emptyBudget = settleEpochBudget({ monthlyBudget, nodes: [] });
+    const emptyBudget = settleEpochBudget({ monthlyBudget, nodes: [], adjustments: input.adjustments ?? [] });
     return {
       ...emptyBudget,
       epoch,
@@ -168,6 +170,7 @@ export function buildRoot(input: {
   }
   const budget = settleEpochBudget({
     monthlyBudget,
+    adjustments: input.adjustments ?? [],
     nodes: [...scoresByNode.values()].map((entry) => ({
       operatorIdHash: entry.operatorIdHash,
       nodeId: entry.nodeId,

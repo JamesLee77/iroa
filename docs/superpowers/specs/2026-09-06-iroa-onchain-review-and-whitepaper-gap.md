@@ -1,7 +1,7 @@
 # IROA 온체인 계약 소스 리뷰와 백서 달성 설계
 
 날짜: 2026-09-06  
-상태: 리뷰 완료 · 수정 4건 적용 · G1·G3·G4 구현 완료 · G6 결정 (a) 반영 · G2·G5 설계  
+상태: 리뷰 완료 · 수정 4건 적용 · G1·G3·G4·G5 구현 완료 · G6 결정 (a) 반영 · G2 설계(배포 절차만 남음)  
 기준 브랜치: `main` (`35e1117`)  
 대상: `onchain/contracts/` 13개 계약 (token 2, migration 2, vaults 4, settlement 2, node 1, governance 1, test 1)  
 참조: 백서 §16 토큰 이코노미, 파일럿 설계 `2026-08-30-iroa-web3-mainnet-private-pilot-design.md`
@@ -77,7 +77,7 @@
 | G2 | §16.4 NODE 보상이 V2에서 계속 지급 | 분배기·금고가 V1에 고정 | V2 보상 분배기·NODE 금고 없음 |
 | G3 | §8.3 실행 공간의 신뢰 수준과 증명 상태 | 신뢰 수준 고정, 기기 키 소유 증명 없음 | **구현 (2026-09-06): 등록 시 기기 키 EIP-712 서명, `changeTrustLevel`** |
 | G4 | §15.5 보상 분쟁 절차 | 이의는 재단 역할만 | **구현 (2026-09-06): 운영자 포털 → control-api 정산 이의 → 컴플라이언스 검토 → `challengeRoot`** |
-| G5 | §16.4 허위 작업 시 환수 | 청구 후 회수 불가 | 환수 수단 |
+| G5 | §16.4 허위 작업 시 환수 | 청구 후 회수 불가 | **구현 (2026-09-06): verifier 다음 에폭 상계 — 벌칙·정정 원장** |
 | G6 | 창립자 합의서(10% 즉시 교부·처분 제한) vs 팀·자문 금고(24+72개월 베스팅) | 온체인은 베스팅 | **(a) 결정 2026-09-06 — 합의서 v0.2를 금고에 맞춤** |
 
 ### G1 · V2 해제 금고 (구현 완료)
@@ -134,11 +134,23 @@ V2ScheduleImporter (기존, 불변)      V2ScheduleVault (신규)
 
 사유 코드 `TASK_EXCLUDED`·`SCORE_UNDERSTATED`·`RECEIPT_NOT_COUNTED`·`POLICY_VERSION_MISMATCH`·`OTHER` 는 재산출 때 verifier가 다시 보는 입력을 가리킨다. 이의 창(메인넷 7일)을 넘긴 이의는 기각이 아니라 다음 에폭 정정(G5 상계)으로 넘긴다. 관리자 콘솔의 분쟁 화면은 아직 이용자 작업 분쟁(`/v1/admin/disputes`, control-api 미구현)만 다루므로, 정산 이의 검토 화면은 별도 작업이다. V2에서 보증금 기반 공개 이의를 검토한다.
 
-### G5 · 환수
+### G5 · 환수 (구현 완료: 다음 에폭 상계)
 
-청구 이후 회수는 토큰 설계상 불가(강제 이전 없음). 대안 두 가지 중 택일.
-1. **청구 지연**: 확정 후 N개월 청구 유예 — 단순하나 정직한 운영자도 늦게 받음.
-2. **다음 에폭 상계**: 허위가 확인된 운영자의 다음 에폭 점수에서 차감 — verifier `epoch-budget.ts`에 `penalties` 입력 추가. 온체인 변경 없음. **권장.**
+청구 이후 회수는 토큰 설계상 불가(강제 이전 없음). 청구 지연(확정 후 N개월 유예)은 정직한 운영자도 늦게 받게 하므로 택하지 않았다.
+
+`verifier/src/epoch-budget.ts`의 `settleEpochBudget`이 `adjustments` 원장을 받는다.
+
+```
+OperatorAdjustment { operatorIdHash, kind: penalty|credit, amount, reason, sourceEpoch, referenceHash }
+reason: FRAUD_CONFIRMED · SECURITY_VIOLATION · PRIVACY_VIOLATION · OVERPAYMENT_CORRECTION (penalty)
+        DISPUTE_UPHELD_AFTER_WINDOW · UNDERPAYMENT_CORRECTION (credit)
+```
+
+- **penalty**: 운영자의 그 달 보상(상한 적용 후)에서 차감. 0 아래로 내려가지 않으며 미차감 잔액은 `carriedAdjustments`로 다음 에폭에 이월. 차감분은 금고에 남는다(`penaltyAppliedAmount`).
+- **credit**: 같은 달 예산에서 추가 지급하되 운영자 월 5% 상한을 넘지 못한다. 넘는 부분은 이월(`creditAppliedAmount`).
+- 같은 운영자의 원장은 `sourceEpoch` 오름차순 → `referenceHash` 순으로 정산해 결정적이다. 그 달 유효 작업이 없는 운영자의 원장은 전부 이월.
+- `buildRoot`가 `adjustments`를 그대로 넘기므로 리워드 리프는 이미 상계된 금액을 담는다. 온체인 변경 없음.
+- 원장의 출처: 확정 뒤 드러난 허위 작업(`fraud.ts` 코드), 보안·개인정보 위반 판정, 이의 창을 넘겨 인정된 정산 이의(G4 → credit), 과지급 정정. 각 항목은 근거 기록의 해시(`referenceHash`)를 달아야 하며, 다음 에폭 결산 artifact에 이월 잔액이 그대로 실려 감사 가능하다.
 
 ### G6 · 창립자 합의서 정합 (결정: (a))
 
