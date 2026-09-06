@@ -205,6 +205,7 @@ export const faqEn: FaqPageContent = {
             'Rewards could connect to care services, health programmes, donations, and community activity, and the specific structure must be designed after a review of applicable law and regulation.',
           ],
           status: 'validation',
+          link: { label: 'See the NODE operator reward structure', href: '/en/node#rewards' },
         },
       ],
     },

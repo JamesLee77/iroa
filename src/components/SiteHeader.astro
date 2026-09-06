@@ -15,7 +15,7 @@ const whitepaper = english ? '/en/whitepaper' : '/whitepaper';
 const navigationItems = english
   ? [
       { label: 'Protocol', href: '/en/#protocol' },
-      { label: 'Network', href: '/en/#network' },
+      { label: 'Network', href: '/en/node' },
       { label: 'Economy', href: '/en/#economy' },
       { label: 'Whitepaper', href: '/en/whitepaper' },
       { label: 'Q&A', href: '/en/faq' },
@@ -23,13 +23,13 @@ const navigationItems = english
     ]
   : [
       { label: '프로토콜', href: '/#protocol' },
-      { label: '네트워크', href: '/#network' },
+      { label: '네트워크', href: '/node' },
       { label: '이코노미', href: '/#economy' },
       { label: '백서', href: '/whitepaper' },
       { label: 'Q&A', href: '/faq' },
       { label: '로드맵', href: '/#roadmap' },
     ];
-const translatable = ['/whitepaper', '/faq'];
+const translatable = ['/whitepaper', '/faq', '/node'];
 const hasTranslation = (path: string) => translatable.some((base) => path === base || path.startsWith(`${base}/`));
 const languageHref = english
   ? (hasTranslation(currentPath.replace(/^\/en/, '')) ? currentPath.replace(/^\/en/, '') : '/')

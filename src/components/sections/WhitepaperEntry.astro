@@ -35,13 +35,8 @@ const english = locale === 'en';
     </ol>
   </nav>
   <div class="whitepaper-entry__reader" aria-label={english ? 'Web whitepaper preview' : '웹 백서 구성 미리보기'}>
-    <aside>
-      <p class="latin">DOCUMENT INDEX</p>
-      <ol>{english ? <><li class="is-current">01 Core Declaration</li><li>02 Protocol Architecture</li><li>03 Privacy and Safety</li><li>04 Network Economy</li></> : <><li class="is-current">01 핵심 선언</li><li>02 프로토콜 구조</li><li>03 개인정보와 보안</li><li>04 네트워크 경제</li></>}</ol>
-    </aside>
     <article>
       <div class="whitepaper-entry__reader-copy">
-        <p class="whitepaper-entry__breadcrumb latin">IROA.AI / WHITEPAPER / 01</p>
         <FileText aria-hidden="true" size={24} />
         <h3>{english ? 'Connect real-world requests to verifiable outcomes.' : '현실의 요청을 검증 가능한 결과로 연결합니다.'}</h3>
         <p>{english ? 'The whitepaper brings protocol architecture, user authority, Nodes and evidence, settlement boundaries, and roadmap evidence into one reading flow.' : '백서는 프로토콜 아키텍처, 사용자 권한, Node와 증빙, 정산 경계, 로드맵의 근거를 하나의 읽기 흐름으로 제공합니다.'}</p>
@@ -57,7 +52,6 @@ const english = locale === 'en';
           loading="lazy"
         />
       </figure>
-      <div class="whitepaper-entry__mini-path" aria-hidden="true"><span>Request</span><span>Task Capsule</span><span>Node</span><span>Proof</span><span>Base</span></div>
     </article>
   </div>
 </section>

@@ -1,0 +1,245 @@
+---
+import { Image } from 'astro:assets';
+import { ArrowRight } from 'lucide-astro';
+import dilutionChart from '../../../docs/whitepaper/analysis/iroa-node-reward-dilution.png';
+import type { NodePageContent } from '../../types/node';
+import StatusBadge from '../primitives/StatusBadge.astro';
+import NetworkState from './NetworkState.astro';
+
+interface Props {
+  content: NodePageContent;
+  locale?: 'ko' | 'en';
+}
+
+const { content, locale = 'ko' } = Astro.props;
+const english = locale === 'en';
+
+const blocks = [
+  { id: 'node-definition', title: content.definition.title },
+  { id: 'trust-levels', title: content.trustLevels.title },
+  { id: 'operator', title: content.operator.title },
+  { id: 'rewards', title: content.rewards.title },
+  { id: 'dilution', title: content.dilution.title },
+  { id: 'network-state', title: content.networkState.title },
+  { id: 'pilot', title: content.pilot.title },
+  { id: 'participation', title: content.participation.title },
+  { id: 'boundaries', title: content.boundaries.title },
+] as const;
+const indexOf = (id: (typeof blocks)[number]['id']) =>
+  String(blocks.findIndex((block) => block.id === id) + 1).padStart(2, '0');
+---
+
+<div class="node-page container">
+  <header class="node-page__intro">
+    <p class="node-page__eyebrow latin">{content.eyebrow}</p>
+    <h1 id="node-page-title">{content.title}</h1>
+    <p class="node-page__lead">{content.lead}</p>
+  </header>
+
+  <p class="node-page__notice" role="note">{content.notice}</p>
+
+  <nav class="node-page__contents" aria-label={content.contentsLabel}>
+    <ol>
+      {blocks.map((block) => (
+        <li>
+          <a href={`#${block.id}`}>
+            <span class="tabular" aria-hidden="true">{indexOf(block.id)}</span>
+            <span>{block.title}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+
+  <section class="node-block" id="node-definition" aria-labelledby="node-definition-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('node-definition')}</span>
+      <h2 id="node-definition-title">{content.definition.title}</h2>
+      <StatusBadge status={content.definition.status} locale={locale} />
+    </div>
+    <div class="node-block__prose">
+      {content.definition.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+    </div>
+    <div class="node-capsule">
+      <p class="node-capsule__label">{content.definition.capsuleLabel}</p>
+      <ol class="node-capsule__items">
+        {content.definition.capsule.map((item) => <li>{item}</li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="node-block" id="trust-levels" aria-labelledby="trust-levels-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('trust-levels')}</span>
+      <h2 id="trust-levels-title">{content.trustLevels.title}</h2>
+      <StatusBadge status={content.trustLevels.status} locale={locale} />
+    </div>
+    <p class="node-block__lead">{content.trustLevels.lead}</p>
+    <div class="node-table-scroll">
+      <table class="node-table">
+        <thead>
+          <tr>
+            <th scope="col">{content.trustLevels.columns.level}</th>
+            <th scope="col">{content.trustLevels.columns.examples}</th>
+            <th scope="col">{content.trustLevels.columns.allowed}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {content.trustLevels.levels.map((row) => (
+            <tr>
+              <th scope="row"><span class="node-table__level latin">{row.level}</span> {row.name}</th>
+              <td>{row.examples}</td>
+              <td>{row.allowed}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="node-block__note">{content.trustLevels.note}</p>
+  </section>
+
+  <section class="node-block" id="operator" aria-labelledby="operator-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('operator')}</span>
+      <h2 id="operator-title">{content.operator.title}</h2>
+      <StatusBadge status={content.operator.status} locale={locale} />
+    </div>
+    <p class="node-block__lead">{content.operator.lead}</p>
+    <ol class="node-steps">
+      {content.operator.steps.map((step, index) => (
+        <li>
+          <span class="node-steps__index tabular" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <h3>{step.title}</h3>
+          <p>{step.description}</p>
+        </li>
+      ))}
+    </ol>
+    <p class="node-block__note">{content.operator.approvalNote}</p>
+  </section>
+
+  <section class="node-block" id="rewards" aria-labelledby="rewards-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('rewards')}</span>
+      <h2 id="rewards-title">{content.rewards.title}</h2>
+      <StatusBadge status={content.rewards.status} locale={locale} />
+    </div>
+    <p class="node-block__lead">{content.rewards.lead}</p>
+    <div class="node-rewards">
+      <div class="node-rewards__allocation">
+        <p class="node-rewards__label">{content.rewards.allocation.label}</p>
+        <p class="node-rewards__share latin tabular">{content.rewards.allocation.share}</p>
+        <p class="node-rewards__amount latin tabular">{content.rewards.allocation.amount} IROA</p>
+        <p class="node-rewards__source">{content.rewards.allocation.source}</p>
+      </div>
+      <div class="node-rewards__formula">
+        <p class="node-rewards__label">{content.rewards.formulaLabel}</p>
+        <ul class="node-formula" aria-label={content.rewards.formulaLabel}>
+          {content.rewards.formula.map((term) => (
+            <li data-sign={term.sign}>
+              <span class="node-formula__sign latin tabular" aria-hidden="true">{term.sign}</span>
+              <span>{term.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="node-rewards__score">
+        <p class="node-rewards__label">{content.rewards.scoreLabel}</p>
+        <ul class="node-weights" aria-label={content.rewards.scoreLabel}>
+          {content.rewards.scoreWeights.map((weight) => (
+            <li>
+              <span class="node-weights__label">{weight.label}</span>
+              <span class="node-weights__bar" aria-hidden="true"><span style={`inline-size: ${weight.weightPercent}%`}></span></span>
+              <span class="node-weights__value latin tabular">{weight.weightPercent}%</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+    <ul class="node-rules">
+      {content.rewards.rules.map((rule) => <li>{rule}</li>)}
+    </ul>
+  </section>
+
+  <section class="node-block" id="dilution" aria-labelledby="dilution-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('dilution')}</span>
+      <h2 id="dilution-title">{content.dilution.title}</h2>
+      <StatusBadge status={content.dilution.status} locale={locale} />
+    </div>
+    <figure class="node-dilution">
+      <Image
+        src={dilutionChart}
+        alt={content.dilution.alt}
+        widths={[640, 960, 1280]}
+        sizes="(max-width: 1239px) calc(100vw - 2rem), 1240px"
+        format="webp"
+        quality={88}
+        loading="lazy"
+      />
+      <figcaption>
+        <p>{content.dilution.paragraph}</p>
+        <p class="node-dilution__source">{content.dilution.source}</p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <NetworkState content={content.networkState} locale={locale} index={indexOf('network-state')} />
+
+  <section class="node-block" id="pilot" aria-labelledby="pilot-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('pilot')}</span>
+      <h2 id="pilot-title">{content.pilot.title}</h2>
+    </div>
+    <p class="node-block__lead">{content.pilot.lead}</p>
+    <ol class="node-pilot">
+      {content.pilot.stages.map((stage) => (
+        <li>
+          <div class="node-pilot__head">
+            <span class="node-pilot__id latin tabular" aria-hidden="true">{stage.id}</span>
+            <h3>{stage.title}</h3>
+            <StatusBadge status={stage.status} locale={locale} />
+          </div>
+          <dl>
+            <div><dt>{content.pilot.columns.outcome}</dt><dd>{stage.outcome}</dd></div>
+            <div><dt>{content.pilot.columns.entryCriteria}</dt><dd>{stage.entryCriteria}</dd></div>
+          </dl>
+        </li>
+      ))}
+    </ol>
+    <p class="node-block__note">{content.pilot.boundary}</p>
+  </section>
+
+  <section class="node-block" id="participation" aria-labelledby="participation-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('participation')}</span>
+      <h2 id="participation-title">{content.participation.title}</h2>
+      <StatusBadge status={content.participation.status} locale={locale} />
+    </div>
+    <p class="node-block__lead">{content.participation.lead}</p>
+    <ul class="node-requirements">
+      {content.participation.requirements.map((item) => <li>{item}</li>)}
+    </ul>
+    <p class="node-participation__channel">{content.participation.channelLabel}</p>
+    <p class="node-block__note">{content.participation.privacyNotice}</p>
+  </section>
+
+  <section class="node-block node-boundaries" id="boundaries" aria-labelledby="boundaries-title">
+    <div class="node-block__head">
+      <span class="node-block__index tabular" aria-hidden="true">{indexOf('boundaries')}</span>
+      <h2 id="boundaries-title">{content.boundaries.title}</h2>
+    </div>
+    <ul class="node-requirements">
+      {content.boundaries.items.map((item) => <li>{item}</li>)}
+    </ul>
+    <div class="node-page__ctas">
+      <a class="node-page__cta" href={content.whitepaperCta.href}>{content.whitepaperCta.label}<ArrowRight aria-hidden="true" size={18} /></a>
+      <a class="node-page__cta" href={content.faqCta.href}>{content.faqCta.label}<ArrowRight aria-hidden="true" size={18} /></a>
+    </div>
+  </section>
+
+  <p class="node-page__foot">
+    {english
+      ? 'Every section describes the project’s design as of this page’s publication and is not a service or reward guarantee.'
+      : '모든 항목은 이 페이지 게시 시점의 프로젝트 설계를 설명하며, 서비스나 보상을 보장하지 않습니다.'}
+  </p>
+</div>

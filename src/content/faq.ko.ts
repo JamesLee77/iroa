@@ -207,6 +207,7 @@ export const faqKo: FaqPageContent = {
             '보상은 돌봄 서비스 이용, 건강관리 프로그램, 기부 및 지역사회 활동과 연계될 수 있으며, 구체적인 구조는 관련 법률과 제도 검토를 거쳐 설계해야 합니다.',
           ],
           status: 'validation',
+          link: { label: 'NODE 운영자 보상 구조 보기', href: '/node#rewards' },
         },
       ],
     },

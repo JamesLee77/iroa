@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { ArrowRight } from 'lucide-astro';
 import secureProofVisual from '../../assets/home/iroa-secure-proof-v1.png';
 import type { NodeProofContent } from '../../types/home';
 import PrivacyBoundary from '../patterns/PrivacyBoundary.astro';
@@ -18,6 +19,12 @@ const english = locale === 'en';
 
 <section id="network" class="home-section network-proof container" aria-labelledby="network-proof-title">
   <SectionIntro eyebrow="NODE & PROOF" title={content.title} lead={content.description} id="network-proof-title" />
+  {content.directory && (
+    <p class="network-proof__directory">
+      <span>{content.directory.summary}</span>
+      <a href={content.directory.href}>{content.directory.label}<ArrowRight aria-hidden="true" size={18} /></a>
+    </p>
+  )}
   <figure class="network-proof__visual">
     <Image
       src={secureProofVisual}

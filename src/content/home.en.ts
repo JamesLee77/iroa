@@ -6,7 +6,7 @@ import type { HomepageContent } from '../types/home';
 export const homeEn: HomepageContent = {
   navigation: [
     { label: 'Protocol', href: '#protocol' },
-    { label: 'Network', href: '#network' },
+    { label: 'Network', href: '/en/node' },
     { label: 'Economy', href: '#economy' },
     { label: 'Whitepaper', href: '#whitepaper-entry' },
     { label: 'Roadmap', href: '#roadmap' },
@@ -57,6 +57,11 @@ export const homeEn: HomepageContent = {
   network: {
     title: 'Nodes and evidence have separate, verifiable roles.',
     description: 'No Node controls the entire request. User approval, bounded authority, and external outcome checks remain distinct boundaries.',
+    directory: {
+      summary: 'Trust levels run from N0 public compute to N4 personal approval, and operators run NODEs only after qualification and approval.',
+      label: 'Explore the NODE network',
+      href: '/en/node',
+    },
     node: { level: 'N2', status: 'validation', description: 'N2 is the design and review stage for approved access points such as kiosks, welfare centers, and companion devices.' },
     proof: {
       result: 'A task is not complete until its external outcome is verified.',
@@ -100,7 +105,7 @@ export const homeEn: HomepageContent = {
     { title: 'Foundation', status: 'current', description: 'Publish the whitepaper and shared principles, and fix the public status language for each capability.', entryCriteria: 'Public information separates operational evidence from plans.', evidence: 'Whitepaper v1.0 and published design principles' },
     { title: 'Request Validation', status: 'next', description: 'Validate bounded requests that require approval, recovery, and human handoff.', entryCriteria: 'Users understand and can confirm goals and outcomes.', evidence: 'Request lifecycle and field-validation criteria' },
     { title: 'Secure Execution', status: 'planned', description: 'Design and review per-request isolation, one-time permission, and deletion confirmation.', entryCriteria: 'Residual sensitive data and duplicate execution are controlled.', evidence: 'Task Capsule and secure execution principles' },
-    { title: 'Network Research', status: 'research', description: 'Long-term research on institutional links, execution-space rewards, companion devices, and high-risk robotics.', entryCriteria: 'Legal, safety, and field evidence comes first.', evidence: 'Node trust levels and staged safety review' },
+    { title: 'Node Network', status: 'validation', description: 'Approval-based NODE registration, result and deletion receipts, monthly settlement, and reward claims are validated on Base Sepolia, then move through a private-participant pilot and an independent audit to V2. High-risk companion-device and robotics boundaries remain long-term research.', entryCriteria: 'The Base Sepolia deployment manifest and module validation are complete.', evidence: 'Pilot stages A–E and the NODE network page' },
   ],
   contact: {
     title: 'Design the validation scope with institutions and practitioners.', status: 'planned',

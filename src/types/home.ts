@@ -74,6 +74,12 @@ export interface ProtocolContent {
 export interface NodeProofContent {
   title: string;
   description: string;
+  /** One-line span of the trust levels and the link to the NODE page. */
+  directory?: {
+    summary: string;
+    label: string;
+    href: `/${string}`;
+  };
   node: {
     level: 'N0' | 'N1' | 'N2' | 'N3' | 'N4';
     status: PublicStatus;

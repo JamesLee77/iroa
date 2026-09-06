@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const navigationItems = [
   { label: '프로토콜', href: '/#protocol' },
-  { label: '네트워크', href: '/#network' },
+  { label: '네트워크', href: '/node' },
   { label: '이코노미', href: '/#economy' },
   { label: '백서', href: '/whitepaper' },
   { label: '로드맵', href: '/#roadmap' },

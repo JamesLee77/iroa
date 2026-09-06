@@ -1,0 +1,16 @@
+---
+import NodeNetwork from '../components/sections/NodeNetwork.astro';
+import { nodeKo } from '../content/node.ko';
+import SiteLayout from '../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  title="IROA.AI | NODE 네트워크"
+  description="IROA NODE가 무엇이고, 신뢰 수준 N0–N4가 어떤 요청을 맡으며, 운영자 등록·승인과 검증된 작업 보상, 파일럿 단계가 어떻게 이어지는지 설명합니다."
+  canonicalPath="/node"
+  alternatePath="/en/node"
+>
+  <div class="page--node">
+    <NodeNetwork content={nodeKo} locale="ko" />
+  </div>
+</SiteLayout>

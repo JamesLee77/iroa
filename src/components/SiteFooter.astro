@@ -23,7 +23,7 @@ const copy = english
     <nav aria-label={copy.nav}>
       <ul>
         <li><a href={`${root}#protocol`}>{copy.protocol}</a></li>
-        <li><a href={`${root}#network`}>{copy.network}</a></li>
+        <li><a href={english ? '/en/node' : '/node'}>{copy.network}</a></li>
         <li><a href={english ? '/en/whitepaper' : '/whitepaper'}>{copy.whitepaper}</a></li>
         <li><a href={`${root}#roadmap`}>{copy.roadmap}</a></li>
       </ul>

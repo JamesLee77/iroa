@@ -15,7 +15,7 @@ const { content, locale = 'ko' } = Astro.props;
 const english = locale === 'en';
 ---
 
-<section class="home-section settlement-overview container" aria-labelledby="settlement-overview-title">
+<section id="settlement" class="home-section settlement-overview container" aria-labelledby="settlement-overview-title">
   <SectionIntro eyebrow="SETTLEMENT BOUNDARY" title={content.title} lead={content.description} id="settlement-overview-title" />
   <figure class="settlement-overview__visual">
     <Image
