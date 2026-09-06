@@ -62,6 +62,67 @@ export function deriveNodeId(operatorAddressInput: string, deviceKeyHash: Hex32)
     .digest('hex')}` as Hex32;
 }
 
+export interface NodeRegistryDomain {
+  chainId: number;
+  verifyingContract: Address;
+}
+
+export const NODE_REGISTRATION_TYPES = {
+  NodeRegistration: [
+    { name: 'nodeId', type: 'bytes32' },
+    { name: 'operatorWallet', type: 'address' },
+    { name: 'operatorIdHash', type: 'bytes32' },
+    { name: 'trustLevel', type: 'uint8' },
+  ],
+} as const;
+
+const TRUST_LEVEL_CODE = { N0: 0, N1: 1, N2: 2, N3: 3 } as const;
+
+export function nodeRegistrationTypedData(
+  domain: NodeRegistryDomain,
+  registration: { nodeId: Hex32; operatorWallet: Address; operatorIdHash: Hex32; trustLevel: keyof typeof TRUST_LEVEL_CODE },
+) {
+  return {
+    domain: { name: 'IROANodeRegistry', version: '1', chainId: domain.chainId, verifyingContract: domain.verifyingContract },
+    types: NODE_REGISTRATION_TYPES,
+    primaryType: 'NodeRegistration' as const,
+    message: {
+      nodeId: registration.nodeId,
+      operatorWallet: registration.operatorWallet,
+      operatorIdHash: registration.operatorIdHash,
+      trustLevel: TRUST_LEVEL_CODE[registration.trustLevel],
+    },
+  };
+}
+
+/**
+ * Proof that this device holds the key behind its hash: the on-chain registry only binds
+ * a device-key hash to a NODE when the device signed the registration for exactly this
+ * operator wallet, operator id, and trust level. The signature is what the operator pastes
+ * into the portal alongside the challenge signature.
+ */
+export async function signNodeRegistration(input: {
+  secretProvider: DeviceSecretProvider;
+  domain: NodeRegistryDomain;
+  operatorAddress: string;
+  operatorIdHash: Hex32;
+  trustLevel: keyof typeof TRUST_LEVEL_CODE;
+}): Promise<{ nodeId: Hex32; deviceKeyHash: Hex32; deviceAddress: Address; signature: Hex }> {
+  const identity = await getDeviceIdentity(input.secretProvider);
+  const operatorWallet = AddressSchema.parse(getAddress(input.operatorAddress));
+  const nodeId = deriveNodeId(operatorWallet, identity.deviceKeyHash);
+  const typedData = nodeRegistrationTypedData(input.domain, {
+    nodeId,
+    operatorWallet,
+    operatorIdHash: Hex32Schema.parse(input.operatorIdHash),
+    trustLevel: input.trustLevel,
+  });
+  const signature = await input.secretProvider.withPrivateKey((privateKey) =>
+    privateKeyToAccount(privateKey).signTypedData(typedData),
+  );
+  return { nodeId, deviceKeyHash: identity.deviceKeyHash, deviceAddress: identity.deviceAddress, signature };
+}
+
 export async function getDeviceIdentity(secretProvider: DeviceSecretProvider): Promise<DeviceIdentity> {
   const keyVersion = await secretProvider.version();
   return secretProvider.withPrivateKey(async (privateKey) => accountIdentity(privateKeyToAccount(privateKey), keyVersion));

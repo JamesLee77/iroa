@@ -28,6 +28,15 @@ export const NODE_REGISTRY_EVENTS = [
       { name: 'newStatus', type: 'uint8', indexed: true },
     ],
   },
+  {
+    type: 'event',
+    name: 'NodeTrustLevelChanged',
+    inputs: [
+      { name: 'nodeId', type: 'bytes32', indexed: true },
+      { name: 'previousLevel', type: 'uint8', indexed: true },
+      { name: 'newLevel', type: 'uint8', indexed: true },
+    ],
+  },
 ] as const;
 
 export const ROOT_REGISTRY_EVENTS = [
@@ -99,6 +108,7 @@ interface EventBase {
 export type NetworkEvent =
   | (EventBase & { kind: 'NodeRegistered'; nodeId: Hex; trustLevel: RegistryTrustLevel })
   | (EventBase & { kind: 'NodeStatusChanged'; nodeId: Hex; previousStatus: NodeStatusCode; newStatus: NodeStatusCode })
+  | (EventBase & { kind: 'NodeTrustLevelChanged'; nodeId: Hex; previousLevel: RegistryTrustLevel; newLevel: RegistryTrustLevel })
   | (EventBase & { kind: 'RootProposed'; epoch: bigint; revision: number })
   | (EventBase & { kind: 'RootFinalized'; epoch: bigint; revision: number })
   | (EventBase & { kind: 'RewardClaimed'; epoch: bigint; nodeId: Hex });
@@ -122,7 +132,8 @@ export function byNewest(left: NetworkEvent, right: NetworkEvent): number {
 /**
  * Folds the event history and the registry's current answer for each node
  * into the five figures the page prints. Only nodes the registry reports as
- * Active are counted; registration alone never moves a number.
+ * Active are counted; registration alone never moves a number. A node's trust
+ * level is the one compliance last set, not the one it registered with.
  */
 export function aggregateNetworkMetrics(
   events: readonly NetworkEvent[],
@@ -132,16 +143,22 @@ export function aggregateNetworkMetrics(
   const finalized = new Set<string>();
   let lastRootAt: number | null = null;
   let claims = 0;
+
+  const levelOf = new Map<Hex, RegistryTrustLevel>();
+  for (const event of [...events].sort(byNewest).reverse()) {
+    if (event.kind === 'NodeRegistered') levelOf.set(event.nodeId, event.trustLevel);
+    if (event.kind === 'NodeTrustLevelChanged') levelOf.set(event.nodeId, event.newLevel);
+  }
   let activeNodes = 0;
+  for (const [nodeId, level] of levelOf) {
+    if (statuses.get(nodeId) === NODE_STATUS.Active) {
+      activeNodes += 1;
+      trustMix[level] += 1;
+    }
+  }
 
   for (const event of events) {
     switch (event.kind) {
-      case 'NodeRegistered':
-        if (statuses.get(event.nodeId) === NODE_STATUS.Active) {
-          activeNodes += 1;
-          trustMix[event.trustLevel] += 1;
-        }
-        break;
       case 'RootFinalized':
         finalized.add(event.epoch.toString());
         if (lastRootAt === null || event.timestamp > lastRootAt) lastRootAt = event.timestamp;

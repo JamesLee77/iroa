@@ -11,6 +11,9 @@ contract IROANodeRegistry is AccessControl, EIP712 {
     bytes32 public constant OPERATOR_WALLET_CHANGE_TYPEHASH = keccak256(
         "OperatorWalletChange(bytes32 nodeId,address newWallet,uint256 nonce,uint64 deadline)"
     );
+    bytes32 public constant NODE_REGISTRATION_TYPEHASH = keccak256(
+        "NodeRegistration(bytes32 nodeId,address operatorWallet,bytes32 operatorIdHash,uint8 trustLevel)"
+    );
 
     enum NodeStatus {
         Pending,
@@ -38,6 +41,7 @@ contract IROANodeRegistry is AccessControl, EIP712 {
     error UnauthorizedNodeOperator(address caller);
     error OperatorAuthorizationExpired(uint64 deadline);
     error InvalidOperatorSignature(address recovered, address expected);
+    error InvalidDeviceSignature(address recovered, bytes32 expectedDeviceKeyHash);
 
     event NodeRegistered(
         bytes32 indexed nodeId,
@@ -49,6 +53,7 @@ contract IROANodeRegistry is AccessControl, EIP712 {
     event NodeStatusChanged(bytes32 indexed nodeId, NodeStatus indexed previousStatus, NodeStatus indexed newStatus);
     event DeviceKeyRevoked(bytes32 indexed nodeId, bytes32 indexed deviceKeyHash);
     event NodeRejected(bytes32 indexed nodeId, bytes32 indexed deviceKeyHash);
+    event NodeTrustLevelChanged(bytes32 indexed nodeId, uint8 indexed previousLevel, uint8 indexed newLevel);
     event OperatorWalletChanged(
         bytes32 indexed nodeId,
         address indexed previousWallet,
@@ -70,11 +75,20 @@ contract IROANodeRegistry is AccessControl, EIP712 {
         _grantRole(SUSPENDER_ROLE, suspender);
     }
 
+    /// @notice The registry's device-key hash for a device address; clients derive it the same way.
+    function deviceKeyHashOf(address device) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(device));
+    }
+
+    /// @notice Registers a NODE for `msg.sender`. The device key must sign the registration
+    /// (EIP-712 `NodeRegistration`) so a hash can only be bound by whoever holds the key —
+    /// registration is open, and without this proof anyone could claim another operator's key.
     function registerNode(
         bytes32 nodeId,
         bytes32 operatorIdHash_,
         bytes32 deviceKeyHash,
-        uint8 trustLevel
+        uint8 trustLevel,
+        bytes calldata deviceSignature
     ) external {
         if (nodeId == bytes32(0) || operatorIdHash_ == bytes32(0) || deviceKeyHash == bytes32(0)) {
             revert ZeroIdentifier();
@@ -84,6 +98,12 @@ contract IROANodeRegistry is AccessControl, EIP712 {
             revert DeviceKeyAlreadyRegistered(deviceKeyHash, deviceKeyNode[deviceKeyHash]);
         }
         if (trustLevel > 3) revert InvalidTrustLevel(trustLevel);
+
+        bytes32 structHash = keccak256(
+            abi.encode(NODE_REGISTRATION_TYPEHASH, nodeId, msg.sender, operatorIdHash_, trustLevel)
+        );
+        address device = ECDSA.recover(_hashTypedDataV4(structHash), deviceSignature);
+        if (deviceKeyHashOf(device) != deviceKeyHash) revert InvalidDeviceSignature(device, deviceKeyHash);
 
         _registered[nodeId] = true;
         deviceKeyNode[deviceKeyHash] = nodeId;
@@ -118,6 +138,18 @@ contract IROANodeRegistry is AccessControl, EIP712 {
         delete deviceKeyNode[node.deviceKeyHash];
         _setStatus(nodeId, node, NodeStatus.Revoked);
         emit NodeRejected(nodeId, node.deviceKeyHash);
+    }
+
+    /// @notice Moves a NODE to another trust level after its attestation state changes.
+    /// The level bounds which requests the NODE may take; it never widens what it may see.
+    function changeTrustLevel(bytes32 nodeId, uint8 newLevel) external onlyRole(COMPLIANCE_ROLE) {
+        if (newLevel > 3) revert InvalidTrustLevel(newLevel);
+        NodeRecord storage node = _requireNode(nodeId);
+        if (node.status == NodeStatus.Revoked) revert InvalidNodeStatus(nodeId, node.status);
+
+        uint8 previousLevel = node.trustLevel;
+        node.trustLevel = newLevel;
+        emit NodeTrustLevelChanged(nodeId, previousLevel, newLevel);
     }
 
     function suspendNode(bytes32 nodeId) external onlyRole(SUSPENDER_ROLE) {

@@ -9,6 +9,7 @@ const templates: ActivityTemplates = {
   suspended: 'NODE {id} 정지',
   revoked: 'NODE {id} 폐기',
   reinstated: 'NODE {id} 재개',
+  trustLevelChanged: 'NODE {id} 신뢰 수준 {from} → {to}',
   rootProposed: '{epoch} 에폭 결산 루트 제안 · 이의 창 열림',
   rootFinalized: '{epoch} 에폭 결산 확정',
   rewardClaimed: '{epoch} 에폭 보상 청구 1건',
@@ -31,6 +32,11 @@ describe('activity sentences', () => {
     expect(change(1, 2)).toBe('NODE abcdef12 정지');
     expect(change(2, 3)).toBe('NODE abcdef12 폐기');
     expect(change(2, 1)).toBe('NODE abcdef12 재개');
+  });
+
+  it('names both trust levels when compliance moves a NODE', () => {
+    const event: NetworkEvent = { ...base, kind: 'NodeTrustLevelChanged', nodeId, previousLevel: 1, newLevel: 3 };
+    expect(describeEvent(event, templates)).toBe('NODE abcdef12 신뢰 수준 N1 → N3');
   });
 
   it('prints a claim as a count of one, with no amount', () => {

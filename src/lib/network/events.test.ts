@@ -23,6 +23,17 @@ describe('network metrics aggregation', () => {
     expect(metrics.trustMix).toEqual({ 0: 0, 1: 1, 2: 0, 3: 0 });
   });
 
+  it('counts a node at the trust level compliance last set, not the one it registered with', () => {
+    const events: NetworkEvent[] = [
+      registered(id('1'), 1, 10n),
+      { ...base, kind: 'NodeTrustLevelChanged', nodeId: id('1'), previousLevel: 1, newLevel: 3, blockNumber: 12n },
+      { ...base, kind: 'NodeTrustLevelChanged', nodeId: id('1'), previousLevel: 3, newLevel: 2, blockNumber: 15n },
+    ];
+    const metrics = aggregateNetworkMetrics(events, new Map([[id('1'), NODE_STATUS.Active]]));
+    expect(metrics.activeNodes).toBe(1);
+    expect(metrics.trustMix).toEqual({ 0: 0, 1: 0, 2: 1, 3: 0 });
+  });
+
   it('shows zero rather than a registration count when nothing is approved yet', () => {
     const metrics = aggregateNetworkMetrics([registered(id('1'), 0)], new Map());
     expect(metrics.activeNodes).toBe(0);

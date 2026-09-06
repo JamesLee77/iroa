@@ -139,3 +139,7 @@ tbody tr:hover { background: #f8fafb; }
   .data-card__heading, .hash-line, .compact-list div { align-items: flex-start; flex-direction: column; }
   .button-row > button { flex: 1 1 10rem; }
 }
+
+/* A select and its action button read as one control on the NODE card. */
+.inline-field { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; }
+.inline-field select { min-height: 2.25rem; }

@@ -111,6 +111,7 @@ export interface NodePageContent {
         suspended: string;
         revoked: string;
         reinstated: string;
+        trustLevelChanged: string;
         rootProposed: string;
         rootFinalized: string;
         rewardClaimed: string;

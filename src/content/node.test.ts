@@ -85,7 +85,9 @@ describe('published NODE page content', () => {
     for (const content of [nodeKo, nodeEn]) {
       const { templates } = content.networkState.activity;
       expect(templates.registered).toContain('{level}');
-      for (const key of ['registered', 'approved', 'suspended', 'revoked', 'reinstated'] as const) expect(templates[key]).toContain('{id}');
+      for (const key of ['registered', 'approved', 'suspended', 'revoked', 'reinstated', 'trustLevelChanged'] as const) expect(templates[key]).toContain('{id}');
+      expect(templates.trustLevelChanged).toContain('{from}');
+      expect(templates.trustLevelChanged).toContain('{to}');
       for (const key of ['rootProposed', 'rootFinalized', 'rewardClaimed'] as const) expect(templates[key]).toContain('{epoch}');
       expect(content.networkState.updated.label).toContain('{time}');
       expect(content.networkState.updated.failed).toContain('{time}');

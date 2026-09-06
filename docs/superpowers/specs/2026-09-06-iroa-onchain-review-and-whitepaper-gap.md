@@ -1,7 +1,7 @@
 # IROA 온체인 계약 소스 리뷰와 백서 달성 설계
 
 날짜: 2026-09-06  
-상태: 리뷰 완료 · 수정 4건 적용 · G1 구현 완료 · G6 결정 (a) 반영 · G2–G5 설계  
+상태: 리뷰 완료 · 수정 4건 적용 · G1·G3 구현 완료 · G6 결정 (a) 반영 · G2·G4·G5 설계  
 기준 브랜치: `main` (`35e1117`)  
 대상: `onchain/contracts/` 13개 계약 (token 2, migration 2, vaults 4, settlement 2, node 1, governance 1, test 1)  
 참조: 백서 §16 토큰 이코노미, 파일럿 설계 `2026-08-30-iroa-web3-mainnet-private-pilot-design.md`
@@ -75,7 +75,7 @@
 |---|---|---|---|
 | G1 | §16.3 잠금 해제 일정이 V2에서도 이어짐 | V2 importer는 스냅샷만 저장 | **V2 해제 금고 없음 → `V2ScheduleVault` 구현 (2026-09-06)** |
 | G2 | §16.4 NODE 보상이 V2에서 계속 지급 | 분배기·금고가 V1에 고정 | V2 보상 분배기·NODE 금고 없음 |
-| G3 | §8.3 실행 공간의 신뢰 수준과 증명 상태 | 신뢰 수준 고정, 기기 키 소유 증명 없음 | 등록부 V2 |
+| G3 | §8.3 실행 공간의 신뢰 수준과 증명 상태 | 신뢰 수준 고정, 기기 키 소유 증명 없음 | **구현 (2026-09-06): 등록 시 기기 키 EIP-712 서명, `changeTrustLevel`** |
 | G4 | §15.5 보상 분쟁 절차 | 이의는 재단 역할만 | 운영자 이의 경로 |
 | G5 | §16.4 허위 작업 시 환수 | 청구 후 회수 불가 | 환수 수단 |
 | G6 | 창립자 합의서(10% 즉시 교부·처분 제한) vs 팀·자문 금고(24+72개월 베스팅) | 온체인은 베스팅 | **(a) 결정 2026-09-06 — 합의서 v0.2를 금고에 맞춤** |
@@ -110,10 +110,11 @@ V2ScheduleImporter (기존, 불변)      V2ScheduleVault (신규)
 
 `IROARewardDistributor`를 그대로 두고 생성자 인자만 V2 토큰·V2 NODE 금고로 바꿔 **재배포**한다(G1 테스트로 호환 확인). 등록부·루트 등록부는 토큰 무관이라 재사용. 에폭 번호는 V1 시작 시각 기준으로 계속 센다(`start`가 스냅샷에 있음). V1 분배기는 마지막 V1 에폭 확정 후 금고 역할을 회수해 폐쇄.
 
-### G3 · 등록부 V2 (파일럿 뒤)
+### G3 · 등록부 (구현 완료)
 
-- `registerNode`에 기기 키 EIP-712 서명 추가(소유 증명). node-agent가 서명을 만들고 운영자 포털이 전달.
-- `changeTrustLevel(nodeId, level)` (COMPLIANCE) — 증명 상태에 따라 등급 조정.
+- `registerNode(nodeId, operatorIdHash, deviceKeyHash, trustLevel, deviceSignature)` — 기기 키가 EIP-712 `NodeRegistration(nodeId, operatorWallet, operatorIdHash, trustLevel)`을 서명한다. 계약은 복구한 주소의 `keccak256(abi.encodePacked(device))`가 `deviceKeyHash`와 같아야 등록한다. 잘못된 서명은 임의의 주소로 복구되므로 해시 대조가 없으면 아무 서명이나 통과한다 — 그래서 해시 인자를 남겼다. 서명은 `nodeId`·`operatorWallet`에 묶여 다른 지갑이 재사용할 수 없다.
+- `changeTrustLevel(nodeId, newLevel)` (COMPLIANCE, 폐기 전까지, 0–3) + `NodeTrustLevelChanged` 이벤트.
+- node-agent `signNodeRegistration()`이 서명을 만들고, 운영자 포털이 서명할 EIP-712 데이터를 보여주고 서명을 받아 `registerNode`에 넘긴다. 관리자 콘솔에 `등록 거부`·`신뢰 수준 변경` 버튼. 공개 사이트는 `NodeTrustLevelChanged`를 반영해 최신 등급으로 분포를 센다.
 - 등록 수수료 또는 보증금은 백서가 요구하지 않으므로 넣지 않는다.
 
 ### G4 · 운영자 이의

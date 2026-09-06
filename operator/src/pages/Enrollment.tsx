@@ -1,10 +1,10 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { type Address, type Hex } from 'viem';
-import { usePublicClient, useWriteContract } from 'wagmi';
+import { useChainId, usePublicClient, useWriteContract } from 'wagmi';
 import type { Hex32 } from '@iroa/protocol';
 import { useOperator } from '../context/OperatorContext';
 import { enrollNode, requestNodeChallenge } from '../lib/api';
-import { assertSuccessfulReceipt, nodeRegistryAbi, requireContract, trustLevelCode } from '../lib/contracts';
+import { assertSuccessfulReceipt, nodeRegistrationTypedData, nodeRegistryAbi, requireContract, trustLevelCode } from '../lib/contracts';
 import { t, type Locale } from '../lib/i18n';
 import { Icon } from '../components/Icon';
 
@@ -26,6 +26,7 @@ function errorText(locale: Locale, cause: unknown): string {
 export function Enrollment({ locale }: { locale: Locale }) {
   const operator = useOperator();
   const publicClient = usePublicClient();
+  const chainId = useChainId();
   const { writeContractAsync } = useWriteContract();
   const [deviceAddress, setDeviceAddress] = useState('');
   const [deviceKeyHash, setDeviceKeyHash] = useState('');
@@ -33,11 +34,29 @@ export function Enrollment({ locale }: { locale: Locale }) {
   const [policyVersion, setPolicyVersion] = useState(DEFAULT_POLICY_VERSION);
   const [challenge, setChallenge] = useState<{ nodeId: Hex32; nonce: string; expiresAt: number; message: string } | null>(null);
   const [deviceSignature, setDeviceSignature] = useState('');
+  const [registrationSignature, setRegistrationSignature] = useState('');
   const [stage, setStage] = useState<EnrollmentStage>('form');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transactionHash, setTransactionHash] = useState<Hex | null>(null);
   const [onchainRegistered, setOnchainRegistered] = useState(false);
+
+  const registrationPayload = useMemo(() => {
+    if (!challenge || !operator.address || !operator.session) return '';
+    try {
+      const typedData = nodeRegistrationTypedData({
+        chainId,
+        registry: requireContract('nodeRegistry'),
+        nodeId: challenge.nodeId,
+        operatorWallet: operator.address,
+        operatorIdHash: operator.session.actorIdHash,
+        trustLevel,
+      });
+      return JSON.stringify(typedData, null, 2);
+    } catch {
+      return '';
+    }
+  }, [challenge, operator.address, operator.session, chainId, trustLevel]);
 
   const challengeExpired = useMemo(
     () => Boolean(challenge && challenge.expiresAt <= Math.floor(Date.now() / 1_000)),
@@ -56,6 +75,7 @@ export function Enrollment({ locale }: { locale: Locale }) {
       setChallenge({ nodeId, nonce: issued.nonce, expiresAt: issued.expiresAt, message: issued.message });
       setStage('challenge');
       setDeviceSignature('');
+      setRegistrationSignature('');
       setOnchainRegistered(false);
       setTransactionHash(null);
     } catch (cause) {
@@ -99,7 +119,7 @@ export function Enrollment({ locale }: { locale: Locale }) {
           address: requireContract('nodeRegistry'),
           abi: nodeRegistryAbi,
           functionName: 'registerNode',
-          args: [challenge.nodeId, operator.session.actorIdHash, deviceKeyHash as Hex32, trustLevelCode(trustLevel)],
+          args: [challenge.nodeId, operator.session.actorIdHash, deviceKeyHash as Hex32, trustLevelCode(trustLevel), registrationSignature as Hex],
         });
         assertSuccessfulReceipt(await publicClient.waitForTransactionReceipt({ hash }));
         setTransactionHash(hash);
@@ -149,6 +169,10 @@ export function Enrollment({ locale }: { locale: Locale }) {
           <label>{t(locale, 'challengeMessage')}<textarea readOnly rows={6} value={challenge?.message ?? ''} /></label>
           <p className="field-help">{new Date((challenge?.expiresAt ?? 0) * 1_000).toLocaleString(locale === 'ko' ? 'ko-KR' : 'en-US')}</p>
           <label>{t(locale, 'deviceSignature')}<input required pattern="0x[0-9a-fA-F]{130}" value={deviceSignature} onChange={(event) => setDeviceSignature(event.target.value)} autoComplete="off" /></label>
+          {!onchainRegistered && <>
+            <label>{t(locale, 'registrationPayload')}<textarea readOnly rows={10} value={registrationPayload} /></label>
+            <label>{t(locale, 'registrationSignature')}<input required pattern="0x[0-9a-fA-F]{130}" value={registrationSignature} onChange={(event) => setRegistrationSignature(event.target.value)} autoComplete="off" /></label>
+          </>}
           {onchainRegistered && <p className="inline-success"><Icon name="check" />{locale === 'ko' ? '온체인 등록 완료 · 포털 연결만 다시 시도합니다.' : 'Onchain registration complete · only the portal connection will be retried.'}</p>}
           {challengeExpired && <p className="form-error" role="alert">{locale === 'ko' ? '일회용 서명 요청이 만료되었습니다. 새로 만들어 주세요.' : 'The one-time signing request expired. Create a new one.'}</p>}
           {error && <p className="form-error" role="alert">{error}</p>}

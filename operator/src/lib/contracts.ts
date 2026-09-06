@@ -18,6 +18,7 @@ export const nodeRegistryAbi = [
       { name: 'operatorIdHash', type: 'bytes32' },
       { name: 'deviceKeyHash', type: 'bytes32' },
       { name: 'trustLevel', type: 'uint8' },
+      { name: 'deviceSignature', type: 'bytes' },
     ],
   },
   { type: 'function', name: 'revokeDeviceKey', stateMutability: 'nonpayable', outputs: [], inputs: [{ name: 'nodeId', type: 'bytes32' }] },
@@ -109,4 +110,36 @@ export function migrationConfigured(): boolean {
 
 export function trustLevelCode(level: 'N0' | 'N1' | 'N2' | 'N3'): number {
   return Number(level.slice(1));
+}
+
+/**
+ * The EIP-712 payload the device key must sign before the registry accepts a
+ * registration. Shown to the operator verbatim so the device can sign exactly it.
+ */
+export function nodeRegistrationTypedData(input: {
+  chainId: number;
+  registry: Address;
+  nodeId: Hex;
+  operatorWallet: Address;
+  operatorIdHash: Hex;
+  trustLevel: 'N0' | 'N1' | 'N2' | 'N3';
+}) {
+  return {
+    domain: { name: 'IROANodeRegistry', version: '1', chainId: input.chainId, verifyingContract: input.registry },
+    types: {
+      NodeRegistration: [
+        { name: 'nodeId', type: 'bytes32' },
+        { name: 'operatorWallet', type: 'address' },
+        { name: 'operatorIdHash', type: 'bytes32' },
+        { name: 'trustLevel', type: 'uint8' },
+      ],
+    },
+    primaryType: 'NodeRegistration' as const,
+    message: {
+      nodeId: input.nodeId,
+      operatorWallet: input.operatorWallet,
+      operatorIdHash: input.operatorIdHash,
+      trustLevel: trustLevelCode(input.trustLevel),
+    },
+  };
 }

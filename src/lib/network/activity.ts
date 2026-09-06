@@ -8,6 +8,7 @@ export interface ActivityTemplates {
   suspended: string;
   revoked: string;
   reinstated: string;
+  trustLevelChanged: string;
   rootProposed: string;
   rootFinalized: string;
   rewardClaimed: string;
@@ -44,6 +45,8 @@ export function describeEvent(event: NetworkEvent, templates: ActivityTemplates)
       if (event.newStatus === NODE_STATUS.Revoked) return fill(templates.revoked, values);
       return null;
     }
+    case 'NodeTrustLevelChanged':
+      return fill(templates.trustLevelChanged, { id: short(event.nodeId), from: `N${event.previousLevel}`, to: `N${event.newLevel}` });
     case 'RootProposed':
       return fill(templates.rootProposed, { epoch: event.epoch.toString() });
     case 'RootFinalized':

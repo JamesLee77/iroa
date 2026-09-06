@@ -3,6 +3,8 @@ export type AdminRoute = '/nodes' | '/disputes' | '/settlement' | '/governance' 
 export type AdminAction =
   | 'node:approve'
   | 'node:suspend'
+  | 'node:reject'
+  | 'node:trust-level'
   | 'dispute:resolve'
   | 'settlement:propose'
   | 'governance:export'
@@ -23,9 +25,9 @@ export const PERSONA_ROUTES: Record<Persona, readonly AdminRoute[]> = {
 };
 
 export const PERSONA_ACTIONS: Record<Persona, ReadonlySet<AdminAction>> = {
-  super_admin: new Set(['node:approve', 'node:suspend', 'dispute:resolve', 'settlement:propose', 'governance:export', 'audit:export']),
+  super_admin: new Set(['node:approve', 'node:suspend', 'node:reject', 'node:trust-level', 'dispute:resolve', 'settlement:propose', 'governance:export', 'audit:export']),
   treasury: new Set(['settlement:propose', 'governance:export', 'audit:export']),
-  compliance: new Set(['node:approve', 'node:suspend', 'dispute:resolve', 'audit:export']),
+  compliance: new Set(['node:approve', 'node:suspend', 'node:reject', 'node:trust-level', 'dispute:resolve', 'audit:export']),
   read_only: new Set(),
 };
 

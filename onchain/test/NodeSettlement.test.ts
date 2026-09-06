@@ -14,6 +14,39 @@ const LEAF_TYPES = [
   "bytes32",
 ];
 
+
+/**
+ * Signs the EIP-712 NodeRegistration with a device key and returns the arguments
+ * `registerNode` expects. The device-key hash is derived exactly as the registry does.
+ */
+async function signedRegistration(
+  ethers: any,
+  registry: any,
+  device: any,
+  operatorAddress: string,
+  nodeId: string,
+  operatorIdHash: string,
+  trustLevel: number,
+) {
+  const domain = {
+    name: "IROANodeRegistry",
+    version: "1",
+    chainId: (await ethers.provider.getNetwork()).chainId,
+    verifyingContract: await registry.getAddress(),
+  };
+  const types = {
+    NodeRegistration: [
+      { name: "nodeId", type: "bytes32" },
+      { name: "operatorWallet", type: "address" },
+      { name: "operatorIdHash", type: "bytes32" },
+      { name: "trustLevel", type: "uint8" },
+    ],
+  };
+  const signature = await device.signTypedData(domain, types, { nodeId, operatorWallet: operatorAddress, operatorIdHash, trustLevel });
+  const deviceKeyHash = ethers.keccak256(ethers.solidityPacked(["address"], [device.address]));
+  return { deviceKeyHash, signature, args: [nodeId, operatorIdHash, deviceKeyHash, trustLevel, signature] as const };
+}
+
 describe("IROA NODE settlement", function () {
   async function deploySettlementFixture() {
     const { ethers, networkHelpers } = await network.connect();
@@ -68,9 +101,9 @@ describe("IROA NODE settlement", function () {
 
     const nodeId = ethers.id("node-1");
     const operatorIdHash = ethers.id("operator-1");
-    await nodeRegistry
-      .connect(operator)
-      .registerNode(nodeId, operatorIdHash, ethers.id("device-key-1"), 2);
+    const device = ethers.Wallet.createRandom();
+    const registration = await signedRegistration(ethers, nodeRegistry, device, operator.address, nodeId, operatorIdHash, 2);
+    await nodeRegistry.connect(operator).registerNode(...registration.args);
     await nodeRegistry.connect(compliance).approveNode(nodeId);
 
     return {
@@ -91,6 +124,8 @@ describe("IROA NODE settlement", function () {
       other,
       nodeId,
       operatorIdHash,
+      device,
+      deviceKeyHash: registration.deviceKeyHash,
     };
   }
 
@@ -159,43 +194,94 @@ describe("IROA NODE settlement", function () {
   });
 
   it("never permits one device key to register a second NODE", async function () {
-    const { ethers, nodeRegistry, other } = await deploySettlementFixture();
+    const { ethers, nodeRegistry, operator, other, device } = await deploySettlementFixture();
 
     await expect(
       nodeRegistry
         .connect(other)
-        .registerNode(ethers.id("node-2"), ethers.id("operator-2"), ethers.id("device-key-1"), 1),
+        .registerNode(...(await signedRegistration(ethers, nodeRegistry, device, operator.address, ethers.id("node-2"), ethers.id("operator-2"), 1)).args),
     ).to.be.revertedWithCustomError(nodeRegistry, "DeviceKeyAlreadyRegistered");
   });
 
-  it("frees a squatted device key when compliance rejects the pending registration", async function () {
-    const { ethers, nodeRegistry, compliance, operator, other } = await deploySettlementFixture();
-    const deviceKeyHash = ethers.id("device-key-real");
-    const squattedNodeId = ethers.id("squatter-node");
-    const realNodeId = ethers.id("real-node");
+  it("binds a device-key hash only to whoever holds the device key", async function () {
+    const { ethers, nodeRegistry, operator, other } = await deploySettlementFixture();
+    const realDevice = ethers.Wallet.createRandom();
+    const realHash = ethers.keccak256(ethers.solidityPacked(["address"], [realDevice.address]));
+    const squatter = ethers.Wallet.createRandom();
 
-    await nodeRegistry.connect(other).registerNode(squattedNodeId, ethers.id("squatter"), deviceKeyHash, 1);
+    // A signature from another key recovers to another address, so the hash does not match.
+    const forged = await signedRegistration(ethers, nodeRegistry, squatter, other.address, ethers.id("squat"), ethers.id("squatter"), 1);
     await expect(
-      nodeRegistry.connect(operator).registerNode(realNodeId, ethers.id("operator-1"), deviceKeyHash, 2),
-    ).to.be.revertedWithCustomError(nodeRegistry, "DeviceKeyAlreadyRegistered");
+      nodeRegistry.connect(other).registerNode(ethers.id("squat"), ethers.id("squatter"), realHash, 1, forged.signature),
+    ).to.be.revertedWithCustomError(nodeRegistry, "InvalidDeviceSignature");
 
-    await expect(nodeRegistry.connect(compliance).rejectNode(squattedNodeId))
+    // A genuine device signature bound to one operator cannot be submitted by another wallet.
+    const bound = await signedRegistration(ethers, nodeRegistry, realDevice, operator.address, ethers.id("real"), ethers.id("operator-1"), 2);
+    await expect(nodeRegistry.connect(other).registerNode(...bound.args)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "InvalidDeviceSignature",
+    );
+    await nodeRegistry.connect(operator).registerNode(...bound.args);
+    expect(await nodeRegistry.deviceKeyNode(realHash)).to.equal(ethers.id("real"));
+    expect(await nodeRegistry.deviceKeyHashOf(realDevice.address)).to.equal(realHash);
+  });
+
+  it("frees a device key when compliance rejects a pending registration", async function () {
+    const { ethers, nodeRegistry, compliance, operator } = await deploySettlementFixture();
+    const device = ethers.Wallet.createRandom();
+    const first = await signedRegistration(ethers, nodeRegistry, device, operator.address, ethers.id("first"), ethers.id("operator-1"), 1);
+    await nodeRegistry.connect(operator).registerNode(...first.args);
+
+    const second = await signedRegistration(ethers, nodeRegistry, device, operator.address, ethers.id("second"), ethers.id("operator-1"), 2);
+    await expect(nodeRegistry.connect(operator).registerNode(...second.args)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "DeviceKeyAlreadyRegistered",
+    );
+
+    await expect(nodeRegistry.connect(compliance).rejectNode(ethers.id("first")))
       .to.emit(nodeRegistry, "NodeRejected")
-      .withArgs(squattedNodeId, deviceKeyHash);
-    expect(await nodeRegistry.nodeStatus(squattedNodeId)).to.equal(3n);
-    expect(await nodeRegistry.deviceKeyNode(deviceKeyHash)).to.equal(ethers.ZeroHash);
+      .withArgs(ethers.id("first"), first.deviceKeyHash);
+    expect(await nodeRegistry.nodeStatus(ethers.id("first"))).to.equal(3n);
+    expect(await nodeRegistry.deviceKeyNode(first.deviceKeyHash)).to.equal(ethers.ZeroHash);
 
-    await nodeRegistry.connect(operator).registerNode(realNodeId, ethers.id("operator-1"), deviceKeyHash, 2);
-    expect(await nodeRegistry.deviceKeyNode(deviceKeyHash)).to.equal(realNodeId);
-    // The rejected registration is closed for good.
-    await expect(nodeRegistry.connect(compliance).approveNode(squattedNodeId)).to.be.revertedWithCustomError(
+    await nodeRegistry.connect(operator).registerNode(...second.args);
+    expect(await nodeRegistry.deviceKeyNode(first.deviceKeyHash)).to.equal(ethers.id("second"));
+    await expect(nodeRegistry.connect(compliance).approveNode(ethers.id("first"))).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "InvalidNodeStatus",
+    );
+  });
+
+  it("lets compliance move a NODE between trust levels until it is revoked", async function () {
+    const { ethers, nodeRegistry, compliance, operator, nodeId } = await deploySettlementFixture();
+    expect((await nodeRegistry.getNode(nodeId)).trustLevel).to.equal(2n);
+
+    await expect(nodeRegistry.connect(compliance).changeTrustLevel(nodeId, 3))
+      .to.emit(nodeRegistry, "NodeTrustLevelChanged")
+      .withArgs(nodeId, 2n, 3n);
+    expect((await nodeRegistry.getNode(nodeId)).trustLevel).to.equal(3n);
+
+    await expect(nodeRegistry.connect(operator).changeTrustLevel(nodeId, 1)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "AccessControlUnauthorizedAccount",
+    );
+    await expect(nodeRegistry.connect(compliance).changeTrustLevel(nodeId, 4))
+      .to.be.revertedWithCustomError(nodeRegistry, "InvalidTrustLevel")
+      .withArgs(4);
+    await expect(nodeRegistry.connect(compliance).changeTrustLevel(ethers.id("unknown"), 1)).to.be.revertedWithCustomError(
+      nodeRegistry,
+      "NodeNotRegistered",
+    );
+
+    await nodeRegistry.connect(operator).revokeDeviceKey(nodeId);
+    await expect(nodeRegistry.connect(compliance).changeTrustLevel(nodeId, 1)).to.be.revertedWithCustomError(
       nodeRegistry,
       "InvalidNodeStatus",
     );
   });
 
   it("never rejects a NODE that was already approved, and keeps a revoked key bound", async function () {
-    const { ethers, nodeRegistry, compliance, operator, nodeId } = await deploySettlementFixture();
+    const { nodeRegistry, compliance, operator, nodeId, deviceKeyHash } = await deploySettlementFixture();
 
     await expect(nodeRegistry.connect(compliance).rejectNode(nodeId)).to.be.revertedWithCustomError(
       nodeRegistry,
@@ -207,7 +293,7 @@ describe("IROA NODE settlement", function () {
     );
 
     await nodeRegistry.connect(operator).revokeDeviceKey(nodeId);
-    expect(await nodeRegistry.deviceKeyNode(ethers.id("device-key-1"))).to.equal(nodeId);
+    expect(await nodeRegistry.deviceKeyNode(deviceKeyHash)).to.equal(nodeId);
   });
 
   it("requires both current-operator EIP-712 authorization and compliance execution for wallet changes", async function () {
@@ -380,7 +466,7 @@ describe("IROA NODE settlement", function () {
     await token.connect(fixture.admin).setAllowed(other.address, true);
     await nodeRegistry
       .connect(other)
-      .registerNode(otherNodeId, otherOperatorIdHash, ethers.id("device-key-2"), 2);
+      .registerNode(...(await signedRegistration(ethers, nodeRegistry, ethers.Wallet.createRandom(), other.address, otherNodeId, otherOperatorIdHash, 2)).args);
     await nodeRegistry.connect(compliance).approveNode(otherNodeId);
 
     const amount = (await nodeVault.monthlyBudget(0)) / 100n;

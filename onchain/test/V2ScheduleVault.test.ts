@@ -203,7 +203,11 @@ describe("V2ScheduleVault", function () {
 
     const nodeId = ethers.id("node-v2");
     const operatorIdHash = ethers.id("operator-v2");
-    await nodeRegistry.connect(operator).registerNode(nodeId, operatorIdHash, ethers.id("device-v2"), 1);
+    const device = ethers.Wallet.createRandom();
+    const domain = { name: "IROANodeRegistry", version: "1", chainId: (await ethers.provider.getNetwork()).chainId, verifyingContract: await nodeRegistry.getAddress() };
+    const types = { NodeRegistration: [{ name: "nodeId", type: "bytes32" }, { name: "operatorWallet", type: "address" }, { name: "operatorIdHash", type: "bytes32" }, { name: "trustLevel", type: "uint8" }] };
+    const deviceSignature = await device.signTypedData(domain, types, { nodeId, operatorWallet: operator.address, operatorIdHash, trustLevel: 1 });
+    await nodeRegistry.connect(operator).registerNode(nodeId, operatorIdHash, await nodeRegistry.deviceKeyHashOf(device.address), 1, deviceSignature);
     await nodeRegistry.connect(compliance).approveNode(nodeId);
 
     const epoch = 1n;
