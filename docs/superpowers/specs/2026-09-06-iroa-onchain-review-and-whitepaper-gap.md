@@ -1,7 +1,7 @@
 # IROA 온체인 계약 소스 리뷰와 백서 달성 설계
 
 날짜: 2026-09-06  
-상태: 리뷰 완료 · 수정 4건 적용 · 설계 초안 (오너 검토 대기)  
+상태: 리뷰 완료 · 수정 4건 적용 · G1 구현 완료 · G2–G6 설계 (오너 검토 대기)  
 기준 브랜치: `main` (`35e1117`)  
 대상: `onchain/contracts/` 13개 계약 (token 2, migration 2, vaults 4, settlement 2, node 1, governance 1, test 1)  
 참조: 백서 §16 토큰 이코노미, 파일럿 설계 `2026-08-30-iroa-web3-mainnet-private-pilot-design.md`
@@ -73,14 +73,14 @@
 
 | # | 백서 약속 | 현재 | 공백 |
 |---|---|---|---|
-| G1 | §16.3 잠금 해제 일정이 V2에서도 이어짐 | V2 importer는 스냅샷만 저장 | **V2 해제 금고 없음** |
+| G1 | §16.3 잠금 해제 일정이 V2에서도 이어짐 | V2 importer는 스냅샷만 저장 | **V2 해제 금고 없음 → `V2ScheduleVault` 구현 (2026-09-06)** |
 | G2 | §16.4 NODE 보상이 V2에서 계속 지급 | 분배기·금고가 V1에 고정 | V2 보상 분배기·NODE 금고 없음 |
 | G3 | §8.3 실행 공간의 신뢰 수준과 증명 상태 | 신뢰 수준 고정, 기기 키 소유 증명 없음 | 등록부 V2 |
 | G4 | §15.5 보상 분쟁 절차 | 이의는 재단 역할만 | 운영자 이의 경로 |
 | G5 | §16.4 허위 작업 시 환수 | 청구 후 회수 불가 | 환수 수단 |
 | G6 | 창립자 합의서(10% 즉시 교부·처분 제한) vs 팀·자문 금고(24+72개월 베스팅) | 온체인은 베스팅 | **정합 결정 필요** |
 
-### G1 · V2 해제 금고 (최우선)
+### G1 · V2 해제 금고 (구현 완료)
 
 `V2ScheduleImporter`를 확장하지 않고 **해제 계약을 분리**한다. importer는 이전 순간의 진실(스냅샷)만 보관하고, 해제 계약이 그 스냅샷을 읽어 지급한다. 이전 자체(원자적 소각·발행·import)는 변경하지 않는다.
 
@@ -98,9 +98,17 @@ V2ScheduleImporter (기존, 불변)      V2ScheduleVault (신규)
 - 해제 수식은 V1 금고와 바이트 단위로 같은 계단식을 유지해 이전 전후 해제량이 이어진다. 테스트: 같은 시각에 V1 `vestedAt`와 V2 `releasable + released`가 같다.
 - NODE 금고(`rewardClaimsOnly`)의 V2 대응은 `releaseReward`만 열고, 월 예산은 누적표 차분으로 계산한다.
 
+**구현 (`onchain/contracts/vaults/V2ScheduleVault.sol`)**
+- `V2ScheduleVault is V2ScheduleImporter, AccessControl, ReentrancyGuard`. importer 코드는 상속으로 그대로(`importSchedule`만 `virtual`, `_schedules`만 `internal`). 금고 하나 = 스케줄 하나(`ScheduleAlreadyActive`).
+- `vestedAt`: CliffLinear는 V1 `CliffLinearVestingVault.vestedAt`와 같은 계단식, MonthlyCumulative는 `table[monthIndex]`(V1 emission·liquidity 두 표 모두 이 정의와 일치). `monthlyBudget(m) = table[m] − table[m−1]` — V1 `MonthlyEmissionVault.monthlyBudget`와 120개월 전부 동일함을 테스트.
+- 해제 경로: `release()`(수익자 스케줄, 누구나 호출·수익자에게 지급) · `releaseForCurrentMonth()`(RELEASE_MANAGER, 당월 예산, 이월 없음) · `releaseReward()`(REWARD_DISTRIBUTOR, 종료 에폭). 당월 예산과 누적표 상한(V1 기집행분 반영) 중 작은 쪽까지만.
+- `IROARewardDistributor`는 변경 없이 V2 토큰 + `V2ScheduleVault`로 재배포하면 동작한다(테스트: V2에서 루트 확정 → 청구 → 잔여 감소). G2의 계약 측은 이것으로 끝났고 배포 절차만 남는다.
+- 배포: `deploy-v2-migration.ts`가 importer 대신 `V2ScheduleVault` 7개를 배포(admin=Timelock, 생태계·연구개발은 `RELEASE_MANAGER`, NODE는 `rewardClaimsOnly`). manifest `kind: "v2-vault"`.
+- 경계: V1에서 이전 달에 이미 집행한 수량은 누적 상한으로만 막히므로, 관리형 금고의 이전은 월 경계 직후에 수행한다(runbook §4).
+
 ### G2 · V2 보상 분배기
 
-`IROARewardDistributor`를 그대로 두고 생성자 인자만 V2 토큰·V2 NODE 금고로 바꿔 **재배포**한다. 등록부·루트 등록부는 토큰 무관이라 재사용. 에폭 번호는 V1 시작 시각 기준으로 계속 센다(`start`가 스냅샷에 있음). V1 분배기는 마지막 V1 에폭 확정 후 금고 역할을 회수해 폐쇄.
+`IROARewardDistributor`를 그대로 두고 생성자 인자만 V2 토큰·V2 NODE 금고로 바꿔 **재배포**한다(G1 테스트로 호환 확인). 등록부·루트 등록부는 토큰 무관이라 재사용. 에폭 번호는 V1 시작 시각 기준으로 계속 센다(`start`가 스냅샷에 있음). V1 분배기는 마지막 V1 에폭 확정 후 금고 역할을 회수해 폐쇄.
 
 ### G3 · 등록부 V2 (파일럿 뒤)
 
@@ -131,6 +139,7 @@ V2ScheduleImporter (기존, 불변)      V2ScheduleVault (신규)
 2. 금고 잉여(F1)는 이전 뒤 V1에 남는다 — 대사표에 "V1 잔여 잉여"로 기록.
 3. Cliff/Liquidity 금고의 `migrateRemaining`은 수익자 키가 필요 — 수익자 지갑은 Safe로.
 4. 배포 manifest `controls.deploymentBlock`을 기록 — 공개 사이트가 전체 이력을 읽는 기준.
+6. 관리형 금고(생태계·연구개발)의 `migrateRemaining`은 월 경계 직후에 실행 — 이전 달 기집행분이 V2 당월 예산과 겹치지 않도록.
 5. 관리자 콘솔 `Nodes` 화면에 `rejectNode` 버튼 추가(별도 PR).
 
 ## 5. 검증

@@ -51,7 +51,7 @@ export const ANNUAL_WEIGHTS = {
 export interface VaultManifestEntry {
   key: VaultKey;
   label: string;
-  kind: "monthly" | "cliff-linear" | "liquidity" | "v2-importer";
+  kind: "monthly" | "cliff-linear" | "liquidity" | "v2-vault";
   address: string;
   allocation: string;
   beneficiary?: string;
