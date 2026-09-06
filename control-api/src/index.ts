@@ -10,6 +10,7 @@ import {
   type OperatorRewardProvider,
 } from './operator.js';
 import { ReceiptService } from './receipts.js';
+import { SettlementDisputeService } from './settlement-disputes.js';
 import { MemoryStorage, type NodeDeviceRecord, type Storage, type TaskRecord } from './storage.js';
 import { TaskService } from './tasks.js';
 
@@ -30,6 +31,7 @@ interface Services {
   leases: LeaseService;
   receipts: ReceiptService;
   operator: OperatorService;
+  settlementDisputes: SettlementDisputeService;
 }
 
 const MAX_BODY_BYTES = 64 * 1_024;
@@ -198,6 +200,22 @@ async function route(request: IncomingMessage, response: ServerResponse, service
     send(response, 200, (await services.operator.listTasks(userActor(request, services))).map(serializeOperatorTask));
     return;
   }
+  if (method === 'POST' && url.pathname === '/v1/operator/settlements/disputes') {
+    send(response, 201, await services.settlementDisputes.open(userActor(request, services), await readJson(request)));
+    return;
+  }
+  if (method === 'GET' && url.pathname === '/v1/operator/settlements/disputes') {
+    send(response, 200, await services.settlementDisputes.listForOperator(userActor(request, services)));
+    return;
+  }
+  if (method === 'GET' && url.pathname === '/v1/settlements/disputes') {
+    send(response, 200, await services.settlementDisputes.listForCompliance(userActor(request, services)));
+    return;
+  }
+  if (method === 'POST' && parts.length === 5 && parts[0] === 'v1' && parts[1] === 'settlements' && parts[2] === 'disputes' && parts[4] === 'resolve') {
+    send(response, 200, await services.settlementDisputes.resolve(userActor(request, services), parts[3] ?? '', await readJson(request)));
+    return;
+  }
   if (method === 'GET' && url.pathname === '/v1/operator/rewards') {
     send(response, 200, await services.operator.listRewards(userActor(request, services)));
     return;
@@ -260,6 +278,7 @@ export function createControlApi(config: ControlApiConfig) {
     leases: new LeaseService(storage, now),
     receipts: new ReceiptService(storage, chainId, verifyingContract, now),
     operator: new OperatorService(storage, config.rewardProvider ?? new EmptyOperatorRewardProvider()),
+    settlementDisputes: new SettlementDisputeService(storage, config.complianceOperators, now),
   };
   const server = createServer((request, response) => {
     void route(request, response, services).catch((error) => {
@@ -293,5 +312,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   await main();
 }
 
-export { AuthService, LeaseService, MemoryStorage, NodeService, OperatorService, ReceiptService, TaskService };
+export { AuthService, LeaseService, MemoryStorage, NodeService, OperatorService, ReceiptService, SettlementDisputeService, TaskService };
 export type { ControlApiConfig };

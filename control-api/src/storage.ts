@@ -68,12 +68,33 @@ export interface ReceiptRecord {
   createdAt: number;
 }
 
+export type SettlementDisputeStatus = 'open' | 'upheld' | 'rejected';
+
+/**
+ * An operator's objection to one epoch's settlement. The note is kept for the
+ * operator and compliance only; audit rows carry the evidence hash, never the note.
+ */
+export interface SettlementDisputeRecord {
+  disputeId: string;
+  epoch: number;
+  operatorAddress: Address;
+  operatorIdHash: Hex32;
+  nodeId: Hex32 | null;
+  reasonCode: string;
+  evidenceHash: Hex32;
+  note: string;
+  status: SettlementDisputeStatus;
+  resolutionNote: string | null;
+  openedAt: number;
+  resolvedAt: number | null;
+}
+
 export interface AuditRecord {
   auditId: string;
   action: string;
   actorType: ActorType;
   actorIdHash: Hex32;
-  subjectType: 'task' | 'node' | 'lease' | 'receipt' | 'session';
+  subjectType: 'task' | 'node' | 'lease' | 'receipt' | 'session' | 'settlement';
   subjectIdHash: Hex32;
   metadata: Readonly<Record<string, string | number | boolean | null>>;
   createdAt: number;
@@ -102,6 +123,11 @@ export interface StorageTransaction {
   insertReceipt(receipt: Omit<ReceiptRecord, 'receiptId'>): ReceiptRecord;
   getReceipt(taskId: Hex32, kind: ReceiptKind): ReceiptRecord | undefined;
 
+  insertSettlementDispute(dispute: Omit<SettlementDisputeRecord, 'disputeId'>): SettlementDisputeRecord;
+  getSettlementDispute(disputeId: string): SettlementDisputeRecord | undefined;
+  listSettlementDisputes(): readonly SettlementDisputeRecord[];
+  updateSettlementDispute(dispute: SettlementDisputeRecord): void;
+
   appendAudit(event: Omit<AuditRecord, 'auditId'>): AuditRecord;
   listAudit(): readonly AuditRecord[];
 }
@@ -116,6 +142,7 @@ interface MemoryState {
   nodes: Map<Hex32, NodeDeviceRecord>;
   leases: Map<string, TaskLeaseRecord>;
   receipts: Map<string, ReceiptRecord>;
+  settlementDisputes: Map<string, SettlementDisputeRecord>;
   audit: AuditRecord[];
 }
 
@@ -247,6 +274,26 @@ class MemoryTransaction implements StorageTransaction {
     return receipt ? clone(receipt) : undefined;
   }
 
+  insertSettlementDispute(dispute: Omit<SettlementDisputeRecord, 'disputeId'>): SettlementDisputeRecord {
+    const record = { ...dispute, disputeId: randomUUID() };
+    this.state.settlementDisputes.set(record.disputeId, record);
+    return record;
+  }
+
+  getSettlementDispute(disputeId: string): SettlementDisputeRecord | undefined {
+    const record = this.state.settlementDisputes.get(disputeId);
+    return record ? { ...record } : undefined;
+  }
+
+  listSettlementDisputes(): readonly SettlementDisputeRecord[] {
+    return [...this.state.settlementDisputes.values()].map((record) => ({ ...record }));
+  }
+
+  updateSettlementDispute(dispute: SettlementDisputeRecord): void {
+    if (!this.state.settlementDisputes.has(dispute.disputeId)) throw new Error('SETTLEMENT_DISPUTE_NOT_FOUND');
+    this.state.settlementDisputes.set(dispute.disputeId, { ...dispute });
+  }
+
   appendAudit(event: Omit<AuditRecord, 'auditId'>): AuditRecord {
     const record = { ...clone(event), auditId: randomUUID() };
     this.state.audit.push(record);
@@ -265,6 +312,7 @@ export class MemoryStorage implements Storage {
     nodes: new Map(),
     leases: new Map(),
     receipts: new Map(),
+      settlementDisputes: new Map(),
     audit: [],
   };
 

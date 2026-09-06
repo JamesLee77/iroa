@@ -47,6 +47,7 @@ interface MockState {
   nodeChainStatus: bigint;
   registeredOnchain: boolean;
   rpcDelayMs: number;
+  disputes: Array<Record<string, unknown>>;
 }
 
 function word(value: bigint | boolean): Hex {
@@ -194,6 +195,13 @@ async function installRoutes(page: Page, state: MockState) {
     }
     if (path.endsWith('/operator/nodes')) return route.fulfill({ status: 200, json: state.showNode ? [{ nodeId: NODE_ID, deviceKeyHash: DEVICE_HASH, trustLevel: 'N0', policyVersion: '1.0.0', status: 'active', agentVersion: '1.0.0', capacityBucket: 'medium', lastSeenAt: 1_800_000_000, createdAt: 1, updatedAt: 1 }] : [] });
     if (path.endsWith('/operator/tasks')) return route.fulfill({ status: 200, json: [] });
+    if (path.endsWith('/operator/settlements/disputes')) {
+      if (route.request().method() === 'POST') {
+        state.disputes.push({ disputeId: `dispute-${state.disputes.length + 1}`, epoch: 1, operatorIdHash: ACTOR_HASH, nodeId: null, reasonCode: 'TASK_EXCLUDED', evidenceHash: RECEIPT_ROOT, note: 'n', status: 'open', resolutionNote: null, openedAt: 1_800_000_000, resolvedAt: null });
+        return route.fulfill({ status: 201, json: state.disputes[state.disputes.length - 1] });
+      }
+      return route.fulfill({ status: 200, json: state.disputes });
+    }
     if (path.endsWith('/operator/rewards')) return route.fulfill({ status: 200, json: [{ recordId: RECORD_ID, leaf: { epoch: 1, operatorIdHash: ACTOR_HASH, nodeId: NODE_ID, score: '95', rewardAmount: (25n * 10n ** 18n).toString(), receiptBatchRoot: RECEIPT_ROOT, policyVersion: '1.0.0', claimNonce: CLAIM_NONCE }, proof: [PROOF], scoreBreakdown: { validatedTasks: 12, resultQualityBps: 9800, accessibilityQualityBps: 9600, securityGate: true }, excludedReasons: [] }] });
     return route.fulfill({ status: 404, json: { error: 'NOT_FOUND' } });
   });
@@ -206,7 +214,7 @@ async function connectAndSignIn(page: Page) {
 }
 
 function initialState(overrides: Partial<MockState> = {}): MockState {
-  return { chainId: BASE_SEPOLIA, claimed: false, v1Balance: 10n * 10n ** 18n, v2Balance: 0n, allowance: 0n, burned: 0n, minted: 0n, transactionCount: 0, enrollFailures: 0, statusFailures: 0, showNode: false, nodeChainStatus: 1n, registeredOnchain: false, rpcDelayMs: 0, ...overrides };
+  return { chainId: BASE_SEPOLIA, claimed: false, v1Balance: 10n * 10n ** 18n, v2Balance: 0n, allowance: 0n, burned: 0n, minted: 0n, transactionCount: 0, enrollFailures: 0, statusFailures: 0, showNode: false, nodeChainStatus: 1n, registeredOnchain: false, rpcDelayMs: 0, disputes: [], ...overrides };
 }
 
 test('wrong chain locks writes until the wallet switches to the selected network', async ({ page }) => {
@@ -255,6 +263,27 @@ test('reward claim status is read from the chain and duplicate claim is disabled
   await connectAndSignIn(page);
   await expect(page.getByText('청구 완료').first()).toBeVisible();
   await expect(page.getByRole('button', { name: '청구 완료' })).toBeDisabled();
+});
+
+test('an operator can dispute an epoch settlement from a reward card and see it under review', async ({ page }) => {
+  const state = initialState({ claimed: true });
+  await installWallet(page, state);
+  await installRoutes(page, state);
+  await page.goto('/rewards');
+  await connectAndSignIn(page);
+  await expect(page.getByText('제기한 이의가 없습니다.')).toBeVisible();
+
+  await page.getByRole('button', { name: '정산 이의 제기' }).first().click();
+  await expect(page.getByLabel('에폭')).toHaveValue('1');
+  await expect(page.getByRole('button', { name: '이의 제출' })).toBeDisabled();
+  await page.getByLabel('설명 (10–500자, 개인정보·원문 없이)').fill('에폭 1의 검증된 작업 두 건이 정산에서 제외되었습니다.');
+  await page.getByRole('button', { name: '이의 제출' }).click();
+
+  await expect(page.getByRole('status').filter({ hasText: '이의가 접수되었습니다.' })).toBeVisible();
+  const disputeCard = page.locator('li.data-card').filter({ hasText: '검토 중' });
+  await expect(disputeCard).toHaveCount(1);
+  await expect(disputeCard.getByText('검증된 작업이 제외됨')).toBeVisible();
+  expect(state.disputes).toHaveLength(1);
 });
 
 test('reward stays in checking state until the onchain claim read completes', async ({ page }) => {

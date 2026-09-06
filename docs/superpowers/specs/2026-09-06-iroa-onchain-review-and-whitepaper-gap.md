@@ -1,7 +1,7 @@
 # IROA 온체인 계약 소스 리뷰와 백서 달성 설계
 
 날짜: 2026-09-06  
-상태: 리뷰 완료 · 수정 4건 적용 · G1·G3 구현 완료 · G6 결정 (a) 반영 · G2·G4·G5 설계  
+상태: 리뷰 완료 · 수정 4건 적용 · G1·G3·G4 구현 완료 · G6 결정 (a) 반영 · G2·G5 설계  
 기준 브랜치: `main` (`35e1117`)  
 대상: `onchain/contracts/` 13개 계약 (token 2, migration 2, vaults 4, settlement 2, node 1, governance 1, test 1)  
 참조: 백서 §16 토큰 이코노미, 파일럿 설계 `2026-08-30-iroa-web3-mainnet-private-pilot-design.md`
@@ -76,7 +76,7 @@
 | G1 | §16.3 잠금 해제 일정이 V2에서도 이어짐 | V2 importer는 스냅샷만 저장 | **V2 해제 금고 없음 → `V2ScheduleVault` 구현 (2026-09-06)** |
 | G2 | §16.4 NODE 보상이 V2에서 계속 지급 | 분배기·금고가 V1에 고정 | V2 보상 분배기·NODE 금고 없음 |
 | G3 | §8.3 실행 공간의 신뢰 수준과 증명 상태 | 신뢰 수준 고정, 기기 키 소유 증명 없음 | **구현 (2026-09-06): 등록 시 기기 키 EIP-712 서명, `changeTrustLevel`** |
-| G4 | §15.5 보상 분쟁 절차 | 이의는 재단 역할만 | 운영자 이의 경로 |
+| G4 | §15.5 보상 분쟁 절차 | 이의는 재단 역할만 | **구현 (2026-09-06): 운영자 포털 → control-api 정산 이의 → 컴플라이언스 검토 → `challengeRoot`** |
 | G5 | §16.4 허위 작업 시 환수 | 청구 후 회수 불가 | 환수 수단 |
 | G6 | 창립자 합의서(10% 즉시 교부·처분 제한) vs 팀·자문 금고(24+72개월 베스팅) | 온체인은 베스팅 | **(a) 결정 2026-09-06 — 합의서 v0.2를 금고에 맞춤** |
 
@@ -117,9 +117,22 @@ V2ScheduleImporter (기존, 불변)      V2ScheduleVault (신규)
 - node-agent `signNodeRegistration()`이 서명을 만들고, 운영자 포털이 서명할 EIP-712 데이터를 보여주고 서명을 받아 `registerNode`에 넘긴다. 관리자 콘솔에 `등록 거부`·`신뢰 수준 변경` 버튼. 공개 사이트는 `NodeTrustLevelChanged`를 반영해 최신 등급으로 분포를 센다.
 - 등록 수수료 또는 보증금은 백서가 요구하지 않으므로 넣지 않는다.
 
-### G4 · 운영자 이의
+### G4 · 운영자 이의 (구현 완료)
 
-온체인 이의는 파일럿 동안 재단 역할로 유지한다(파일럿 설계 §2). 운영자는 control-api `/v1/disputes`(verifier `disputes.ts`)로 이의를 제기하고, 재단이 근거 해시로 `challengeRoot`를 실행한다. V2에서 보증금 기반 공개 이의를 검토한다.
+온체인 이의는 파일럿 동안 재단 역할(CHALLENGER_ROLE)로 유지한다(파일럿 설계 §2). 운영자 경로는 오프체인이다.
+
+```
+운영자 포털 보상 화면 ─ "정산 이의 제기" ─▶ POST /v1/operator/settlements/disputes
+   {epoch, reasonCode, note(10–500자, 원문·blob 참조 금지), evidenceHash?}
+   · 운영자·에폭당 검토 중 이의 1건 · evidenceHash 없으면 note의 sha256
+   · 감사: SETTLEMENT_DISPUTE_OPENED (evidenceHash만, note 없음)
+컴플라이언스 ─▶ GET /v1/settlements/disputes · POST /v1/settlements/disputes/:id/resolve {upheld|rejected, note}
+   · 감사: SETTLEMENT_DISPUTE_UPHELD / _REJECTED
+인정(upheld) ─▶ CHALLENGER_ROLE 지갑이 이의 창 안에서 challengeRoot(epoch, evidenceHash)
+            ─▶ Timelock cancelChallengedRoot ─▶ verifier가 사유 코드에 해당하는 입력을 다시 검증해 재산출 ─▶ proposeRoot (revision+1)
+```
+
+사유 코드 `TASK_EXCLUDED`·`SCORE_UNDERSTATED`·`RECEIPT_NOT_COUNTED`·`POLICY_VERSION_MISMATCH`·`OTHER` 는 재산출 때 verifier가 다시 보는 입력을 가리킨다. 이의 창(메인넷 7일)을 넘긴 이의는 기각이 아니라 다음 에폭 정정(G5 상계)으로 넘긴다. 관리자 콘솔의 분쟁 화면은 아직 이용자 작업 분쟁(`/v1/admin/disputes`, control-api 미구현)만 다루므로, 정산 이의 검토 화면은 별도 작업이다. V2에서 보증금 기반 공개 이의를 검토한다.
 
 ### G5 · 환수
 

@@ -54,6 +54,23 @@ const RewardRecordSchema = z.object({
   excludedReasons: z.array(z.string().regex(/^[A-Z][A-Z0-9_]{0,63}$/)).max(32),
 }).strict();
 
+export const SETTLEMENT_DISPUTE_REASONS = ['TASK_EXCLUDED', 'SCORE_UNDERSTATED', 'RECEIPT_NOT_COUNTED', 'POLICY_VERSION_MISMATCH', 'OTHER'] as const;
+export type SettlementDisputeReason = (typeof SETTLEMENT_DISPUTE_REASONS)[number];
+
+const SettlementDisputeSchema = z.object({
+  disputeId: z.string().min(1),
+  epoch: z.number().int().nonnegative(),
+  operatorIdHash: Hex32Schema,
+  nodeId: Hex32Schema.nullable(),
+  reasonCode: z.enum(SETTLEMENT_DISPUTE_REASONS),
+  evidenceHash: Hex32Schema,
+  note: z.string(),
+  status: z.enum(['open', 'upheld', 'rejected']),
+  resolutionNote: z.string().nullable(),
+  openedAt: z.number().int().nonnegative(),
+  resolvedAt: z.number().int().nonnegative().nullable(),
+}).strict();
+
 const ChallengeSchema = z.object({ nonce: z.string(), expiresAt: z.number().int(), message: z.string().optional() }).strict();
 const ErrorSchema = z.object({ error: z.string() }).passthrough();
 
@@ -61,6 +78,7 @@ export type OperatorSession = z.infer<typeof StoredSessionSchema>;
 export type OperatorNode = z.infer<typeof NodeSchema>;
 export type OperatorTask = z.infer<typeof OperatorTaskSchema>;
 export type OperatorRewardRecord = z.infer<typeof RewardRecordSchema>;
+export type SettlementDispute = z.infer<typeof SettlementDisputeSchema>;
 
 export class OperatorApiError extends Error {
   constructor(public readonly code: string, public readonly status: number) {
@@ -162,6 +180,14 @@ export async function listTasks(): Promise<OperatorTask[]> {
 
 export async function listRewards(): Promise<OperatorRewardRecord[]> {
   return z.array(RewardRecordSchema).parse(await operatorRequest('/v1/operator/rewards', { method: 'GET' }));
+}
+
+export async function listSettlementDisputes(): Promise<SettlementDispute[]> {
+  return z.array(SettlementDisputeSchema).parse(await operatorRequest('/v1/operator/settlements/disputes', { method: 'GET' }));
+}
+
+export async function openSettlementDispute(input: { epoch: number; nodeId?: Hex32 | null; reasonCode: SettlementDisputeReason; note: string }): Promise<SettlementDispute> {
+  return SettlementDisputeSchema.parse(await operatorRequest('/v1/operator/settlements/disputes', { method: 'POST', body: JSON.stringify(input) }));
 }
 
 export async function updateNodeStatus(nodeId: Hex32, status: 'suspended' | 'revoked'): Promise<OperatorNode> {
