@@ -76,7 +76,10 @@ contract LiquidityReleaseVault is ReentrancyGuard {
 
         uint256 remaining = TOTAL_ALLOCATION - released;
         uint256 actualBalance = token.balanceOf(address(this));
-        if (actualBalance != remaining) revert MigrationBalanceMismatch(remaining, actualBalance);
+        // Any allowlisted holder could send a stray wei here before migration mode, and
+        // nothing can move it out afterwards; requiring an exact balance would let that
+        // wei block the schedule forever. Only a shortfall is a fault.
+        if (actualBalance < remaining) revert MigrationBalanceMismatch(remaining, actualBalance);
 
         uint256[] memory cumulativeReleaseTable = new uint256[](LINEAR_MONTHS + 1);
         for (uint256 i = 0; i <= LINEAR_MONTHS; ++i) {

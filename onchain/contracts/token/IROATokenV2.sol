@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {IIROAMigrationTokenBinding} from "../migration/IROAMigrationTypes.sol";
 
 contract IROATokenV2 is ERC20, ERC20Permit, AccessControl {
     uint256 public constant CAP = 10_000_000_000 ether;
@@ -76,6 +77,13 @@ contract IROATokenV2 is ERC20, ERC20Permit, AccessControl {
         if (migration.code.length == 0) revert InvalidMigrationContract(migration);
         if (migrationAuthorityLocked) revert MigrationAuthorityLocked();
         if (totalSupply() != 0) revert MigrationAlreadyBound();
+        // The bound contract becomes V2's only minter for the life of the token, so it must
+        // prove it was deployed for this token rather than another V2 instance.
+        try IIROAMigrationTokenBinding(migration).v2() returns (address boundV2) {
+            if (boundV2 != address(this)) revert InvalidMigrationContract(migration);
+        } catch {
+            revert InvalidMigrationContract(migration);
+        }
 
         migrationContract = migration;
         emit MigrationContractBound(migration);

@@ -39,3 +39,9 @@ interface IIROAVaultMigration {
 interface IIROAV1MigrationBinding {
     function migrationContract() external view returns (address);
 }
+
+/// @dev The pair a migration contract was deployed for; each token checks its own side before binding.
+interface IIROAMigrationTokenBinding {
+    function v1() external view returns (address);
+    function v2() external view returns (address);
+}

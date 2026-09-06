@@ -93,14 +93,10 @@ describe("IROATokenV1", function () {
   });
 
   it("makes migration mode and the migration allowlist binding irreversible", async function () {
-    const { token, admin, pauser, migration, outsider } = await deployTokenFixture();
+    const { token, admin, migration, outsider } = await deployTokenFixture();
     await token.connect(admin).enterMigrationMode(migration.target);
 
     await expect(token.connect(admin).enterMigrationMode(outsider.address)).to.be.revertedWithCustomError(
-      token,
-      "MigrationAlreadyConfigured",
-    );
-    await expect(token.connect(pauser).unpause()).to.be.revertedWithCustomError(
       token,
       "MigrationAlreadyConfigured",
     );
@@ -108,5 +104,49 @@ describe("IROATokenV1", function () {
       token,
       "MigrationContractMustRemainAllowed",
     );
+  });
+
+  it("can pause a migration in progress and resumes migration-only mode, never private transfers", async function () {
+    const { ethers, token, v2, genesis, admin, pauser, participant, migration } = await deployTokenFixture();
+    await token.connect(admin).setAllowed(participant.address, true);
+    await v2.connect(admin).setAllowed(participant.address, true);
+    await token.connect(genesis).transfer(participant.address, ethers.parseEther("5"));
+    await token.connect(admin).enterMigrationMode(migration.target);
+    await token.connect(participant).approve(migration.target, ethers.parseEther("5"));
+
+    await token.connect(pauser).pause();
+    expect(await token.transferMode()).to.equal(1n);
+    await expect(migration.connect(participant).migrate(1n)).to.be.revertedWithCustomError(token, "TransfersPaused");
+
+    await token.connect(pauser).unpause();
+    expect(await token.transferMode()).to.equal(2n);
+    expect(await token.migrationContract()).to.equal(migration.target);
+    await expect(token.connect(participant).transfer(genesis.address, 1n)).to.be.revertedWithCustomError(
+      token,
+      "MigrationTransferRequired",
+    );
+    await migration.connect(participant).migrate(1n);
+    expect(await v2.balanceOf(participant.address)).to.equal(1n);
+  });
+
+  it("refuses a migration contract that was deployed for a different V1", async function () {
+    const { ethers, token, v2, admin, pauser, genesis } = await deployTokenFixture();
+    const otherV1 = await ethers.deployContract("IROATokenV1", [genesis.address, admin.address, pauser.address]);
+    await otherV1.waitForDeployment();
+    const foreignMigration = await ethers.deployContract("IROAMigrationV1ToV2", [
+      otherV1.target,
+      v2.target,
+      admin.address,
+    ]);
+    await foreignMigration.waitForDeployment();
+
+    await expect(token.connect(admin).enterMigrationMode(foreignMigration.target))
+      .to.be.revertedWithCustomError(token, "InvalidMigrationContract")
+      .withArgs(foreignMigration.target);
+    // A contract without the binding view is refused the same way.
+    await expect(token.connect(admin).enterMigrationMode(v2.target))
+      .to.be.revertedWithCustomError(token, "InvalidMigrationContract")
+      .withArgs(v2.target);
+    expect(await token.transferMode()).to.equal(0n);
   });
 });

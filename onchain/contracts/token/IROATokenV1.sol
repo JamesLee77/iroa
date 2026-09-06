@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {IIROAMigrationTokenBinding} from "../migration/IROAMigrationTypes.sol";
 
 contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
     uint256 public constant GENESIS_SUPPLY = 10_000_000_000 ether;
@@ -65,8 +66,10 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
         emit AllowedAccountUpdated(account, allowed);
     }
 
+    /// @notice Halts every transfer, including migration deposits and burns. Pausing stays
+    /// available in migration mode so a defect found mid-migration can be contained; the
+    /// migration binding itself is untouched and resumes on unpause.
     function pause() external onlyRole(PAUSER_ROLE) {
-        if (transferMode == TransferMode.MIGRATION_ONLY) revert MigrationAlreadyConfigured();
         if (transferMode != TransferMode.PAUSED) {
             TransferMode previousMode = transferMode;
             transferMode = TransferMode.PAUSED;
@@ -74,11 +77,14 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
         }
     }
 
+    /// @notice Resumes the mode the token was in before the pause: migration-only once a
+    /// migration contract is bound, private transfers otherwise.
     function unpause() external onlyRole(PAUSER_ROLE) {
-        if (transferMode == TransferMode.MIGRATION_ONLY) revert MigrationAlreadyConfigured();
         if (transferMode == TransferMode.PAUSED) {
-            transferMode = TransferMode.NORMAL_PRIVATE;
-            emit TransferModeChanged(TransferMode.PAUSED, transferMode);
+            TransferMode resumedMode =
+                migrationContract != address(0) ? TransferMode.MIGRATION_ONLY : TransferMode.NORMAL_PRIVATE;
+            transferMode = resumedMode;
+            emit TransferModeChanged(TransferMode.PAUSED, resumedMode);
         }
     }
 
@@ -86,6 +92,13 @@ contract IROATokenV1 is ERC20, ERC20Permit, AccessControl {
         if (migrationContract != address(0)) revert MigrationAlreadyConfigured();
         if (migration == address(0)) revert ZeroAddress();
         if (migration.code.length == 0) revert InvalidMigrationContract(migration);
+        // The binding is one-way, so the contract must prove it was deployed for this token
+        // before it becomes the only address allowed to move and burn V1.
+        try IIROAMigrationTokenBinding(migration).v1() returns (address boundV1) {
+            if (boundV1 != address(this)) revert InvalidMigrationContract(migration);
+        } catch {
+            revert InvalidMigrationContract(migration);
+        }
 
         TransferMode previousMode = transferMode;
         migrationContract = migration;

@@ -269,6 +269,50 @@ describe("IROA V1 to V2 migration invariants", function () {
     ).to.revert(ethers);
   });
 
+  async function deployCliffWithProbesFixture(balanceOffset: bigint) {
+    const fixture = await deployMigrationCore();
+    const { ethers, networkHelpers, v1, v2, migration, genesis, admin, team } = fixture;
+    const start = await networkHelpers.time.latest();
+    const total = ethers.parseEther("1500000000");
+    const vault = await ethers.deployContract("CliffLinearVestingVault", [v1.target, team.address, total, start, 24, 72]);
+    const importer = await ethers.deployContract("V2ScheduleImporter", [v2.target, migration.target]);
+    await Promise.all([vault.waitForDeployment(), importer.waitForDeployment()]);
+    await v1.connect(admin).setAllowed(vault.target, true);
+    await v1.connect(genesis).transfer(vault.target, total + balanceOffset);
+    await migration.connect(admin).registerVaultPair(vault.target, importer.target);
+    for (let i = 0; i < 6; i += 1) {
+      const probe = await ethers.deployContract("MigrationVaultProbe", [v1.target, admin.address]);
+      const probeImporter = await ethers.deployContract("V2ScheduleImporter", [v2.target, migration.target]);
+      await Promise.all([probe.waitForDeployment(), probeImporter.waitForDeployment()]);
+      await migration.connect(admin).registerVaultPair(probe.target, probeImporter.target);
+    }
+    await migration.connect(admin).lockVaultPairs();
+    await v1.connect(admin).enterMigrationMode(migration.target);
+    return { ...fixture, vault, importer, total };
+  }
+
+  it("migrates a vault holding a stray surplus instead of letting one wei brick the schedule", async function () {
+    const { ethers, v1, v2, migration, team, vault, importer, total } = await deployCliffWithProbesFixture(1n);
+
+    await vault.connect(team).migrateRemaining(migration.target, importer.target, ethers.id("team"), ethers.id("team-batch"));
+
+    expect(await v2.balanceOf(importer.target)).to.equal(total);
+    expect(await v1.balanceOf(vault.target)).to.equal(1n);
+    expect((await importer.getSchedule(ethers.id("team"))).remaining).to.equal(total);
+    await expectSupplyInvariant(v1, v2);
+  });
+
+  it("still refuses to migrate a vault whose balance falls short of its schedule", async function () {
+    const { ethers, v1, migration, team, vault, importer, total } = await deployCliffWithProbesFixture(-1n);
+
+    await expect(
+      vault.connect(team).migrateRemaining(migration.target, importer.target, ethers.id("team"), ethers.id("team-batch")),
+    )
+      .to.be.revertedWithCustomError(vault, "MigrationBalanceMismatch")
+      .withArgs(total, total - 1n);
+    expect(await v1.balanceOf(vault.target)).to.equal(total - 1n);
+  });
+
   it("migrates an exact cliff snapshot atomically without re-vesting released tokens", async function () {
     const fixture = await deploySevenVaultFixture();
     const { ethers, v1, v2, migration, team, vaults, importers, start } = fixture;

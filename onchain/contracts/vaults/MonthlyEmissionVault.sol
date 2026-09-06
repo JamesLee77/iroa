@@ -166,7 +166,10 @@ contract MonthlyEmissionVault is AccessControl, ReentrancyGuard {
 
         uint256 remaining = allocation - totalReleased;
         uint256 actualBalance = token.balanceOf(address(this));
-        if (actualBalance != remaining) revert MigrationBalanceMismatch(remaining, actualBalance);
+        // Any allowlisted holder could send a stray wei here before migration mode, and
+        // nothing can move it out afterwards; requiring an exact balance would let that
+        // wei block the schedule forever. Only a shortfall is a fault.
+        if (actualBalance < remaining) revert MigrationBalanceMismatch(remaining, actualBalance);
 
         uint256[] memory cumulativeReleaseTable = new uint256[](scheduleMonths);
         uint256 cumulative;
