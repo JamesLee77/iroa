@@ -50,6 +50,18 @@ const SettlementSchema = z.object({
   capExcludedAmount: DecimalUint,
   roundingExcludedAmount: DecimalUint,
   unusedAmount: DecimalUint,
+  // Offsets carried between epochs (verifier adjustments). Optional so artifacts
+  // produced before the ledger existed still parse.
+  penaltyAppliedAmount: DecimalUint.optional(),
+  creditAppliedAmount: DecimalUint.optional(),
+  carriedAdjustments: z.array(z.object({
+    operatorIdHash: Hex32,
+    kind: z.enum(['penalty', 'credit']),
+    amount: DecimalUint,
+    reason: z.string().regex(/^[A-Z][A-Z0-9_]{0,63}$/),
+    sourceEpoch: z.number().int().nonnegative(),
+    referenceHash: Hex32,
+  }).strict()).optional(),
   allocations: z.array(z.object({
     operatorIdHash: Hex32,
     nodeId: Hex32,

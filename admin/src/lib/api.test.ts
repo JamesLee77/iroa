@@ -26,6 +26,14 @@ describe('admin settlement boundary', () => {
       excludedTasks: [],
     };
     expect(() => parseAdminSettlement({ ...artifact, canonicalArtifact: JSON.stringify(artifact), artifactSha256: HEX })).not.toThrow();
+    // An artifact that carries the adjustment ledger parses too.
+    const withLedger = {
+      ...artifact,
+      penaltyAppliedAmount: '100',
+      creditAppliedAmount: '0',
+      carriedAdjustments: [{ operatorIdHash: HEX, kind: 'penalty', amount: '50', reason: 'FRAUD_CONFIRMED', sourceEpoch: 0, referenceHash: HEX }],
+    };
+    expect(() => parseAdminSettlement({ ...withLedger, canonicalArtifact: JSON.stringify(withLedger), artifactSha256: HEX })).not.toThrow();
   });
 });
 

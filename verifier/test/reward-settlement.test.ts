@@ -193,6 +193,91 @@ describe('integer scoring and epoch budget', () => {
   });
 });
 
+describe('epoch adjustments (clawback by offset and late corrections)', () => {
+  const penalty = (operator: string, amount: string, sourceEpoch = 0, reference = 'a') => ({
+    operatorIdHash: hex(operator), kind: 'penalty' as const, amount, reason: 'FRAUD_CONFIRMED' as const, sourceEpoch, referenceHash: hex(reference),
+  });
+  const credit = (operator: string, amount: string, sourceEpoch = 0, reference = 'c') => ({
+    operatorIdHash: hex(operator), kind: 'credit' as const, amount, reason: 'DISPUTE_UPHELD_AFTER_WINDOW' as const, sourceEpoch, referenceHash: hex(reference),
+  });
+  const twoOperators = [
+    { operatorIdHash: hex('1'), nodeId: hex('2'), score: '100' },
+    { operatorIdHash: hex('3'), nodeId: hex('4'), score: '100' },
+  ];
+
+  it('withholds a penalty from the operator it names, leaves it in the vault, and touches no one else', () => {
+    const settlement = settleEpochBudget({ monthlyBudget: '10000', nodes: twoOperators, adjustments: [penalty('1', '120')] });
+    expect(settlement.allocations.map((allocation) => allocation.rewardAmount)).toEqual(['380', '500']);
+    expect(settlement.penaltyAppliedAmount).toBe('120');
+    expect(settlement.totalReward).toBe('880');
+    expect(settlement.unusedAmount).toBe('9120');
+    expect(settlement.carriedAdjustments).toEqual([]);
+  });
+
+  it('never pushes a reward below zero and carries the unpaid remainder with its provenance', () => {
+    const settlement = settleEpochBudget({ monthlyBudget: '10000', nodes: twoOperators, adjustments: [penalty('1', '800', 4, 'f')] });
+    expect(settlement.allocations.map((allocation) => allocation.rewardAmount)).toEqual(['500']);
+    expect(settlement.penaltyAppliedAmount).toBe('500');
+    expect(settlement.carriedAdjustments).toEqual([penalty('1', '300', 4, 'f')]);
+  });
+
+  it('settles older findings first', () => {
+    const settlement = settleEpochBudget({
+      monthlyBudget: '10000',
+      nodes: twoOperators,
+      adjustments: [penalty('1', '400', 7, 'b'), penalty('1', '400', 2, 'e')],
+    });
+    expect(settlement.carriedAdjustments).toEqual([penalty('1', '300', 7, 'b')]);
+  });
+
+  it('carries everything for an operator with no valid work this epoch', () => {
+    const idle = settleEpochBudget({ monthlyBudget: '10000', nodes: twoOperators, adjustments: [penalty('9', '50')] });
+    expect(idle.penaltyAppliedAmount).toBe('0');
+    expect(idle.carriedAdjustments).toEqual([penalty('9', '50')]);
+    const empty = settleEpochBudget({ monthlyBudget: '10000', nodes: [], adjustments: [penalty('9', '50'), credit('8', '5')] });
+    expect(empty.carriedAdjustments).toHaveLength(2);
+    expect(empty.totalReward).toBe('0');
+  });
+
+  it('pays a credit from the budget but never above the operator cap', () => {
+    const settlement = settleEpochBudget({ monthlyBudget: '10000', nodes: twoOperators, adjustments: [credit('1', '80')] });
+    // Operator 1 already sits at the 5% cap (500), so the credit cannot be paid this epoch.
+    expect(settlement.allocations.map((allocation) => allocation.rewardAmount)).toEqual(['500', '500']);
+    expect(settlement.creditAppliedAmount).toBe('0');
+    expect(settlement.carriedAdjustments).toEqual([credit('1', '80')]);
+
+    // With a large operator in the pool, operator 1 earns 250 (2.5%) and has room under the cap.
+    const roomy = settleEpochBudget({
+      monthlyBudget: '10000',
+      nodes: [...twoOperators, { operatorIdHash: hex('5'), nodeId: hex('6'), score: '3800' }],
+      adjustments: [credit('1', '80')],
+    });
+    expect(roomy.allocations.map((allocation) => allocation.rewardAmount)).toEqual(['330', '250', '500']);
+    expect(roomy.creditAppliedAmount).toBe('80');
+    expect(roomy.carriedAdjustments).toEqual([]);
+  });
+
+  it('rejects a zero amount and an unknown reason', () => {
+    expect(() => settleEpochBudget({ monthlyBudget: '10000', nodes: twoOperators, adjustments: [penalty('1', '0')] })).toThrow();
+    expect(() => settleEpochBudget({ monthlyBudget: '10000', nodes: twoOperators, adjustments: [{ ...penalty('1', '1'), reason: 'GRUDGE' as never }] })).toThrow();
+  });
+
+  it('flows through buildRoot so the reward leaves already carry the offset', () => {
+    const first = candidate(1);
+    const settlement = buildRoot({
+      epoch: 3,
+      policyVersion: '1.0.0',
+      monthlyBudget: '10000',
+      candidates: [first],
+      adjustments: [{ operatorIdHash: first.operatorIdHash, kind: 'penalty', amount: '100', reason: 'OVERPAYMENT_CORRECTION', sourceEpoch: 2, referenceHash: hex('e') }],
+    });
+    expect(settlement.includedTaskCount).toBe(1);
+    expect(settlement.penaltyAppliedAmount).toBe('100');
+    expect(BigInt(settlement.allocations[0]?.rewardAmount ?? '0') + 100n).toBe(BigInt(settlement.totalReward) + 100n);
+    expect(settlement.claims[0]?.leaf.rewardAmount).toBe(settlement.allocations[0]?.rewardAmount);
+  });
+});
+
 describe('deterministic settlement', () => {
   it('excludes duplicate task IDs even when fingerprints differ', () => {
     const first = candidate(1);
