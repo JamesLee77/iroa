@@ -44,7 +44,7 @@ const mobileSettlementFacts = content.facts
     <div class="home-hero__lead">
       <div class="home-hero__status">
         <div class="home-hero__validation">
-          <StatusBadge status="validation" label="IROA Rewards · Validation Stage" locale={locale} />
+          <StatusBadge status="validation" label={english ? 'IROA reward status · In validation' : 'IROA 보상 · 검증 중'} locale={locale} />
         </div>
         <ul class="home-hero__settlement-plan" aria-label={english ? 'Mobile settlement plan' : '모바일 결제 계획'}>
       {mobileSettlementFacts.map((fact) => <li><span class="latin">{fact.label}</span><span aria-hidden="true">·</span><strong>{fact.status}</strong></li>)}

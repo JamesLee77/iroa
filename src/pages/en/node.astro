@@ -1,0 +1,17 @@
+---
+import NodeNetwork from '../../components/sections/NodeNetwork.astro';
+import { nodeEn } from '../../content/node.en';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+---
+
+<SiteLayout
+  title="IROA.AI | NODE Network"
+  description="What an IROA NODE is, which requests trust levels N0–N4 handle, how operator registration and approval work, how verified work is rewarded, and the pilot stages ahead."
+  canonicalPath="/en/node"
+  alternatePath="/node"
+  locale="en"
+>
+  <div class="page--node">
+    <NodeNetwork content={nodeEn} locale="en" />
+  </div>
+</SiteLayout>

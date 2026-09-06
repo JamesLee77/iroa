@@ -7,9 +7,15 @@ interface Props {
   asset: 'Circle Native USDC';
   status: PublicStatus;
   locale?: 'ko' | 'en';
+  /**
+   * The atlas stage card once repeated the full record — status row and
+   * note — that the settlement section prints again a screen later. The
+   * compact form keeps the two facts and points at the section instead.
+   */
+  compact?: boolean;
 }
 
-const { network, asset, status, locale = 'ko' } = Astro.props;
+const { network, asset, status, locale = 'ko', compact = false } = Astro.props;
 const english = locale === 'en';
 ---
 
@@ -23,10 +29,16 @@ const english = locale === 'en';
       <dt>{english ? 'Settlement asset' : '정산 자산'}</dt>
       <dd class="latin">{asset}</dd>
     </div>
-    <div>
-      <dt>{english ? 'Public status' : '공개 상태'}</dt>
-      <dd><StatusBadge status={status} locale={locale} /></dd>
-    </div>
+    {!compact && (
+      <div>
+        <dt>{english ? 'Public status' : '공개 상태'}</dt>
+        <dd><StatusBadge status={status} locale={locale} /></dd>
+      </div>
+    )}
   </dl>
-  <p class="protocol-pattern__note">{english ? 'A future B2B settlement direction, subject to deployment, legal, and security review.' : '배포·법률·보안 검토 이후의 B2B 정산 방향입니다.'}</p>
+  {compact ? (
+    <p class="protocol-pattern__note"><StatusBadge status={status} locale={locale} /> <a href="#settlement">{english ? 'See the settlement boundary' : '정산 경계 보기'}</a></p>
+  ) : (
+    <p class="protocol-pattern__note">{english ? 'A future B2B settlement direction, subject to deployment, legal, and security review.' : '배포·법률·보안 검토 이후의 B2B 정산 방향입니다.'}</p>
+  )}
 </section>

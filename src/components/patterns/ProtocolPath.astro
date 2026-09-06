@@ -95,7 +95,7 @@ const stageIcons = {
                 />
               )}
               {stage.id === 'base-settlement' && stage.network && stage.asset && (
-                <SettlementRecord network={stage.network} asset={stage.asset} status="planned" locale={locale} />
+                <SettlementRecord network={stage.network} asset={stage.asset} status="planned" locale={locale} compact />
               )}
             </div>
           </li>

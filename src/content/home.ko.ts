@@ -6,7 +6,7 @@ import type { HomepageContent } from '../types/home';
 export const homeKo: HomepageContent = {
   navigation: [
     { label: '프로토콜', href: '#protocol' },
-    { label: '네트워크', href: '#network' },
+    { label: '네트워크', href: '/node' },
     { label: '이코노미', href: '#economy' },
     { label: '백서', href: '#whitepaper-entry' },
     { label: '로드맵', href: '#roadmap' },
@@ -107,6 +107,11 @@ export const homeKo: HomepageContent = {
     title: 'Node와 증빙은 역할을 나누어 검증합니다.',
     description:
       'Node는 요청 전체를 독점하지 않으며, 사용자 승인·제한 권한·외부 결과 확인을 각각의 경계로 둡니다.',
+    directory: {
+      summary: '신뢰 수준은 N0 공개 연산부터 N4 개인 승인까지 다섯 등급이며, 운영자는 자격 확인과 승인을 거쳐 NODE를 운영합니다.',
+      label: 'NODE 네트워크 자세히 보기',
+      href: '/node',
+    },
     node: {
       level: 'N2',
       status: 'validation',
@@ -198,11 +203,11 @@ export const homeKo: HomepageContent = {
       evidence: 'Task Capsule과 보안 실행 공간 원칙',
     },
     {
-      title: 'Network Research',
-      status: 'research',
-      description: '기관 연계, 실행 공간 보상, 반려기기와 로봇의 고위험 경계를 장기 연구합니다.',
-      entryCriteria: '법률·안전·현장 검증의 근거가 선행합니다.',
-      evidence: 'Node 신뢰 수준과 단계별 안전 검토',
+      title: 'Node Network',
+      status: 'validation',
+      description: '승인형 NODE 등록, 결과·삭제 확인서, 월별 결산과 보상 청구를 Base Sepolia에서 검증하고, 비공개 참여자 파일럿과 독립 감사를 거쳐 V2로 이전합니다. 반려기기와 로봇의 고위험 경계는 장기 연구로 남깁니다.',
+      entryCriteria: 'Base Sepolia 배포 manifest와 모듈 검증이 완료됩니다.',
+      evidence: '파일럿 단계 A–E와 NODE 네트워크 페이지',
     },
   ],
   contact: {

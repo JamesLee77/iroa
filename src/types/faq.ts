@@ -13,6 +13,8 @@ export interface FaqEntry {
    * so a plan is never presented as a live service.
    */
   status?: PublicStatus;
+  /** A pointer to the page that carries the fuller explanation. */
+  link?: { label: string; href: string };
 }
 
 export interface FaqGroup {

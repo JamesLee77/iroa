@@ -28,6 +28,34 @@ const {
 const canonical = new URL(canonicalPath, Astro.site);
 const shareImage = new URL(imagePath, Astro.site);
 const alternate = alternatePath ? new URL(alternatePath, Astro.site) : undefined;
+const structuredData = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${Astro.site}#organization`,
+      name: 'IROA.AI',
+      url: String(Astro.site),
+      logo: new URL('/apple-touch-icon.png', Astro.site),
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${Astro.site}#website`,
+      name: 'IROA.AI',
+      url: String(Astro.site),
+      inLanguage: locale,
+      publisher: { '@id': `${Astro.site}#organization` },
+    },
+    {
+      '@type': 'WebPage',
+      url: canonical,
+      name: title,
+      description,
+      inLanguage: locale,
+      isPartOf: { '@id': `${Astro.site}#website` },
+    },
+  ],
+});
 const copy = locale === 'en'
   ? { skip: 'Skip to main content', ogLocale: 'en_US' }
   : { skip: '본문으로 바로가기', ogLocale: 'ko_KR' };
@@ -61,6 +89,7 @@ const copy = locale === 'en'
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={shareImage} />
     <title>{title}</title>
+    <script type="application/ld+json" set:html={structuredData} is:inline />
   </head>
   <body>
     <a class="skip-link" href="#main-content">{copy.skip}</a>

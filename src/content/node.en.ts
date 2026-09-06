@@ -1,0 +1,153 @@
+import type { NodePageContent } from '../types/node';
+
+export const nodeEn: NodePageContent = {
+  eyebrow: 'NODE NETWORK',
+  title: 'A NODE is an execution space verified per request.',
+  lead:
+    'Who operates a NODE, which trust level handles which request, and how verified work becomes a reward — explained from the whitepaper and the pilot design.',
+  notice:
+    'NODE registration, settlement, and rewards on this page are a design under validation in a private pilot. There is no open registration, sale, yield, or listing promise, and the network-state figures show only values read from the chain after a deployment manifest is published.',
+  contentsLabel: 'NODE page contents',
+  definition: {
+    title: 'What a NODE is',
+    status: 'current',
+    paragraphs: [
+      'A NODE is a secure execution space that carries out one user-approved request within bounded authority. Every task gets a fresh isolated environment and its own encryption key, and moves only within the allowed domains, tools, actions, cost, and time.',
+      'No NODE controls the entire request. Planning, credential use, and outcome verification sit behind separate boundaries, and moving to a higher-risk step requires a newly issued, narrower capability.',
+    ],
+    capsuleLabel: 'The per-request protection bundle (Task Capsule) a NODE receives',
+    capsule: [
+      'Request declaration — purpose, target service, success condition, and expiry',
+      'One-time capability — task authority limited to allowed domains, tools, actions, and cost',
+      'Credential vault link — official auth, passkeys, or short tokens instead of raw passwords',
+      'Policy sandbox — independent control of file, network, messaging, payment, and personal-data transfer',
+      'User confirmation points — steps such as payment, contracts, or sensitive data where execution must stop',
+      'Result Receipt — the booking number, intake response, or payment approval that proves success',
+      'Deletion Receipt — the record proving temporary credentials, cookies, and task keys were destroyed',
+    ],
+  },
+  trustLevels: {
+    title: 'Trust levels N0–N4',
+    status: 'current',
+    lead: 'A higher level does not mean automatic access to more personal data. Request purpose, user consent, data class, and the execution space’s current attestation must all be satisfied.',
+    columns: { level: 'Level', examples: 'Examples', allowed: 'Allowed requests' },
+    levels: [
+      { level: 'N0', name: 'public compute', examples: 'Verified de-identified compute pool', allowed: 'Public information and synthetic or de-identified processing' },
+      { level: 'N1', name: 'managed execution', examples: 'IROA secure space or registered operator', allowed: 'Low-risk isolated web tasks and long tracking' },
+      { level: 'N2', name: 'approved access point', examples: 'Kiosk, welfare center, companion', allowed: 'Booking, ordering, bounded identity, human connection' },
+      { level: 'N3', name: 'institution', examples: 'Hospital, municipality, welfare institution', allowed: 'Sensitive work within contract and qualification' },
+      { level: 'N4', name: 'personal approval', examples: 'Watch, mobile, passkey, in-person check', allowed: 'Credential use and final approval' },
+    ],
+    note: 'The owner of an execution space and the identity and state of the actual runtime are verified separately. The table matches whitepaper §8.3.',
+  },
+  operator: {
+    title: 'What an operator does',
+    status: 'validation',
+    lead: 'A NODE operator registers a NODE with a device key, runs tasks under the current policy version once approved, and proves results and deletion. There is no open registration.',
+    steps: [
+      { title: 'Create a device key', description: 'A NODE device key is created apart from the operator wallet, and the NODE ID is derived from the key hash.' },
+      { title: 'Register', description: 'The registration is recorded as Pending and receives no tasks yet.' },
+      { title: 'Qualification and approval', description: 'A compliance role that has checked the operator’s qualification and trust level must approve the NODE before it becomes Active.' },
+      { title: 'Heartbeat', description: 'An active NODE periodically reports its agent version, policy version, and spare capacity under its signature.' },
+      { title: 'Run tasks', description: 'Requests run inside the Task Capsule scope and stop at every user confirmation point.' },
+      { title: 'Prove results and deletion', description: 'A Result Receipt and a Deletion Receipt are left behind. Both must verify for the reward score to pass its security gate.' },
+    ],
+    approvalNote: 'Suspension and revocation are executed by separate roles, and a leaked device key is revoked on its own while the NODE ID is kept.',
+  },
+  rewards: {
+    title: 'Reward structure',
+    status: 'validation',
+    lead: 'NODE operating cost rests on real service fees; IROA tokens are a performance reward for verified work, availability, security, and quality alongside them. Registering a NODE or leaving equipment on does not create fixed returns.',
+    allocation: {
+      label: 'Node build and operation reward allocation',
+      share: '25%',
+      amount: '2,500,000,000',
+      source: 'of the 10,000,000,000 IROA maximum supply · whitepaper §16.2',
+    },
+    formulaLabel: 'Node token reward (whitepaper §16.4)',
+    formula: [
+      { sign: '=', label: 'verified request completion' },
+      { sign: '+', label: 'availability and response' },
+      { sign: '+', label: 'accessibility and quality' },
+      { sign: '+', label: 'security proof and deletion compliance' },
+      { sign: '-', label: 'failure, duplication, and delay penalties' },
+      { sign: '-', label: 'fake-work, security, and privacy penalties' },
+    ],
+    scoreLabel: 'Task score weights (pilot design §7.2)',
+    scoreWeights: [
+      { label: 'Result quality', weightPercent: 40 },
+      { label: 'Accessibility quality', weightPercent: 25 },
+      { label: 'Timeliness', weightPercent: 15 },
+      { label: 'Human handoff quality', weightPercent: 10 },
+      { label: 'Resource efficiency', weightPercent: 10 },
+    ],
+    rules: [
+      'The completion gate and the security gate are 0 or 1. The security gate is 1 only when both the Result Receipt and the Deletion Receipt verify.',
+      'The uptime bonus stays within 10% of the verified task score and is never paid to a NODE with no tasks.',
+      'Scores of several NODEs are summed per operator, and one operator’s monthly reward stays within 5% of that month’s NODE budget. The excess stays in the NODE vault rather than being redistributed.',
+      'Self-dealing, duplicate requests, false completion, signature errors, policy mismatch, missing deletion, and disputed tasks are excluded from or held out of rewards.',
+    ],
+  },
+  dilution: {
+    title: 'More NODEs means a smaller average reward',
+    status: 'current',
+    alt: 'Average token reward dilution as the number of Nodes grows',
+    paragraph:
+      'In the 12-year stress test, the simple average token amount per Node declines sharply as the fixed pool is shared across more Nodes. In the baseline scenario, the year-12 average is approximately 1/1,083 of the year-1 average. Token emissions alone therefore cannot guarantee server, electricity, connectivity, or security-staff cost; if request fees and institutional contracts do not grow, new Node expansion slows and reward rates are recalculated.',
+    source: 'Whitepaper §16.4 · 12-year simulation',
+  },
+  networkState: {
+    title: 'Network state',
+    status: 'planned',
+    lead: 'Figures here show only values read from the contracts named in a signed deployment manifest. Until a manifest is published, only the structure is shown.',
+    predeploy: {
+      title: 'Before deployment',
+      description: 'Once a Base Sepolia deployment manifest is published in the repository this card switches to validation data. A mainnet manifest takes precedence when it exists.',
+    },
+    metrics: [
+      { id: 'active-nodes', label: 'Active NODEs', description: 'Counts Active status only; pending registrations are excluded.' },
+      { id: 'trust-mix', label: 'Trust-level mix', description: 'N0–N4 composition of active NODEs' },
+      { id: 'finalized-epochs', label: 'Finalized epochs', description: 'Monthly settlement roots finalized after the challenge window' },
+      { id: 'last-root', label: 'Last settlement finalized', description: 'Block time of the most recent RootFinalized' },
+      { id: 'claims', label: 'Reward claims', description: 'Count only; amounts are never summed on this page.' },
+    ],
+    placeholder: '—',
+    profileLabels: { network: 'Network', release: 'Release', contracts: 'Contracts', explorer: 'View on BaseScan' },
+  },
+  pilot: {
+    title: 'Pilot stages',
+    lead: 'NODE registration through Result Receipts, disputes, and reward claims is validated end to end on mainnet with private participants, then passes an independent audit and the V2 migration. No dates are promised; only entry criteria are published.',
+    columns: { outcome: 'Outcome', entryCriteria: 'Entry criteria' },
+    stages: [
+      { id: 'A', title: 'Local and Base Sepolia complete', outcome: 'Contracts, verifier, and operator portal run as one flow on the testnet', entryCriteria: 'Module review/fix and final integration validation pass', status: 'validation' },
+      { id: 'B', title: 'V1 issued on Base mainnet', outcome: '10 billion IROA V1 issued, seven vaults reconciled, Safe and Timelock handoff', entryCriteria: 'Deployment artifact, Safe, Timelock, and legal scope confirmed', status: 'planned' },
+      { id: 'C', title: 'Private participant validation', outcome: 'Only approved participants operate NODEs, receive, and transfer', entryCriteria: 'V1 address verified, vaults reconciled, allowlist operations ready', status: 'planned' },
+      { id: 'D', title: 'Independent smart-contract audit', outcome: 'Real V1 addresses and operating evidence submitted to the auditor', entryCriteria: 'Audit scope and migration code submitted', status: 'planned' },
+      { id: 'E', title: 'V2 deployment and 1:1 migration', outcome: 'V2 minted for exactly the V1 burned; total supply stays at 10 billion', entryCriteria: 'Audit must-fix items applied and migration rehearsal passed', status: 'planned' },
+    ],
+    boundary: 'Throughout the pilot there is no public sale, DEX liquidity, bridge, third-party custody, or listing.',
+  },
+  participation: {
+    title: 'Operator participation',
+    status: 'planned',
+    lead: 'Operating a NODE is a matter of qualification and approval, not open registration. Discussions start from the following.',
+    requirements: [
+      'A NODE device key separate from the operator wallet (hardware security module recommended)',
+      'An execution environment and remote attestation matching the trust level to be served',
+      'Operator qualification check and consent to the private pilot',
+      'Adherence to the policy version, submission of result and deletion receipts, and participation in the dispute process',
+    ],
+    channelLabel: 'Operator contact channel in preparation',
+    privacyNotice: 'No personal data is collected before an official contact channel is in place.',
+  },
+  boundaries: {
+    title: 'What this page does not promise',
+    items: [
+      'No promise of price, yield, liquidity, or exchange listing.',
+      'Verified contribution is reviewed together with dispute, cancellation, and quality criteria.',
+      'Holding tokens is never a condition for essential support.',
+    ],
+  },
+  whitepaperCta: { label: 'Read the token economy chapter', href: '/en/whitepaper/token-economy' },
+  faqCta: { label: 'See the reward structure in Q&A', href: '/en/faq#rewards' },
+};

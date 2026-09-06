@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { imageSize } from 'image-size';
 
-const representativeRoutes = ['/', '/whitepaper', '/whitepaper/token-economy', '/design-system'] as const;
+const representativeRoutes = ['/', '/whitepaper', '/whitepaper/token-economy', '/node', '/design-system'] as const;
 
 for (const route of representativeRoutes) {
   test(`${route} has no serious or critical WCAG 2.2 AA violations`, async ({ page }) => {
@@ -44,7 +44,7 @@ test('renders the internal design-system inventory from production components', 
 });
 
 test('publishes unique metadata and absolute share discovery on representative routes', async ({ page }) => {
-  const routes = ['/', '/whitepaper', '/whitepaper/token-economy', '/design-system', '/404.html'];
+  const routes = ['/', '/whitepaper', '/whitepaper/token-economy', '/node', '/en/node', '/design-system', '/404.html'];
   const titles = new Set<string>();
 
   for (const route of routes) {

@@ -1,0 +1,153 @@
+import type { NodePageContent } from '../types/node';
+
+export const nodeKo: NodePageContent = {
+  eyebrow: 'NODE NETWORK',
+  title: 'NODE는 요청별로 검증되는 실행 공간입니다.',
+  lead:
+    '누가 NODE를 운영하고, 어떤 신뢰 수준이 어떤 요청을 맡으며, 검증된 작업이 어떻게 보상으로 이어지는지 백서와 파일럿 설계를 기준으로 설명합니다.',
+  notice:
+    '이 페이지의 NODE 등록·결산·보상은 비공개 파일럿에서 검증 중인 설계입니다. 공개 등록, 판매, 수익률, 상장을 약속하지 않으며, 네트워크 상태의 숫자는 배포 manifest가 공개된 뒤 체인에서 읽은 값만 표시합니다.',
+  contentsLabel: 'NODE 페이지 목차',
+  definition: {
+    title: 'NODE란',
+    status: 'current',
+    paragraphs: [
+      'NODE는 사용자가 승인한 요청 하나를 제한된 권한 안에서 실행하는 보안 실행 공간입니다. 작업마다 새 격리 환경과 별도 암호화 키를 받고, 허용된 도메인·도구·행동·비용·시간 안에서만 움직입니다.',
+      'NODE는 요청 전체를 독점하지 않습니다. 계획, 자격증명 사용, 결과 검증은 서로 다른 경계에서 이루어지고, 더 높은 위험 단계로 넘어갈 때는 새 제한 권한을 다시 발급받습니다.',
+    ],
+    capsuleLabel: 'NODE가 받는 요청별 보호 꾸러미(Task Capsule)',
+    capsule: [
+      '요청 선언서 — 목적, 대상 서비스, 성공조건과 만료시간',
+      '일회성 Capability — 허용 도메인·도구·행동·비용만 포함한 작업 권한',
+      '인증정보 보관소 연결 — 비밀번호 원문 대신 공식 인증·패스키·짧은 토큰',
+      'Policy Sandbox — 파일·네트워크·메시지·결제·개인정보 전송의 독립 통제',
+      '사용자 확인 지점 — 결제·계약·민감정보 등 반드시 멈춰야 할 단계',
+      'Result Receipt — 예약번호·접수응답·결제승인처럼 성공을 입증하는 결과',
+      'Deletion Receipt — 종료 후 임시 자격·쿠키·작업키 폐기를 증명하는 기록',
+    ],
+  },
+  trustLevels: {
+    title: '신뢰 수준 N0–N4',
+    status: 'current',
+    lead: '높은 등급은 더 많은 개인정보를 자동으로 볼 수 있다는 뜻이 아닙니다. 요청 목적, 사용자 동의, 데이터 등급, 실행 공간의 현재 증명 상태를 모두 만족해야 합니다.',
+    columns: { level: '등급', examples: '예시', allowed: '허용 요청' },
+    levels: [
+      { level: 'N0', name: '공개 연산', examples: '검증된 비식별 연산 풀', allowed: '공개정보 정리, 합성·비식별 처리' },
+      { level: 'N1', name: '관리형 실행', examples: 'IROA 보안 실행 공간·등록 운영자', allowed: '낮은 위험의 격리 웹 요청, 장시간 추적' },
+      { level: 'N2', name: '승인 접근 거점', examples: '키오스크·복지관·반려기기', allowed: '예약·주문, 제한된 본인확인, 사람 연결' },
+      { level: 'N3', name: '기관', examples: '병원·지자체·복지기관', allowed: '계약·자격 범위의 민감업무' },
+      { level: 'N4', name: '개인 승인', examples: '워치·모바일·패스키·대면 확인', allowed: '자격증명 사용과 최종 승인' },
+    ],
+    note: '실행 공간 소유자와 실제 실행환경의 신원·상태는 분리해 검증합니다. 표는 백서 8.3절과 같습니다.',
+  },
+  operator: {
+    title: '운영자가 하는 일',
+    status: 'validation',
+    lead: 'NODE 운영자는 기기 키로 NODE를 등록하고, 승인 뒤 정책 버전을 지키며 작업을 실행하고, 결과와 삭제를 증명합니다. 공개 등록은 없습니다.',
+    steps: [
+      { title: '기기 키 생성', description: '운영자 지갑과 별개로 NODE 기기 키를 만들고, 키 해시로 NODE ID를 도출합니다.' },
+      { title: '등록', description: '등록 요청은 승인 대기(Pending) 상태로 기록되며, 아직 작업을 받지 않습니다.' },
+      { title: '자격 확인과 승인', description: '운영자 자격과 신뢰 수준을 확인한 컴플라이언스 권한이 승인해야 활성(Active) 상태가 됩니다.' },
+      { title: '가동 신호', description: '활성 NODE는 에이전트 버전, 정책 버전, 여유 용량을 서명해 주기적으로 보고합니다.' },
+      { title: '작업 실행', description: 'Task Capsule 범위 안에서 요청을 실행하고, 사용자 확인 지점에서는 멈춥니다.' },
+      { title: '결과·삭제 증명', description: 'Result Receipt와 Deletion Receipt를 남깁니다. 둘 다 검증돼야 보상 점수의 보안 관문을 통과합니다.' },
+    ],
+    approvalNote: '정지(Suspended)와 폐기(Revoked)는 별도 권한이 실행하며, 기기 키가 유출되면 해당 키만 폐기하고 NODE ID는 유지합니다.',
+  },
+  rewards: {
+    title: '보상 구조',
+    status: 'validation',
+    lead: 'NODE 운영비는 실제 서비스 수수료가 기본이고, IROA 토큰은 검증된 작업·가동·보안·품질에 대한 성과 보상으로 함께 지급하는 방향입니다. NODE를 등록하거나 장비를 켜두는 것만으로 고정수익을 지급하지 않습니다.',
+    allocation: {
+      label: 'NODE 구축·운영 보상 배분',
+      share: '25%',
+      amount: '2,500,000,000',
+      source: '최대 공급량 10,000,000,000 IROA 중 · 백서 16.2절',
+    },
+    formulaLabel: 'NODE 토큰 보상 (백서 16.4절)',
+    formula: [
+      { sign: '=', label: '검증된 요청 완료 보상' },
+      { sign: '+', label: '가동·응답 보상' },
+      { sign: '+', label: '접근성·품질 보상' },
+      { sign: '+', label: '보안 증명·삭제 준수 보상' },
+      { sign: '-', label: '실패·중복·지연 감점' },
+      { sign: '-', label: '허위 작업·보안·개인정보 위반 감점' },
+    ],
+    scoreLabel: '작업 점수 가중치 (파일럿 설계 7.2절)',
+    scoreWeights: [
+      { label: '결과 품질', weightPercent: 40 },
+      { label: '접근성 품질', weightPercent: 25 },
+      { label: '적시성', weightPercent: 15 },
+      { label: '사람 인계 품질', weightPercent: 10 },
+      { label: '자원 효율', weightPercent: 10 },
+    ],
+    rules: [
+      '완료 관문과 보안 관문은 0 또는 1입니다. Result Receipt와 Deletion Receipt가 모두 검증돼야 보안 관문이 1이 됩니다.',
+      '가동시간 보너스는 검증된 작업 점수의 10% 이내이며, 작업이 없는 NODE에는 지급하지 않습니다.',
+      '여러 NODE의 점수는 운영자 단위로 합산하고, 한 운영자의 월 보상은 그 달 NODE 예산의 5% 이내입니다. 초과분은 다른 운영자에게 재분배하지 않고 NODE 금고에 남깁니다.',
+      '자기거래, 중복 요청, 허위 완료, 서명 오류, 정책 불일치, 삭제 미준수와 분쟁 중인 작업은 보상에서 제외하거나 보류합니다.',
+    ],
+  },
+  dilution: {
+    title: 'NODE가 늘면 평균 보상은 줄어듭니다',
+    status: 'current',
+    alt: 'NODE 수 증가에 따른 평균 토큰 보상 희석 그래프',
+    paragraph:
+      '12년 스트레스 테스트에서 NODE 수가 증가하면 정해진 보상 풀을 나눈 NODE당 단순 평균 토큰 수량은 크게 줄어듭니다. 기준 시나리오에서는 1년 차 대비 12년 차 단순 평균이 약 1,083분의 1로 감소합니다. 따라서 토큰 배출만으로 서버·전기·통신·보안 인력 비용을 보장할 수 없고, 실제 요청 사용료와 기관 운영 계약이 성장하지 않으면 신규 NODE 확대를 늦추고 보상률을 다시 계산합니다.',
+    source: '백서 16.4절 · 12년 시뮬레이션',
+  },
+  networkState: {
+    title: '네트워크 상태',
+    status: 'planned',
+    lead: '이 영역의 숫자는 서명된 배포 manifest에 적힌 계약에서 읽은 값만 표시합니다. manifest가 공개되기 전에는 구조만 보여줍니다.',
+    predeploy: {
+      title: '배포 전',
+      description: 'Base Sepolia 배포 manifest가 저장소에 게시되면 이 카드가 검증 중 데이터로 바뀝니다. 메인넷 manifest가 게시되면 그것을 우선합니다.',
+    },
+    metrics: [
+      { id: 'active-nodes', label: '활성 NODE', description: '승인(Active) 상태만 셉니다. 승인 대기는 포함하지 않습니다.' },
+      { id: 'trust-mix', label: '신뢰 수준 분포', description: '활성 NODE의 N0–N4 구성' },
+      { id: 'finalized-epochs', label: '확정 에폭', description: '이의 창을 지나 확정된 월별 결산 루트 수' },
+      { id: 'last-root', label: '마지막 결산 확정', description: '가장 최근 RootFinalized 블록 시각' },
+      { id: 'claims', label: '보상 청구', description: '건수만 셉니다. 금액은 합산해 표시하지 않습니다.' },
+    ],
+    placeholder: '—',
+    profileLabels: { network: '네트워크', release: '릴리스', contracts: '계약', explorer: 'BaseScan에서 보기' },
+  },
+  pilot: {
+    title: '파일럿 단계',
+    lead: 'NODE 등록부터 결과 확인서, 분쟁, 보상 청구까지를 비공개 참여자와 함께 메인넷에서 끝까지 검증한 뒤 독립 감사와 V2 이전을 거칩니다. 날짜는 약속하지 않고 진입 조건만 공개합니다.',
+    columns: { outcome: '결과', entryCriteria: '진입 조건' },
+    stages: [
+      { id: 'A', title: '로컬·Base Sepolia 완성', outcome: '계약, 검증기, 운영자 포털이 테스트넷에서 한 흐름으로 동작', entryCriteria: '모듈 review/fix와 최종 통합 검증 통과', status: 'validation' },
+      { id: 'B', title: 'V1 Base 메인넷 발행', outcome: '100억 IROA V1 발행, 7개 금고 대사, Safe·Timelock 이관', entryCriteria: '배포 artifact, Safe, Timelock, 법률 범위 확인', status: 'planned' },
+      { id: 'C', title: '비공개 참여자 검증', outcome: '승인된 참여자만 NODE 운영·수령·이전', entryCriteria: 'V1 주소 검증, 금고 대사, allowlist 운영 준비', status: 'planned' },
+      { id: 'D', title: '독립 스마트계약 감사', outcome: '실제 V1 주소와 운영 증거를 감사기관에 제출', entryCriteria: '감사 범위와 migration 코드 제출', status: 'planned' },
+      { id: 'E', title: 'V2 배포·1:1 이전', outcome: 'V1 소각 수량만큼 V2 발행, 총공급 100억 유지', entryCriteria: '감사 must-fix 반영과 이전 리허설 통과', status: 'planned' },
+    ],
+    boundary: '파일럿 전 구간에서 공개 판매, DEX 유동성, 브리지, 제3자 보관 서비스와 상장은 열지 않습니다.',
+  },
+  participation: {
+    title: '운영자 참여',
+    status: 'planned',
+    lead: 'NODE 운영은 공개 등록이 아니라 자격 확인과 승인을 거칩니다. 참여 논의는 다음 항목을 기준으로 시작합니다.',
+    requirements: [
+      '운영자 지갑과 별도의 NODE 기기 키(하드웨어 보안 모듈 권장)',
+      '맡으려는 신뢰 수준에 맞는 실행 환경과 원격 신뢰 확인',
+      '운영자 자격 확인과 비공개 파일럿 참여 동의',
+      '정책 버전 준수, 결과·삭제 확인서 제출, 분쟁 절차 참여',
+    ],
+    channelLabel: '운영자 문의 채널 준비 중',
+    privacyNotice: '공식 문의 채널이 마련되기 전에는 개인정보를 수집하지 않습니다.',
+  },
+  boundaries: {
+    title: '이 페이지가 약속하지 않는 것',
+    items: [
+      '가격, 수익률, 유동성, 거래소 상장을 약속하지 않습니다.',
+      '검증된 기여와 분쟁·취소·품질 기준을 함께 검토합니다.',
+      '토큰 보유 여부는 생활 지원의 필수 조건이 아닙니다.',
+    ],
+  },
+  whitepaperCta: { label: '백서 토큰 이코노미 읽기', href: '/whitepaper/token-economy' },
+  faqCta: { label: 'Q&A에서 보상체계 보기', href: '/faq#rewards' },
+};
