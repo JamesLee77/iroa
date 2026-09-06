@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sha256Hex } from '../src/canonical.js';
 import { hashScratchDirectory } from '../src/deletion.js';
-import { deriveNodeId, getDeviceIdentity, InjectedSecretProvider } from '../src/enrollment.js';
+import { deriveNodeId, getDeviceIdentity, InjectedSecretProvider, nodeRegistrationTypedData, signNodeRegistration } from '../src/enrollment.js';
+import { recoverTypedDataAddress } from 'viem';
 import {
   boundedFetch,
   EXECUTOR_RESPONSE_LIMIT_BYTES,
@@ -55,6 +56,48 @@ async function validRunInput(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe('NODE registration proof', () => {
+  it('signs the registration with the device key so the registry can bind the matching hash', async () => {
+    const identity = await getDeviceIdentity(secretProvider);
+    const operatorIdHash = sha256Hex(OPERATOR_ADDRESS);
+    const registration = await signNodeRegistration({
+      secretProvider,
+      domain: { chainId: 31337, verifyingContract: VERIFYING_CONTRACT },
+      operatorAddress: OPERATOR_ADDRESS,
+      operatorIdHash,
+      trustLevel: 'N2',
+    });
+    expect(registration.nodeId).toBe(deriveNodeId(OPERATOR_ADDRESS, identity.deviceKeyHash));
+    expect(registration.deviceKeyHash).toBe(identity.deviceKeyHash);
+
+    const typedData = nodeRegistrationTypedData(
+      { chainId: 31337, verifyingContract: VERIFYING_CONTRACT },
+      { nodeId: registration.nodeId, operatorWallet: registration.deviceAddress === identity.deviceAddress ? (OPERATOR_ADDRESS as never) : (OPERATOR_ADDRESS as never), operatorIdHash, trustLevel: 'N2' },
+    );
+    expect(typedData.message.trustLevel).toBe(2);
+    const recovered = await recoverTypedDataAddress({ ...typedData, signature: registration.signature });
+    expect(recovered.toLowerCase()).toBe(identity.deviceAddress.toLowerCase());
+  });
+
+  it('binds the signature to the operator wallet, so another wallet cannot reuse it', async () => {
+    const operatorIdHash = sha256Hex(OPERATOR_ADDRESS);
+    const registration = await signNodeRegistration({
+      secretProvider,
+      domain: { chainId: 31337, verifyingContract: VERIFYING_CONTRACT },
+      operatorAddress: OPERATOR_ADDRESS,
+      operatorIdHash,
+      trustLevel: 'N1',
+    });
+    const otherOperator = `0x${'56'.repeat(20)}` as const;
+    const typedData = nodeRegistrationTypedData(
+      { chainId: 31337, verifyingContract: VERIFYING_CONTRACT },
+      { nodeId: registration.nodeId, operatorWallet: otherOperator, operatorIdHash, trustLevel: 'N1' },
+    );
+    const recovered = await recoverTypedDataAddress({ ...typedData, signature: registration.signature });
+    expect(recovered.toLowerCase()).not.toBe(registration.deviceAddress.toLowerCase());
+  });
+});
 
 describe('NODE Agent policy regressions', () => {
   it('rejects an executor outside the exact allowlist', async () => {

@@ -49,6 +49,11 @@ export function createNetworkReader(config: ClientConfig): NetworkReader {
               events.push({ ...common, kind: 'NodeStatusChanged', nodeId: log.args.nodeId, previousStatus: log.args.previousStatus as NodeStatusCode, newStatus: log.args.newStatus as NodeStatusCode });
             }
             break;
+          case 'NodeTrustLevelChanged':
+            if (from === config.nodeRegistry.toLowerCase()) {
+              events.push({ ...common, kind: 'NodeTrustLevelChanged', nodeId: log.args.nodeId, previousLevel: log.args.previousLevel as 0 | 1 | 2 | 3, newLevel: log.args.newLevel as 0 | 1 | 2 | 3 });
+            }
+            break;
           case 'RootProposed':
             if (from === config.receiptRootRegistry.toLowerCase()) {
               events.push({ ...common, kind: 'RootProposed', epoch: log.args.epoch, revision: log.args.revision });

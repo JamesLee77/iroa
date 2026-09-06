@@ -26,7 +26,7 @@ const selectors = {
   migrationMinted: toFunctionSelector('migrationMinted()'),
   claimed: toFunctionSelector('claimed(bytes32)'),
   nodeStatus: toFunctionSelector('nodeStatus(bytes32)'),
-  registerNode: toFunctionSelector('registerNode(bytes32,bytes32,bytes32,uint8)'),
+  registerNode: toFunctionSelector('registerNode(bytes32,bytes32,bytes32,uint8,bytes)'),
   deviceKeyNode: toFunctionSelector('deviceKeyNode(bytes32)'),
   operatorWallet: toFunctionSelector('operatorWallet(bytes32)'),
   operatorIdHash: toFunctionSelector('operatorIdHash(bytes32)'),
@@ -230,7 +230,8 @@ test('enrollment retries only the portal connection after an onchain success', a
   await page.getByLabel('기기 지갑 주소').fill('0x3000000000000000000000000000000000000001');
   await page.getByLabel('기기 키 해시').fill(DEVICE_HASH);
   await page.getByRole('button', { name: '기기 서명 요청 만들기' }).click();
-  await page.getByLabel('기기 서명').fill(`0x${'aa'.repeat(65)}`);
+  await page.getByLabel('기기 서명', { exact: true }).fill(`0x${'aa'.repeat(65)}`);
+  await page.getByLabel('온체인 등록 기기 서명').fill(`0x${'bb'.repeat(65)}`);
   await page.getByRole('button', { name: '온체인 등록 후 포털 연결' }).click();
   await expect(page.getByText(/온체인 등록 완료/)).toBeVisible();
   await page.reload();
@@ -239,7 +240,8 @@ test('enrollment retries only the portal connection after an onchain success', a
   await page.getByLabel('기기 지갑 주소').fill('0x3000000000000000000000000000000000000001');
   await page.getByLabel('기기 키 해시').fill(DEVICE_HASH);
   await page.getByRole('button', { name: '기기 서명 요청 만들기' }).click();
-  await page.getByLabel('기기 서명').fill(`0x${'aa'.repeat(65)}`);
+  await page.getByLabel('기기 서명', { exact: true }).fill(`0x${'aa'.repeat(65)}`);
+  await page.getByLabel('온체인 등록 기기 서명').fill(`0x${'bb'.repeat(65)}`);
   await page.getByRole('button', { name: '온체인 등록 후 포털 연결' }).click();
   await expect(page.getByText('NODE 등록이 완료되었습니다.')).toBeVisible();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __iroaTransactionCount: number }).__iroaTransactionCount)).toBe(1);

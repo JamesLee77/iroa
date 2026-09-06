@@ -209,6 +209,6 @@ export async function listGovernanceQueue(): Promise<GovernanceItem[]> {
 export async function listAudit(): Promise<AuditItem[]> {
   return parseAuditItems(await authed('/v1/admin/audit'));
 }
-export async function appendTransactionAudit(input: { action: 'NODE_APPROVED' | 'NODE_SUSPENDED'; target: string; policyVersion: string; transactionHash: string | null; result: 'pending' | 'confirmed' | 'failed' }): Promise<void> {
+export async function appendTransactionAudit(input: { action: 'NODE_APPROVED' | 'NODE_SUSPENDED' | 'NODE_REJECTED' | 'NODE_TRUST_LEVEL_CHANGED'; target: string; policyVersion: string; transactionHash: string | null; result: 'pending' | 'confirmed' | 'failed' }): Promise<void> {
   await authed('/v1/admin/audit', { method: 'POST', body: JSON.stringify(input) });
 }

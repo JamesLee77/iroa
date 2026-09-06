@@ -9,6 +9,8 @@ export { rootApprovalMessage, type RootProposalTransaction, type SafeProposalArt
 export const nodeRegistryAbi = [
   { type: 'function', name: 'approveNode', stateMutability: 'nonpayable', outputs: [], inputs: [{ name: 'nodeId', type: 'bytes32' }] },
   { type: 'function', name: 'suspendNode', stateMutability: 'nonpayable', outputs: [], inputs: [{ name: 'nodeId', type: 'bytes32' }] },
+  { type: 'function', name: 'rejectNode', stateMutability: 'nonpayable', outputs: [], inputs: [{ name: 'nodeId', type: 'bytes32' }] },
+  { type: 'function', name: 'changeTrustLevel', stateMutability: 'nonpayable', outputs: [], inputs: [{ name: 'nodeId', type: 'bytes32' }, { name: 'newLevel', type: 'uint8' }] },
   { type: 'function', name: 'COMPLIANCE_ROLE', stateMutability: 'view', outputs: [{ type: 'bytes32' }], inputs: [] },
   { type: 'function', name: 'SUSPENDER_ROLE', stateMutability: 'view', outputs: [{ type: 'bytes32' }], inputs: [] },
   { type: 'function', name: 'hasRole', stateMutability: 'view', outputs: [{ type: 'bool' }], inputs: [{ type: 'bytes32' }, { type: 'address' }] },
